@@ -460,6 +460,123 @@
       font-size: 0.86rem;
     }
 
+    /* Kolon Temizle Butonu & Gün Sonu Onay Modalı */
+    .btn-clear-col {
+      background: rgba(46, 204, 113, 0.16);
+      border: 1px solid rgba(46, 204, 113, 0.45);
+      color: #2ecc71;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+    .btn-clear-col:hover {
+      background: #2ecc71;
+      color: #181412;
+    }
+
+    .archive-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      place-items: center;
+      padding: 20px;
+    }
+    .archive-modal-backdrop.open {
+      display: grid;
+    }
+    .archive-modal-box {
+      width: 100%;
+      max-width: 460px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      color: var(--ink);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+    }
+    .archive-modal-title {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+    .archive-summary-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .archive-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+    .archive-stat-row.total {
+      border-top: 1px dashed var(--border);
+      padding-top: 10px;
+      margin-top: 4px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--ginger-500);
+    }
+    .archive-warn-box {
+      background: rgba(230, 126, 34, 0.12);
+      border: 1px solid rgba(230, 126, 34, 0.35);
+      color: #ffb37a;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.8rem;
+      margin-bottom: 16px;
+      line-height: 1.45;
+    }
+    .archive-modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 10px;
+    }
+    .btn-modal-cancel {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      padding: 11px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-modal-cancel:hover { background: var(--border); }
+    .btn-modal-confirm {
+      background: #27ae60;
+      border: none;
+      color: #fff;
+      padding: 11px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s ease;
+    }
+    .btn-modal-confirm:hover { background: #219150; }
+    .btn-modal-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+
     /* Yazdırma / Adisyon Çıktısı (40 Kolon / 58mm Termal Yazıcı Uyumlu) */
     @media print {
       @page {
@@ -580,13 +697,39 @@
         <div class="col-title-wrap">
           <span>✓ Tamamlananlar</span>
         </div>
-        <span class="col-badge-count" id="countDone">0</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" id="btnClearCompleted" class="btn-clear-col" onclick="openArchiveModal()" title="Gün sonu tamamlanan siparişleri arşivleyerek ekrandan temizle" style="display:none;">
+            🧹 Temizle
+          </button>
+          <span class="col-badge-count" id="countDone">0</span>
+        </div>
       </div>
       <div class="col-cards-list" id="listDone">
         <div class="col-empty">Henüz tamamlanan sipariş yok.</div>
       </div>
     </section>
   </main>
+
+  <!-- Gün Sonu Arşivleme & Onay Modalı -->
+  <div id="archiveModalBackdrop" class="archive-modal-backdrop" onclick="if(event.target===this) closeArchiveModal()">
+    <div class="archive-modal-box" role="dialog" aria-modal="true" aria-labelledby="archiveModalTitle">
+      <h2 id="archiveModalTitle" class="archive-modal-title">🌙 Gün Sonu — Ekranı Temizle</h2>
+      <p style="font-size: 0.85rem; color: var(--ink-muted);">
+        Tamamlanan ve iptal edilen siparişler mutfak ekranından kaldırılıp veritabanı arşivine aktarılacaktır.
+      </p>
+
+      <div class="archive-summary-card" id="archiveSummaryBody">
+        <!-- Dinamik özet -->
+      </div>
+
+      <div id="archiveActiveWarning" class="archive-warn-box" style="display:none;"></div>
+
+      <div class="archive-modal-actions">
+        <button type="button" class="btn-modal-cancel" onclick="closeArchiveModal()">Vazgeç</button>
+        <button type="button" id="btnConfirmArchive" class="btn-modal-confirm" onclick="confirmArchiveCompleted()">✓ Onayla ve Temizle</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Gizli Yazdırma Alanı (Adisyon için) -->
   <div id="printArea" class="print-receipt" style="display: none;"></div>
@@ -788,6 +931,11 @@
       document.getElementById("countWay").textContent = wayOrders.length;
       document.getElementById("countDone").textContent = doneOrders.length;
 
+      const btnClear = document.getElementById("btnClearCompleted");
+      if (btnClear) {
+        btnClear.style.display = doneOrders.length > 0 ? "inline-flex" : "none";
+      }
+
       listNew.innerHTML = newOrders.length > 0
         ? newOrders.map(renderOrderCard).join("")
         : '<div class="col-empty">Şu anda yeni sipariş yok.</div>';
@@ -801,7 +949,7 @@
         : '<div class="col-empty">Yolda sipariş yok.</div>';
 
       listDone.innerHTML = doneOrders.length > 0
-        ? doneOrders.slice(0, 15).map(renderOrderCard).join("")
+        ? doneOrders.slice(0, 50).map(renderOrderCard).join("")
         : '<div class="col-empty">Henüz tamamlanan sipariş yok.</div>';
 
       // Yeni gelen sipariş varsa ses çal!
@@ -817,6 +965,107 @@
         SoundAlert.playBell();
       }
     }
+
+    // Gün Sonu Özet & Onay Modalı
+    window.openArchiveModal = function() {
+      const doneOrders = allOrders.filter(o => o.status === "delivered" || o.status === "cancelled");
+      if (doneOrders.length === 0) return;
+
+      const delivered = doneOrders.filter(o => o.status === "delivered");
+      const cancelled = doneOrders.filter(o => o.status === "cancelled");
+      const activeCount = allOrders.filter(o => o.status === "new" || o.status === "preparing" || o.status === "on_way").length;
+
+      let cardTotal = 0;
+      let cashTotal = 0;
+      delivered.forEach(o => {
+        const amt = Number(o.total_amount || 0);
+        if (o.payment_method === "door_cash") {
+          cashTotal += amt;
+        } else {
+          cardTotal += amt;
+        }
+      });
+      const grandTotal = cardTotal + cashTotal;
+
+      const summaryBody = document.getElementById("archiveSummaryBody");
+      if (summaryBody) {
+        summaryBody.innerHTML = `
+          <div class="archive-stat-row">
+            <span style="color: var(--ink-muted);">Teslim Edilen Sipariş</span>
+            <strong>${delivered.length} adet</strong>
+          </div>
+          ${cancelled.length > 0 ? `
+            <div class="archive-stat-row">
+              <span style="color: var(--ink-muted);">İptal / Reddedilen (Ciroya dahil değil)</span>
+              <strong style="color: var(--status-cancel);">${cancelled.length} adet</strong>
+            </div>
+          ` : ''}
+          <div class="archive-stat-row">
+            <span style="color: var(--ink-muted);">💳 Kapıda Kredi Kartı</span>
+            <strong>${cardTotal.toLocaleString("tr-TR")} ₺</strong>
+          </div>
+          <div class="archive-stat-row">
+            <span style="color: var(--ink-muted);">💵 Kapıda Nakit</span>
+            <strong>${cashTotal.toLocaleString("tr-TR")} ₺</strong>
+          </div>
+          <div class="archive-stat-row total">
+            <span>Gün Sonu Toplam Ciro</span>
+            <span>${grandTotal.toLocaleString("tr-TR")} ₺</span>
+          </div>
+        `;
+      }
+
+      const warnBox = document.getElementById("archiveActiveWarning");
+      if (warnBox) {
+        if (activeCount > 0) {
+          warnBox.style.display = "block";
+          warnBox.textContent = `ℹ️ Dikkat: Hala işlemde (Yeni / Fırında / Yolda) bekleyen ${activeCount} aktif sipariş var. Bu siparişler arşive alınmayacak, ekranda kalmaya devam edecektir.`;
+        } else {
+          warnBox.style.display = "none";
+        }
+      }
+
+      const backdrop = document.getElementById("archiveModalBackdrop");
+      if (backdrop) backdrop.classList.add("open");
+    };
+
+    window.closeArchiveModal = function() {
+      const backdrop = document.getElementById("archiveModalBackdrop");
+      if (backdrop) backdrop.classList.remove("open");
+    };
+
+    window.confirmArchiveCompleted = async function() {
+      const doneOrders = allOrders.filter(o => o.status === "delivered" || o.status === "cancelled");
+      const ids = doneOrders.map(o => o.id);
+      if (ids.length === 0) {
+        closeArchiveModal();
+        return;
+      }
+
+      const btn = document.getElementById("btnConfirmArchive");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Arşivleniyor...";
+      }
+
+      try {
+        const res = await OrderAPI.archiveOrders(ids);
+        if (res && res.success === false) {
+          alert("Arşivleme sırasında veritabanı hatası oluştu. Lütfen Supabase'de 'is_archived' sütununun eklendiğinden emin olun.");
+        } else {
+          closeArchiveModal();
+          await loadOrders();
+        }
+      } catch (e) {
+        console.error("Archive exception:", e);
+        alert("Bir hata oluştu: " + (e.message || e));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "✓ Onayla ve Temizle";
+        }
+      }
+    };
 
     // Sipariş Durumunu Güncelle
     window.updateStatus = async function(orderId, nextStatus) {

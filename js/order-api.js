@@ -274,16 +274,28 @@ const OrderAPI = {
     return localOrders.find(o => o.id === orderId) || null;
   },
 
-  // Aktif ve Geçmiş Siparişleri Listele (Mutfak / Admin İçin)
+  // Aktif ve Arşivlenmemiş Siparişleri Listele (Mutfak / Admin İçin)
   async getOrders() {
     const sb = getSupabaseClient();
     if (sb) {
       try {
-        const { data: orders, error } = await sb
+        let { data: orders, error } = await sb
           .from("orders")
           .select("*, order_items(*)")
+          .or("is_archived.is.null,is_archived.eq.false")
           .order("created_at", { ascending: false })
-          .limit(50);
+          .limit(100);
+
+        // Eğer Supabase'de is_archived sütunu henüz eklenmediyse geriye dönük uyumluluk
+        if (error && (error.code === "42703" || error.code === "PGRST204" || (error.message && error.message.includes("is_archived")))) {
+          const fallbackRes = await sb
+            .from("orders")
+            .select("*, order_items(*)")
+            .order("created_at", { ascending: false })
+            .limit(50);
+          orders = fallbackRes.data;
+          error = fallbackRes.error;
+        }
 
         if (!error && orders) {
           return orders.map(o => ({
@@ -296,7 +308,39 @@ const OrderAPI = {
       }
     }
 
-    return getLocalOrders();
+    return getLocalOrders().filter(o => !o.is_archived);
+  },
+
+  // Tamamlanan Siparişleri Arşivle (Gün Sonu Temizliği)
+  async archiveOrders(orderIds) {
+    if (!orderIds || orderIds.length === 0) return { success: true };
+
+    const sb = getSupabaseClient();
+    if (sb) {
+      const { error } = await sb
+        .from("orders")
+        .update({ is_archived: true, updated_at: new Date() })
+        .in("id", orderIds);
+
+      if (error) {
+        console.error("Archive orders error:", error);
+        return { success: false, error };
+      }
+    }
+
+    // Yerel depolamayı da güncelle
+    const localOrders = getLocalOrders();
+    let changed = false;
+    localOrders.forEach(o => {
+      if (orderIds.includes(o.id)) {
+        o.is_archived = true;
+        o.updated_at = new Date().toISOString();
+        changed = true;
+      }
+    });
+    if (changed) saveLocalOrders(localOrders);
+
+    return { success: true };
   },
 
   // Sipariş Durumunu Güncelle (new -> preparing -> on_way -> delivered -> cancelled)

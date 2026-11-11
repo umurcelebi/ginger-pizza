@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     payment_method TEXT NOT NULL DEFAULT 'door_card', -- 'door_card' (Kapıda Kart), 'door_cash' (Kapıda Nakit)
     total_amount NUMERIC(10, 2) NOT NULL,
     status TEXT NOT NULL DEFAULT 'new', -- 'new', 'preparing', 'on_way', 'delivered', 'cancelled'
+    is_archived BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -44,3 +45,6 @@ CREATE POLICY "Public update order_items" ON public.order_items FOR UPDATE USING
 
 -- 4. Realtime Bildirimlerini Etkinleştir (Mutfak Ekranı Canlı Düşmesi İçin)
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
+
+-- 5. Mevcut Tablo İçin Gün Sonu Arşivleme Sütunu (Zaten kuruluysa sadece bunu çalıştırın)
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS is_archived BOOLEAN NOT NULL DEFAULT FALSE;
