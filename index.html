@@ -1207,6 +1207,616 @@
         padding-bottom: 70px;
       }
     }
+
+    /* ==========================================================================
+       Cart Drawer, Modals, Floating Button & Tracking
+       ========================================================================== */
+    .btn-header-cart {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--ginger-50);
+      color: var(--ginger-600);
+      border: 1px solid rgba(216, 106, 26, 0.25);
+      padding: 9px 16px;
+      border-radius: var(--radius-full);
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-header-cart:hover {
+      background: var(--ginger-500);
+      color: #fff;
+      border-color: var(--ginger-500);
+    }
+    .btn-header-cart .cart-badge-pill {
+      background: var(--ginger-500);
+      color: #fff;
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 800;
+    }
+    .btn-header-cart:hover .cart-badge-pill {
+      background: #fff;
+      color: var(--ginger-600);
+    }
+
+    .btn-header-track {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--ink-700);
+      background: var(--sand-100);
+      padding: 9px 14px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--sand-200);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-header-track:hover {
+      background: var(--sand-200);
+      color: var(--ink-900);
+    }
+    .btn-header-track.has-active {
+      background: #eafaf1;
+      color: #27ae60;
+      border-color: #a3e4d7;
+      animation: pulse-soft 2s infinite;
+    }
+    @keyframes pulse-soft {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(39, 174, 96, 0); }
+    }
+
+    /* Floating Cart Pill */
+    .floating-cart-pill {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 95;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, var(--ginger-500), var(--ginger-600));
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 999px;
+      box-shadow: 0 10px 28px rgba(216, 106, 26, 0.42);
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .floating-cart-pill:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 14px 32px rgba(216, 106, 26, 0.5);
+    }
+    .floating-cart-icon-box {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+    }
+    .floating-cart-badge {
+      position: absolute;
+      top: -4px;
+      right: -6px;
+      background: #fff;
+      color: var(--ginger-600);
+      font-size: 0.72rem;
+      font-weight: 800;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .floating-cart-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      line-height: 1.2;
+    }
+    .floating-cart-info .fc-title {
+      font-size: 0.78rem;
+      opacity: 0.9;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .floating-cart-info .fc-total {
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    /* Cart Drawer (Sağdan Açılan Panel) */
+    .cart-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .cart-drawer-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .cart-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: 440px;
+      background: #fff;
+      z-index: 1001;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -12px 0 36px rgba(0, 0, 0, 0.2);
+    }
+    .cart-drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--sand-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--sand-50);
+    }
+    .drawer-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .drawer-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+    .btn-close-drawer {
+      background: none;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: var(--ink-500);
+      transition: all 0.15s ease;
+    }
+    .btn-close-drawer:hover {
+      background: var(--sand-200);
+      color: var(--ink-900);
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+    .cart-empty-state {
+      text-align: center;
+      padding: 60px 16px;
+      color: var(--ink-500);
+    }
+    .cart-empty-icon {
+      font-size: 3rem;
+      margin-bottom: 14px;
+      opacity: 0.6;
+    }
+    .cart-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .cart-item-card {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      background: var(--sand-50);
+      border: 1px solid var(--sand-200);
+      gap: 12px;
+    }
+    .cart-item-info {
+      flex: 1;
+    }
+    .cart-item-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--ink-900);
+    }
+    .cart-item-size {
+      display: inline-block;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--ginger-600);
+      background: var(--ginger-50);
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-top: 3px;
+    }
+    .cart-item-price-unit {
+      font-size: 0.8rem;
+      color: var(--ink-500);
+      margin-top: 4px;
+    }
+    .cart-item-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .qty-stepper {
+      display: inline-flex;
+      align-items: center;
+      background: #fff;
+      border: 1px solid var(--sand-300);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      background: none;
+      border: none;
+      font-weight: 700;
+      color: var(--ink-700);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background 0.15s ease;
+    }
+    .qty-btn:hover {
+      background: var(--sand-100);
+      color: var(--ginger-600);
+    }
+    .qty-value {
+      width: 24px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .cart-item-line-total {
+      font-weight: 800;
+      font-size: 0.98rem;
+      color: var(--ink-900);
+    }
+
+    .drawer-footer {
+      padding: 20px 24px;
+      border-top: 1px solid var(--sand-200);
+      background: var(--sand-50);
+    }
+    .drawer-summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      color: var(--ink-600);
+    }
+    .drawer-summary-row.total {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--ink-900);
+      border-top: 1px dashed var(--sand-300);
+      padding-top: 12px;
+      margin-top: 10px;
+      margin-bottom: 16px;
+    }
+    .drawer-summary-row .free-tag {
+      color: var(--success);
+      font-weight: 700;
+    }
+    .btn-checkout-action {
+      width: 100%;
+      background: var(--ginger-500);
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: var(--radius-full);
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(216, 106, 26, 0.35);
+      transition: all 0.2s ease;
+    }
+    .btn-checkout-action:hover {
+      background: var(--ginger-600);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(216, 106, 26, 0.45);
+    }
+
+    /* Checkout & Tracking Modal Styles */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      z-index: 1100;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .modal-backdrop.open {
+      display: grid;
+    }
+    .modal-dialog-box {
+      background: #fff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 520px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalSlideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-top {
+      padding: 18px 24px;
+      background: var(--sand-50);
+      border-bottom: 1px solid var(--sand-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-heading {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+    .modal-content-inner {
+      padding: 24px;
+    }
+
+    /* Delivery Type Tabs in Modal */
+    .delivery-type-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: var(--sand-100);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+    }
+    .delivery-tab-btn {
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--ink-600);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .delivery-tab-btn.active {
+      background: #fff;
+      color: var(--ginger-600);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-group-modal {
+      margin-bottom: 16px;
+    }
+    .form-label-modal {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--ink-700);
+      margin-bottom: 6px;
+    }
+    .form-input-modal, .form-textarea-modal {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--sand-300);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.92rem;
+      transition: border-color 0.15s ease;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    .form-input-modal:focus, .form-textarea-modal:focus {
+      outline: none;
+      border-color: var(--ginger-500);
+      box-shadow: 0 0 0 3px rgba(216, 106, 26, 0.12);
+    }
+
+    /* Payment Radio Cards */
+    .payment-options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .payment-option-card {
+      border: 1.5px solid var(--sand-200);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--ink-800);
+      transition: all 0.15s ease;
+    }
+    .payment-option-card.active {
+      border-color: var(--ginger-500);
+      background: var(--ginger-50);
+      color: var(--ginger-600);
+    }
+
+    /* Tracking Stepper */
+    .tracking-status-hero {
+      text-align: center;
+      padding: 20px 16px;
+      background: var(--sand-50);
+      border-radius: var(--radius-md);
+      margin-bottom: 24px;
+    }
+    .tracking-badge-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+    .tracking-status-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--ink-900);
+    }
+    .tracking-status-desc {
+      font-size: 0.88rem;
+      color: var(--ink-600);
+    }
+
+    .tracking-stepper-wrap {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin-bottom: 28px;
+      padding: 0 8px;
+    }
+    .tracking-stepper-wrap::before {
+      content: "";
+      position: absolute;
+      top: 18px;
+      left: 36px;
+      right: 36px;
+      height: 3px;
+      background: var(--sand-200);
+      z-index: 1;
+    }
+    .tracking-stepper-progress {
+      position: absolute;
+      top: 18px;
+      left: 36px;
+      height: 3px;
+      background: var(--ginger-500);
+      z-index: 2;
+      transition: width 0.4s ease;
+    }
+    .step-item {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 60px;
+    }
+    .step-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid var(--sand-300);
+      display: grid;
+      place-items: center;
+      font-size: 0.85rem;
+      color: var(--ink-400);
+      font-weight: 800;
+      transition: all 0.3s ease;
+    }
+    .step-item.active .step-dot {
+      border-color: var(--ginger-500);
+      color: var(--ginger-600);
+      background: var(--ginger-50);
+      transform: scale(1.1);
+    }
+    .step-item.completed .step-dot {
+      background: var(--ginger-500);
+      border-color: var(--ginger-500);
+      color: #fff;
+    }
+    .step-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--ink-500);
+      text-align: center;
+      line-height: 1.2;
+    }
+    .step-item.active .step-label {
+      color: var(--ginger-600);
+    }
+    .step-item.completed .step-label {
+      color: var(--ink-800);
+    }
+
+    /* Toast Notification */
+    .toast-pill {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #181412;
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      z-index: 2000;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .toast-pill.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .toast-pill a {
+      color: var(--ginger-400);
+      text-decoration: underline;
+      font-weight: 700;
+      margin-left: 6px;
+    }
   </style>
 </head>
 <body>
@@ -1242,6 +1852,18 @@
       </nav>
 
       <div class="header-actions">
+        <button type="button" class="btn-header-track" id="btnHeaderTrack" onclick="openTrackingModal()" title="Canlı Sipariş Takibi">
+          🛵 Siparişim Nerede?
+        </button>
+        <button type="button" class="btn-header-cart" id="btnHeaderCart" onclick="openCartDrawer()" title="Sepetimi Görüntüle">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span>Sepetim</span>
+          <span class="cart-badge-pill" id="headerCartBadge">0</span>
+        </button>
         <a href="tel:02163370201" class="btn-phone" title="Hemen Ara">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
@@ -1451,8 +2073,31 @@
         <p class="section-sub">Kapınıza Gelsin</p>
         <h2 class="section-title">Online Sipariş Kanalları</h2>
         <p class="section-desc">
-          İster doğrudan fırınımızı arayın, ister favori yemek uygulamanız üzerinden sipariş verin. Sıcak ve taze kapınızda.
+          İster doğrudan web sitemizden canlı takip ile, ister telefonla ya da favori yemek uygulamanız üzerinden sipariş verin. Sıcak ve taze kapınızda.
         </p>
+      </div>
+
+      <!-- Doğrudan Web Siparişi Banner / Kartı -->
+      <div style="background: linear-gradient(135deg, #fff7f2, #ffe6d4); border: 2px solid var(--ginger-400); border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; box-shadow: 0 8px 24px rgba(216, 106, 26, 0.12);">
+        <div style="max-width: 600px;">
+          <div style="display: inline-flex; align-items: center; gap: 6px; background: var(--ginger-500); color: #fff; font-size: 0.76rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; margin-bottom: 8px;">
+            En Hızlı & Doğrudan Fırından
+          </div>
+          <h3 style="font-family: var(--font-display); font-size: 1.45rem; font-weight: 700; color: var(--ink-900); margin-bottom: 6px;">
+            Sitemizden Canlı Sipariş Verin
+          </h3>
+          <p style="font-size: 0.92rem; color: var(--ink-700); margin: 0;">
+            Menüden pizzanızı ve boyutunuzu seçin, sepetinize ekleyin; mutfağımız anında fırına versin ve canlı olarak takip edin.
+          </p>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button type="button" onclick="openCartDrawer()" class="btn-primary" style="padding: 13px 26px; font-size: 0.96rem; cursor: pointer;">
+            🛒 Sepeti Aç
+          </button>
+          <a href="#menu" class="btn-primary" style="background: var(--ink-900); padding: 13px 24px; font-size: 0.96rem;">
+            🍕 Menüden Seç
+          </a>
+        </div>
       </div>
 
       <div class="hub-grid">
@@ -1653,14 +2298,165 @@
         </svg>
         Telefon
       </a>
-      <a href="#menu" class="btn-mobile-order">
+      <button type="button" class="btn-mobile-order" onclick="openCartDrawer()" style="cursor:pointer; border:none; width:100%; font-family:inherit;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2L2 22h20L12 2z"/>
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
         </svg>
-        Menüyü Gör
-      </a>
+        <span>Sepetim (<span id="mobileCartCount">0</span>)</span>
+      </button>
     </div>
   </aside>
+
+  <!-- Yüzen Sepet Butonu (Desktop & Tablet) -->
+  <button type="button" class="floating-cart-pill" id="floatingCartBtn" onclick="openCartDrawer()" title="Sepeti Aç">
+    <div class="floating-cart-icon-box">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+      <span class="floating-cart-badge" id="floatingCartBadge">0</span>
+    </div>
+    <div class="floating-cart-info">
+      <span class="fc-title">Sepetim</span>
+      <span class="fc-total" id="floatingCartTotal">0 ₺</span>
+    </div>
+  </button>
+
+  <!-- Sepet Çekmecesi (Slide-Over Drawer) -->
+  <div class="cart-drawer-overlay" id="cartOverlay" onclick="closeCartDrawer()"></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-label="Sipariş Sepeti">
+    <div class="drawer-header">
+      <div class="drawer-title-group">
+        <span style="font-size: 1.4rem;">🛒</span>
+        <h2 class="drawer-title">Sipariş Sepetiniz</h2>
+      </div>
+      <button type="button" class="btn-close-drawer" onclick="closeCartDrawer()" aria-label="Sepeti Kapat">✕</button>
+    </div>
+
+    <div class="drawer-body" id="cartDrawerBody">
+      <!-- Dinamik sepet içeriği renderCartDrawer() ile doldurulur -->
+    </div>
+
+    <div class="drawer-footer" id="cartDrawerFooter">
+      <div class="drawer-summary-row">
+        <span>Ara Toplam</span>
+        <span id="cartDrawerSubtotal">0 ₺</span>
+      </div>
+      <div class="drawer-summary-row">
+        <span>Paket Servis / Teslimat</span>
+        <span class="free-tag">ÜCRETSİZ</span>
+      </div>
+      <div class="drawer-summary-row total">
+        <span>Genel Toplam</span>
+        <span id="cartDrawerTotal">0 ₺</span>
+      </div>
+      <button type="button" class="btn-checkout-action" id="btnOpenCheckout" onclick="openCheckoutModal()">
+        <span>Siparişi Tamamla</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Sipariş Oluşturma / Checkout Modalı -->
+  <div class="modal-backdrop" id="checkoutModalBackdrop" onclick="handleModalBackdropClick(event, 'checkoutModalBackdrop')">
+    <div class="modal-dialog-box" role="dialog" aria-modal="true" aria-labelledby="checkoutModalTitle">
+      <div class="modal-top">
+        <h2 class="modal-heading" id="checkoutModalTitle">🚀 Siparişi Tamamla</h2>
+        <button type="button" class="btn-close-drawer" onclick="closeCheckoutModal()">✕</button>
+      </div>
+
+      <div class="modal-content-inner">
+        <!-- Teslimat Türü Seçici -->
+        <div class="delivery-type-selector">
+          <button type="button" class="delivery-tab-btn active" id="tabDelivery" onclick="setDeliveryType('delivery')">
+            🛵 Adrese Paket Servis
+          </button>
+          <button type="button" class="delivery-tab-btn" id="tabTakeaway" onclick="setDeliveryType('takeaway')">
+            🥡 Restorandan Gel-Al
+          </button>
+        </div>
+
+        <form id="checkoutForm" onsubmit="handleCheckoutSubmit(event)">
+          <div class="form-group-modal">
+            <label class="form-label-modal" for="custName">Adınız Soyadınız *</label>
+            <input type="text" id="custName" class="form-input-modal" placeholder="Örn: Ahmet Yılmaz" required>
+          </div>
+
+          <div class="form-group-modal">
+            <label class="form-label-modal" for="custPhone">Telefon Numaranız *</label>
+            <input type="tel" id="custPhone" class="form-input-modal" placeholder="05XX XXX XX XX" required>
+          </div>
+
+          <div class="form-group-modal" id="groupAddress">
+            <label class="form-label-modal" for="custAddress">Teslimat Adresiniz *</label>
+            <textarea id="custAddress" class="form-textarea-modal" rows="2" placeholder="Göztepe Mah. ... Sok. No:.. Daire:.. Kadıköy" required></textarea>
+            <div style="font-size: 0.74rem; color: var(--ink-500); margin-top: 4px;">Kadıköy Göztepe ve çevre mahallelere sıcak teslimat yapılmaktadır.</div>
+          </div>
+
+          <div class="form-group-modal">
+            <label class="form-label-modal" for="custNotes">Sipariş Notu (Opsiyonel)</label>
+            <input type="text" id="custNotes" class="form-input-modal" placeholder="Örn: Zili çalmayın lütfen / Acı sos bol olsun">
+          </div>
+
+          <div class="form-group-modal">
+            <label class="form-label-modal">Ödeme Yöntemi</label>
+            <div class="payment-options-grid">
+              <label class="payment-option-card active" id="cardPayCard">
+                <input type="radio" name="paymentOption" value="door_card" checked style="display:none;" onchange="setPaymentMethod('door_card')">
+                <span>💳 Kapıda Kredi Kartı</span>
+              </label>
+              <label class="payment-option-card" id="cardPayCash">
+                <input type="radio" name="paymentOption" value="door_cash" style="display:none;" onchange="setPaymentMethod('door_cash')">
+                <span>💵 Kapıda Nakit</span>
+              </label>
+            </div>
+          </div>
+
+          <div style="background: var(--sand-50); border: 1px dashed var(--sand-300); padding: 12px 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <span style="font-size: 0.88rem; color: var(--ink-600); font-weight: 600;">Ödenecek Tutar</span>
+            <span id="checkoutSummaryTotal" style="font-size: 1.25rem; font-weight: 800; color: var(--ginger-600);">0 ₺</span>
+          </div>
+
+          <div style="display: flex; gap: 10px;">
+            <button type="button" onclick="closeCheckoutModal(); openCartDrawer();" class="btn-primary" style="flex: 1; background: var(--sand-200); color: var(--ink-800); box-shadow: none;">
+              ← Sepete Dön
+            </button>
+            <button type="submit" id="btnSubmitOrder" class="btn-primary" style="flex: 2;">
+              <span>Siparişi Onayla & Gönder</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Canlı Sipariş Takip Modalı -->
+  <div class="modal-backdrop" id="trackingModalBackdrop" onclick="handleModalBackdropClick(event, 'trackingModalBackdrop')">
+    <div class="modal-dialog-box" role="dialog" aria-modal="true" aria-labelledby="trackingModalTitle">
+      <div class="modal-top">
+        <div>
+          <h2 class="modal-heading" id="trackingModalTitle">🛵 Sipariş Takibi</h2>
+          <div style="font-size: 0.78rem; color: var(--ink-500); margin-top: 2px;" id="trackingOrderNum">Sipariş Yükleniyor...</div>
+        </div>
+        <button type="button" class="btn-close-drawer" onclick="closeTrackingModal()">✕</button>
+      </div>
+
+      <div class="modal-content-inner" id="trackingModalBody">
+        <!-- Dinamik takip görünümü renderTrackingView() ile buraya doldurulur -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Bildirimi -->
+  <div class="toast-pill" id="toastPill">
+    <span id="toastText">Ürün sepete eklendi!</span>
+    <a href="javascript:void(0)" onclick="openCartDrawer()">Sepete Git →</a>
+  </div>
 
   <!-- ========================================================================
        Menu API & Dinamik Veri Yükleyici
@@ -1668,11 +2464,464 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/menu-api.js"></script>
+  <script src="js/order-api.js"></script>
   <script>
     let menuData = [];
     const cardSelectedSizes = {};
     let currentFilter = "all";
     let currentSearchTerm = "";
+
+    // ========================================================================
+    // SEPET & SİPARİŞ DURUM YÖNETİMİ
+    // ========================================================================
+    let currentDeliveryType = "delivery"; // 'delivery' veya 'takeaway'
+    let currentPaymentMethod = "door_card"; // 'door_card' veya 'door_cash'
+    let activeTrackingSubscription = null;
+    let toastTimeout = null;
+
+    // Toast Göster
+    function showToast(message) {
+      const toast = document.getElementById("toastPill");
+      const text = document.getElementById("toastText");
+      if (!toast || !text) return;
+      text.textContent = message;
+      toast.classList.add("show");
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 3500);
+    }
+
+    // Ürünü Sepete Ekle
+    window.handleAddToCart = function(itemId) {
+      const item = menuData.find(i => i.id === itemId);
+      if (!item || item.isAvailable === false) return;
+
+      const sizeKey = cardSelectedSizes[itemId] || "medium";
+      Cart.addItem(item, sizeKey);
+
+      const sizeName = item.prices ? (sizeKey === "small" ? "Small" : (sizeKey === "medium" ? "Medium" : "XL")) : "";
+      showToast(`🍕 ${item.name} ${sizeName ? '(' + sizeName + ')' : ''} sepete eklendi!`);
+      if (window.SoundAlert) SoundAlert.playBell();
+    };
+
+    // Sepet Çekmecesini Aç / Kapat
+    window.openCartDrawer = function() {
+      renderCartDrawer();
+      const overlay = document.getElementById("cartOverlay");
+      const drawer = document.getElementById("cartDrawer");
+      if (overlay) overlay.classList.add("open");
+      if (drawer) drawer.classList.add("open");
+      document.body.style.overflow = "hidden";
+    };
+
+    window.closeCartDrawer = function() {
+      const overlay = document.getElementById("cartOverlay");
+      const drawer = document.getElementById("cartDrawer");
+      if (overlay) overlay.classList.remove("open");
+      if (drawer) drawer.classList.remove("open");
+      document.body.style.overflow = "";
+    };
+
+    // Sepet Çekmecesini Render Et
+    function renderCartDrawer() {
+      const body = document.getElementById("cartDrawerBody");
+      const footer = document.getElementById("cartDrawerFooter");
+      const subtotalElem = document.getElementById("cartDrawerSubtotal");
+      const totalElem = document.getElementById("cartDrawerTotal");
+      if (!body) return;
+
+      const items = Cart.getItems();
+      const total = Cart.getTotal();
+
+      if (items.length === 0) {
+        body.innerHTML = `
+          <div class="cart-empty-state">
+            <div class="cart-empty-icon">🍕</div>
+            <h3 style="font-family: var(--font-display); font-size: 1.2rem; color: var(--ink-900); margin-bottom: 6px;">Sepetiniz Henüz Boş</h3>
+            <p style="font-size: 0.88rem; margin-bottom: 20px;">Menümüzdeki taş fırın artisan lezzetlerden dilediğinizi ekleyin.</p>
+            <button type="button" class="btn-primary" onclick="closeCartDrawer(); window.location.hash='#menu';">
+              Menüye Göz At
+            </button>
+          </div>
+        `;
+        if (footer) footer.style.display = "none";
+        return;
+      }
+
+      if (footer) footer.style.display = "block";
+      if (subtotalElem) subtotalElem.textContent = `${total} ₺`;
+      if (totalElem) totalElem.textContent = `${total} ₺`;
+
+      body.innerHTML = `
+        <div class="cart-items-list">
+          ${items.map(item => `
+            <div class="cart-item-card">
+              <div class="cart-item-info">
+                <div class="cart-item-name">${item.name}</div>
+                ${item.sizeLabel ? `<span class="cart-item-size">${item.sizeLabel}</span>` : ''}
+                <div class="cart-item-price-unit">${item.unitPrice} ₺ / adet</div>
+              </div>
+              <div class="cart-item-controls">
+                <div class="qty-stepper">
+                  <button type="button" class="qty-btn" onclick="handleQtyChange('${item.cartItemId}', -1)" title="Azalt">−</button>
+                  <span class="qty-value">${item.quantity}</span>
+                  <button type="button" class="qty-btn" onclick="handleQtyChange('${item.cartItemId}', 1)" title="Artır">+</button>
+                </div>
+                <div class="cart-item-line-total">${item.unitPrice * item.quantity} ₺</div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    window.handleQtyChange = function(cartItemId, delta) {
+      Cart.updateQuantity(cartItemId, delta);
+      renderCartDrawer();
+    };
+
+    // Sepet Güncellendiğinde Sayaçları ve Butonları Senkronize Et
+    function syncCartBadges() {
+      const count = Cart.getCount();
+      const total = Cart.getTotal();
+
+      const floatingBadge = document.getElementById("floatingCartBadge");
+      const floatingTotal = document.getElementById("floatingCartTotal");
+      const headerBadge = document.getElementById("headerCartBadge");
+      const mobileCount = document.getElementById("mobileCartCount");
+      const floatingBtn = document.getElementById("floatingCartBtn");
+
+      if (floatingBadge) floatingBadge.textContent = count;
+      if (floatingTotal) floatingTotal.textContent = `${total} ₺`;
+      if (headerBadge) headerBadge.textContent = count;
+      if (mobileCount) mobileCount.textContent = count;
+
+      if (floatingBtn) {
+        floatingBtn.style.display = count > 0 ? "flex" : "none";
+      }
+    }
+
+    // Modal Arka Planına Tıklayınca Kapatma
+    window.handleModalBackdropClick = function(event, modalId) {
+      if (event.target && event.target.id === modalId) {
+        if (modalId === "checkoutModalBackdrop") closeCheckoutModal();
+        if (modalId === "trackingModalBackdrop") closeTrackingModal();
+      }
+    };
+
+    // ========================================================================
+    // CHECKOUT (SİPARİŞİ TAMAMLA)
+    // ========================================================================
+    window.openCheckoutModal = function() {
+      const items = Cart.getItems();
+      if (items.length === 0) {
+        alert("Sepetiniz boş. Lütfen menüden ürün ekleyin.");
+        return;
+      }
+      closeCartDrawer();
+
+      const modal = document.getElementById("checkoutModalBackdrop");
+      const summaryTotal = document.getElementById("checkoutSummaryTotal");
+      if (summaryTotal) summaryTotal.textContent = `${Cart.getTotal()} ₺`;
+      if (modal) modal.classList.add("open");
+      document.body.style.overflow = "hidden";
+    };
+
+    window.closeCheckoutModal = function() {
+      const modal = document.getElementById("checkoutModalBackdrop");
+      if (modal) modal.classList.remove("open");
+      document.body.style.overflow = "";
+    };
+
+    window.setDeliveryType = function(type) {
+      currentDeliveryType = type;
+      const tabDelivery = document.getElementById("tabDelivery");
+      const tabTakeaway = document.getElementById("tabTakeaway");
+      const groupAddress = document.getElementById("groupAddress");
+      const custAddress = document.getElementById("custAddress");
+
+      if (type === "delivery") {
+        if (tabDelivery) tabDelivery.classList.add("active");
+        if (tabTakeaway) tabTakeaway.classList.remove("active");
+        if (groupAddress) groupAddress.style.display = "block";
+        if (custAddress) custAddress.required = true;
+      } else {
+        if (tabDelivery) tabDelivery.classList.remove("active");
+        if (tabTakeaway) tabTakeaway.classList.add("active");
+        if (groupAddress) groupAddress.style.display = "none";
+        if (custAddress) custAddress.required = false;
+      }
+    };
+
+    window.setPaymentMethod = function(method) {
+      currentPaymentMethod = method;
+      const cardPayCard = document.getElementById("cardPayCard");
+      const cardPayCash = document.getElementById("cardPayCash");
+      if (method === "door_card") {
+        if (cardPayCard) cardPayCard.classList.add("active");
+        if (cardPayCash) cardPayCash.classList.remove("active");
+      } else {
+        if (cardPayCard) cardPayCard.classList.remove("active");
+        if (cardPayCash) cardPayCash.classList.add("active");
+      }
+    };
+
+    window.handleCheckoutSubmit = async function(event) {
+      event.preventDefault();
+
+      const name = document.getElementById("custName").value.trim();
+      const phone = document.getElementById("custPhone").value.trim();
+      const address = currentDeliveryType === "delivery" ? document.getElementById("custAddress").value.trim() : "Restorandan Gel-Al";
+      const notes = document.getElementById("custNotes").value.trim();
+      const items = Cart.getItems();
+
+      if (!name || !phone) {
+        alert("Lütfen adınızı ve telefon numaranızı eksiksiz girin.");
+        return;
+      }
+
+      if (currentDeliveryType === "delivery" && !address) {
+        alert("Lütfen teslimat adresinizi girin.");
+        return;
+      }
+
+      const submitBtn = document.getElementById("btnSubmitOrder");
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span>Sipariş İletiliyor...</span>`;
+      }
+
+      try {
+        const order = await OrderAPI.createOrder({
+          name,
+          phone,
+          deliveryType: currentDeliveryType,
+          address,
+          notes,
+          paymentMethod: currentPaymentMethod
+        }, items);
+
+        closeCheckoutModal();
+        if (window.SoundAlert) SoundAlert.playBell();
+        openTrackingModal(order.id);
+        updateActiveOrderHeaderButton();
+      } catch (err) {
+        console.error("Order creation error:", err);
+        alert("Sipariş oluşturulurken bir hata oluştu. Lütfen tekrar deneyin veya telefonla arayın: 0216 337 02 01");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<span>Siparişi Onayla & Gönder</span>`;
+        }
+      }
+    };
+
+    // ========================================================================
+    // CANLI SİPARİŞ TAKİBİ (TRACKING)
+    // ========================================================================
+    window.openTrackingModal = async function(orderId) {
+      const targetId = orderId || OrderAPI.getActiveOrderId();
+      const modal = document.getElementById("trackingModalBackdrop");
+      const body = document.getElementById("trackingModalBody");
+      const numElem = document.getElementById("trackingOrderNum");
+
+      if (!targetId) {
+        if (modal) modal.classList.add("open");
+        if (body) {
+          body.innerHTML = `
+            <div style="text-align: center; padding: 40px 16px;">
+              <div style="font-size: 2.5rem; margin-bottom: 12px;">🔍</div>
+              <h3 style="font-family: var(--font-display); font-size: 1.2rem; color: var(--ink-900); margin-bottom: 6px;">Aktif Sipariş Bulunamadı</h3>
+              <p style="font-size: 0.88rem; color: var(--ink-600); margin-bottom: 20px;">Henüz bir sipariş vermediniz veya siparişiniz teslim edildi.</p>
+              <button type="button" class="btn-primary" onclick="closeTrackingModal(); window.location.hash='#menu';">
+                Menüye Git ve Sipariş Ver
+              </button>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      if (modal) modal.classList.add("open");
+      document.body.style.overflow = "hidden";
+      if (body) body.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--ink-500);">Sipariş durumu sorgulanıyor...</div>`;
+
+      await loadAndRenderTracking(targetId);
+
+      // Gerçek zamanlı dinleyiciyi başlat
+      if (activeTrackingSubscription) activeTrackingSubscription();
+      activeTrackingSubscription = OrderAPI.subscribe((payload) => {
+        loadAndRenderTracking(targetId);
+      });
+    };
+
+    window.closeTrackingModal = function() {
+      const modal = document.getElementById("trackingModalBackdrop");
+      if (modal) modal.classList.remove("open");
+      document.body.style.overflow = "";
+      if (activeTrackingSubscription) {
+        activeTrackingSubscription();
+        activeTrackingSubscription = null;
+      }
+    };
+
+    async function loadAndRenderTracking(orderId) {
+      const order = await OrderAPI.getOrder(orderId);
+      const body = document.getElementById("trackingModalBody");
+      const numElem = document.getElementById("trackingOrderNum");
+      if (!body) return;
+
+      if (!order) {
+        body.innerHTML = `
+          <div style="text-align: center; padding: 40px 16px;">
+            <p>Sipariş bulunamadı veya süresi doldu.</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (numElem) {
+        numElem.textContent = `Sipariş #${order.order_number || order.id.slice(-4)} · ${new Date(order.created_at || Date.now()).toLocaleTimeString("tr-TR", {hour: "2-digit", minute:"2-digit"})}`;
+      }
+
+      const status = order.status || "new";
+      const isTakeaway = order.delivery_type === "takeaway";
+
+      // Durum Konfigürasyonu
+      const statusConfigs = {
+        new: {
+          badgeText: "🔔 Sipariş Alındı",
+          badgeBg: "rgba(230, 126, 34, 0.15)",
+          badgeColor: "#d86a1a",
+          title: "Siparişiniz Alındı!",
+          desc: "Mutfağımız siparişinizi inceleyip onaylıyor. Birazdan taş fırına verilecek.",
+          stepIndex: 1
+        },
+        preparing: {
+          badgeText: "🔥 Taş Fırında",
+          badgeBg: "rgba(243, 156, 18, 0.18)",
+          badgeColor: "#e67e22",
+          title: "Taş Fırında Pişiyor!",
+          desc: "48 saat dinlenmiş hamurunuz açıldı, taze malzemelerle fırına sürüldü.",
+          stepIndex: 2
+        },
+        on_way: {
+          badgeText: isTakeaway ? "🥡 Hazır / Gel-Al" : "🛵 Kuryede / Yolda",
+          badgeBg: "rgba(52, 152, 219, 0.18)",
+          badgeColor: "#2980b9",
+          title: isTakeaway ? "Siparişiniz Hazır!" : "Kuryemiz Yola Çıktı!",
+          desc: isTakeaway ? "Göztepe Rıdvanpaşa fırınımızdan sıcacık teslim alabilirsiniz." : "Özel ısı korumalı çantamızla sıcacık kapınıza doğru geliyor.",
+          stepIndex: 3
+        },
+        delivered: {
+          badgeText: "✓ Teslim Edildi",
+          badgeBg: "rgba(46, 204, 113, 0.18)",
+          badgeColor: "#27ae60",
+          title: "Afiyet Olsun!",
+          desc: "Siparişiniz başarıyla teslim edildi. Bizi tercih ettiğiniz için teşekkür ederiz.",
+          stepIndex: 4
+        },
+        cancelled: {
+          badgeText: "✕ İptal Edildi",
+          badgeBg: "rgba(231, 76, 60, 0.18)",
+          badgeColor: "#c0392b",
+          title: "Sipariş İptal Edildi",
+          desc: "Sipariş iptal edilmiştir. Detaylı bilgi için bizi arayabilirsiniz.",
+          stepIndex: 0
+        }
+      };
+
+      const cfg = statusConfigs[status] || statusConfigs.new;
+      const progressPercent = cfg.stepIndex === 1 ? 0 : (cfg.stepIndex === 2 ? 33 : (cfg.stepIndex === 3 ? 66 : 100));
+
+      const items = order.items || [];
+      const paymentLabel = order.payment_method === "door_cash" ? "Kapıda Nakit" : "Kapıda Kredi Kartı";
+      const deliveryLabel = isTakeaway ? "Restorandan Gel-Al" : "Adrese Paket Servis";
+
+      body.innerHTML = `
+        <div class="tracking-status-hero">
+          <span class="tracking-badge-live" style="background:${cfg.badgeBg}; color:${cfg.badgeColor};">
+            ${cfg.badgeText}
+          </span>
+          <h3 class="tracking-status-title">${cfg.title}</h3>
+          <p class="tracking-status-desc">${cfg.desc}</p>
+        </div>
+
+        ${status !== 'cancelled' ? `
+          <div class="tracking-stepper-wrap">
+            <div class="tracking-stepper-progress" style="width: calc(${progressPercent}% * 0.78);"></div>
+            <div class="step-item ${cfg.stepIndex >= 1 ? 'completed' : ''} ${cfg.stepIndex === 1 ? 'active' : ''}">
+              <div class="step-dot">1</div>
+              <span class="step-label">Alındı</span>
+            </div>
+            <div class="step-item ${cfg.stepIndex >= 2 ? 'completed' : ''} ${cfg.stepIndex === 2 ? 'active' : ''}">
+              <div class="step-dot">2</div>
+              <span class="step-label">Fırında</span>
+            </div>
+            <div class="step-item ${cfg.stepIndex >= 3 ? 'completed' : ''} ${cfg.stepIndex === 3 ? 'active' : ''}">
+              <div class="step-dot">3</div>
+              <span class="step-label">${isTakeaway ? 'Hazır' : 'Yolda'}</span>
+            </div>
+            <div class="step-item ${cfg.stepIndex >= 4 ? 'completed' : ''}">
+              <div class="step-dot">4</div>
+              <span class="step-label">Teslim</span>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Sipariş Detay Kutusu -->
+        <div style="background: var(--sand-50); border: 1px solid var(--sand-200); border-radius: var(--radius-md); padding: 16px; margin-bottom: 20px;">
+          <div style="font-weight: 700; font-size: 0.92rem; color: var(--ink-900); margin-bottom: 10px; border-bottom: 1px dashed var(--sand-300); padding-bottom: 8px;">
+            Sipariş İçeriği
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; margin-bottom: 12px;">
+            ${items.map(item => `
+              <div style="display: flex; justify-content: space-between;">
+                <span>${item.quantity}x ${item.item_name} ${item.size_label ? '(' + item.size_label + ')' : ''}</span>
+                <strong>${item.total_price || (item.unit_price * item.quantity)} ₺</strong>
+              </div>
+            `).join("")}
+          </div>
+          <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--sand-300); padding-top: 10px; font-weight: 800; font-size: 1.05rem; color: var(--ink-900);">
+            <span>Toplam Tutar:</span>
+            <span style="color: var(--ginger-600);">${order.total_amount} ₺</span>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--ink-500); margin-top: 6px;">
+            Teslimat: <strong>${deliveryLabel}</strong> · Ödeme: <strong>${paymentLabel}</strong>
+          </div>
+          ${order.delivery_address && !isTakeaway ? `
+            <div style="font-size: 0.78rem; color: var(--ink-600); margin-top: 4px;">
+              Adres: ${order.delivery_address}
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- İletişim Butonları -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <a href="tel:02163370201" class="btn-primary" style="background: var(--ink-900); font-size: 0.85rem; padding: 11px; justify-content: center;">
+            📞 Fırını Ara
+          </a>
+          <a href="https://wa.me/902163370201" target="_blank" rel="noopener" class="btn-primary" style="background: #25D366; font-size: 0.85rem; padding: 11px; justify-content: center;">
+            💬 WhatsApp
+          </a>
+        </div>
+      `;
+    }
+
+    function updateActiveOrderHeaderButton() {
+      const activeId = OrderAPI.getActiveOrderId();
+      const trackBtn = document.getElementById("btnHeaderTrack");
+      if (trackBtn) {
+        if (activeId) {
+          trackBtn.classList.add("has-active");
+          trackBtn.innerHTML = `🛵 Siparişim Nerede? <span style="font-size:0.7rem; background:#27ae60; color:#fff; padding:1px 5px; border-radius:999px;">Aktif</span>`;
+        } else {
+          trackBtn.classList.remove("has-active");
+          trackBtn.textContent = "🛵 Siparişim Nerede?";
+        }
+      }
+    }
 
     function renderMenu(items) {
       const grid = document.getElementById("menuGrid");
@@ -1736,12 +2985,12 @@
                   <span class="price-label" id="size-label-${item.id}">${sizeLabels[currentSize] || ''}</span>
                 </div>
                 ${isAvailable ? `
-                  <a href="#siparis" class="btn-card-order" title="Sipariş Ver">
-                    <span>Sipariş</span>
+                  <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="Sepete Ekle" style="border:none; cursor:pointer;">
+                    <span>+ Sepete Ekle</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M5 12h14M12 5l7 7-7 7"/>
                     </svg>
-                  </a>
+                  </button>
                 ` : `
                   <span style="font-size:0.8rem; font-weight:700; color:var(--ink-400); padding: 8px 12px; background:var(--sand-100); border-radius:999px;">
                     Geçici Olarak Yok
@@ -1768,12 +3017,12 @@
                 <span class="price-label">Porsiyon Fiyatı</span>
               </div>
               ${isAvailable ? `
-                <a href="#siparis" class="btn-card-order" title="Sipariş Ver">
-                  <span>Sipariş</span>
+                <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="Sepete Ekle" style="border:none; cursor:pointer;">
+                  <span>+ Sepete Ekle</span>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
-                </a>
+                </button>
               ` : `
                 <span style="font-size:0.8rem; font-weight:700; color:var(--ink-400); padding: 8px 12px; background:var(--sand-100); border-radius:999px;">
                   Geçici Olarak Yok
@@ -1850,6 +3099,14 @@
 
     document.addEventListener("DOMContentLoaded", () => {
       loadMenuFromAPI();
+      syncCartBadges();
+      updateActiveOrderHeaderButton();
+
+      // Sepet değiştiğinde UI senkronizasyonu
+      window.addEventListener("ginger-cart-updated", () => {
+        syncCartBadges();
+        renderCartDrawer();
+      });
 
       // Canlı güncelleme dinleyicisi (Admin panelinde değişiklik yapıldığında)
       window.addEventListener("ginger-menu-updated", (e) => {
