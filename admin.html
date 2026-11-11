@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ginger Pizza — Restoran Yönetim Paneli</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#d86a1a">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Supabase CDN (İsteğe bağlı bulut bağlantısı için) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --white: #ffffff;
+      --bg: #f8f6f2;
+      --surface: #ffffff;
+      --sand-100: #eee7dc;
+      --sand-200: #e0d4c3;
+      --ginger-50: #fff5eb;
+      --ginger-100: #fde8d3;
+      --ginger-500: #d86a1a;
+      --ginger-600: #b8500c;
+      --ink-900: #1c1512;
+      --ink-700: #423630;
+      --ink-500: #716259;
+      --ink-400: #9c8e85;
+      --success: #16883b;
+      --success-bg: #eaf6ed;
+      --danger: #cf222e;
+      --danger-bg: #ffebe9;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --radius-full: 999px;
+
+      --shadow-sm: 0 1px 3px rgba(28, 21, 18, 0.05);
+      --shadow-md: 0 6px 18px rgba(28, 21, 18, 0.06);
+
+      --font-display: "Fraunces", Georgia, serif;
+      --font-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--ink-900);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Giriş Ekranı */
+    .login-container {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--sand-100);
+      border-radius: 24px;
+      padding: 36px 32px;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+    }
+
+    .login-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--ginger-50);
+      color: var(--ginger-600);
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .login-title {
+      font-family: var(--font-display);
+      font-size: 1.85rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .login-title span { color: var(--ginger-500); }
+    .login-desc { color: var(--ink-500); font-size: 0.92rem; margin-bottom: 28px; }
+
+    .form-group {
+      text-align: left;
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--ink-700);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--bg);
+      border: 1px solid var(--sand-200);
+      border-radius: var(--radius-sm);
+      font-size: 0.92rem;
+      color: var(--ink-900);
+      outline: none;
+      font-family: inherit;
+      transition: all 0.18s ease;
+    }
+
+    .form-input:focus {
+      background: var(--white);
+      border-color: var(--ginger-500);
+      box-shadow: 0 0 0 3px var(--ginger-100);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      border-radius: var(--radius-full);
+      background: var(--ginger-500);
+      color: var(--white);
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.18s ease;
+    }
+
+    .btn-login:hover { background: var(--ginger-600); }
+
+    .demo-hint {
+      margin-top: 18px;
+      font-size: 0.82rem;
+      color: var(--ink-400);
+      border-top: 1px solid var(--sand-100);
+      padding-top: 14px;
+    }
+
+    .demo-hint button {
+      background: none;
+      border: none;
+      color: var(--ginger-500);
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Admin Ana Arayüz */
+    .admin-app { display: none; }
+    .admin-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--sand-100);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .admin-header-inner {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .admin-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .admin-brand-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    .admin-brand-title span { color: var(--ginger-500); }
+
+    .admin-pill-tag {
+      background: var(--ginger-50);
+      color: var(--ginger-600);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--ginger-100);
+    }
+
+    .admin-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-header {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--sand-200);
+      background: var(--white);
+      color: var(--ink-700);
+      text-decoration: none;
+      transition: all 0.18s ease;
+    }
+
+    .btn-header:hover { border-color: var(--ginger-500); color: var(--ginger-600); }
+
+    .btn-header-primary {
+      background: var(--ginger-500);
+      color: var(--white);
+      border-color: var(--ginger-500);
+      font-weight: 700;
+    }
+
+    .btn-header-primary:hover {
+      background: var(--ginger-600);
+      color: var(--white);
+    }
+
+    /* İstatistikler */
+    .admin-main {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 28px 24px 60px;
+      width: 100%;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border: 1px solid var(--sand-100);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-label { font-size: 0.82rem; font-weight: 600; color: var(--ink-400); text-transform: uppercase; }
+    .stat-value { font-family: var(--font-display); font-size: 1.85rem; font-weight: 700; color: var(--ink-900); margin-top: 4px; }
+    .stat-sub { font-size: 0.76rem; color: var(--ink-500); margin-top: 2px; }
+
+    /* Filtre ve Araç Çubuğu */
+    .toolbar-card {
+      background: var(--white);
+      border: 1px solid var(--sand-100);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .toolbar-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .category-filter-select {
+      padding: 9px 14px;
+      background: var(--bg);
+      border: 1px solid var(--sand-200);
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      color: var(--ink-900);
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .search-input-admin {
+      padding: 9px 14px;
+      background: var(--bg);
+      border: 1px solid var(--sand-200);
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      width: 260px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .search-input-admin:focus { border-color: var(--ginger-500); background: var(--white); }
+
+    .db-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .db-status-local { background: #fff8e6; color: #b78103; border: 1px solid #f9e2ae; }
+    .db-status-connected { background: var(--success-bg); color: var(--success); border: 1px solid #b7e1cd; }
+
+    /* Ürün Listesi Tablosu */
+    .table-container {
+      background: var(--white);
+      border: 1px solid var(--sand-100);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      box-shadow: var(--shadow-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th {
+      background: var(--bg);
+      padding: 14px 18px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--ink-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--sand-100);
+    }
+
+    td {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--sand-100);
+      vertical-align: middle;
+      font-size: 0.92rem;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #faf8f5; }
+
+    .item-cell-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--ink-900);
+    }
+
+    .item-cell-desc {
+      font-size: 0.8rem;
+      color: var(--ink-400);
+      max-width: 320px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+
+    /* Hızlı Fiyat Düzenleme Kutusu */
+    .price-inputs-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .price-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .price-box-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--ink-400);
+      text-transform: uppercase;
+    }
+
+    .price-field-mini {
+      width: 78px;
+      padding: 6px 8px;
+      border: 1px solid var(--sand-200);
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--ginger-600);
+      outline: none;
+      font-family: inherit;
+    }
+
+    .price-field-mini:focus {
+      border-color: var(--ginger-500);
+      background: var(--white);
+    }
+
+    .btn-quick-save {
+      background: var(--ginger-50);
+      border: 1px solid var(--ginger-200);
+      color: var(--ginger-600);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      align-self: flex-end;
+    }
+
+    .btn-quick-save:hover {
+      background: var(--ginger-500);
+      color: var(--white);
+    }
+
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .25s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background-color: white;
+      transition: .25s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider { background-color: var(--success); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .action-btns {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-action-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--sand-200);
+      background: var(--white);
+      color: var(--ink-700);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action-icon:hover { border-color: var(--ginger-500); color: var(--ginger-600); }
+    .btn-action-delete:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+
+    /* Modallar */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(28, 21, 18, 0.55);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.open { display: grid; }
+
+    .modal-box {
+      width: 100%;
+      max-width: 540px;
+      background: var(--white);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid var(--sand-100);
+    }
+
+    /* Bildirim Toast */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--ink-900);
+      color: var(--white);
+      padding: 12px 20px;
+      border-radius: var(--radius-full);
+      font-size: 0.9rem;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 200;
+    }
+
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .price-inputs-row { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================================================
+       1. GİRİŞ EKRANI (LOGIN)
+       ======================================================================== -->
+  <div id="loginView" class="login-container">
+    <div class="login-card">
+      <div class="login-badge">Restoran Portalı</div>
+      <h1 class="login-title">Ginger <span>Pizza</span></h1>
+      <p class="login-desc">Menü ve fiyat yönetim paneline hoş geldiniz.</p>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="loginEmail">Yönetici E-Postası</label>
+          <input type="email" id="loginEmail" class="form-input" value="admin@gingerpizza.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="loginPass">Şifre</label>
+          <input type="password" id="loginPass" class="form-input" value="ginger123" required>
+        </div>
+        <button type="submit" class="btn-login">Panele Giriş Yap</button>
+      </form>
+
+      <div class="demo-hint">
+        Hızlı test için: <button type="button" id="btnQuickDemo">Tek Tıkla Demo Girişi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       2. ADMİN ANA UYGULAMASI (DASHBOARD)
+       ======================================================================== -->
+  <div id="adminApp" class="admin-app">
+    <!-- Üst Başlık -->
+    <header class="admin-header">
+      <div class="admin-header-inner">
+        <div class="admin-brand">
+          <div class="admin-brand-title">Ginger <span>Pizza</span></div>
+          <span class="admin-pill-tag">Yönetim Paneli</span>
+        </div>
+
+        <div class="admin-nav-actions">
+          <span id="dbStatusBadge" class="db-status-badge db-status-local">● Yerel Test Modu</span>
+          <button type="button" class="btn-header" id="btnOpenDbModal">
+            ⚙️ Veritabanı Ayarı
+          </button>
+          <a href="index.html" target="_blank" class="btn-header" title="Canlı siteyi yeni sekmede açar">
+            🌐 Canlı Siteyi Gör
+          </a>
+          <button type="button" class="btn-header" id="btnLogout">
+            Çıkış Yap
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-main">
+      <!-- İstatistikler -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Toplam Ürün</div>
+          <div class="stat-value" id="statTotal">--</div>
+          <div class="stat-sub">Menüdeki tüm kalemler</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Yayında Olanlar</div>
+          <div class="stat-value" id="statActive" style="color: var(--success);">--</div>
+          <div class="stat-sub">Müşterilerin gördüğü</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tükendi / Gizli</div>
+          <div class="stat-value" id="statHidden" style="color: var(--ink-400);">--</div>
+          <div class="stat-sub">Geçici stok dışı</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pizza Çeşidi</div>
+          <div class="stat-value" id="statPizzas" style="color: var(--ginger-500);">--</div>
+          <div class="stat-sub">Taş fırın seçenekleri</div>
+        </div>
+      </div>
+
+      <!-- Araç Çubuğu -->
+      <div class="toolbar-card">
+        <div class="toolbar-left">
+          <select id="filterCategory" class="category-filter-select">
+            <option value="all">Tüm Kategoriler</option>
+            <option value="imza">İmza Pizzalar</option>
+            <option value="klasik">Klasik Lezzetler</option>
+            <option value="gurme">Gurme & Şarküteri</option>
+            <option value="vejetaryen">Vejetaryen & Mantarlı</option>
+            <option value="yan-urun">Yan Lezzetler & Soslar</option>
+            <option value="tatli-icecek">Tatlı & İçecek</option>
+          </select>
+
+          <input type="text" id="searchAdmin" class="search-input-admin" placeholder="Ürün veya malzeme ara...">
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn-header" id="btnResetDefaults" title="Fiyatları ve ürünleri ilk haline döndürür">
+            ↺ Sıfırla
+          </button>
+          <button type="button" class="btn-header btn-header-primary" id="btnOpenNewItem">
+            + Yeni Ürün Ekle
+          </button>
+        </div>
+      </div>
+
+      <!-- Menü Listesi Tablosu -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Ürün Bilgisi</th>
+              <th>Kategori</th>
+              <th>Fiyatlar (Kutudan Doğrudan Değiştirilebilir)</th>
+              <th style="text-align: center;">Yayında</th>
+              <th style="text-align: right;">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody id="itemsTableBody">
+            <!-- Dinamik doldurulacak -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       3. MODAL: YENİ / DÜZENLE ÜRÜN
+       ======================================================================== -->
+  <div id="itemModal" class="modal-backdrop">
+    <div class="modal-box">
+      <h2 class="modal-title" id="itemModalTitle">Yeni Ürün Ekle</h2>
+      <form id="itemForm">
+        <input type="hidden" id="editItemId">
+
+        <div class="form-group">
+          <label class="form-label" for="editName">Ürün Adı</label>
+          <input type="text" id="editName" class="form-input" placeholder="Örn: Quattro Formaggi" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editCategory">Kategori</label>
+          <select id="editCategory" class="form-input">
+            <option value="imza">İmza Pizzalar</option>
+            <option value="klasik">Klasik Lezzetler</option>
+            <option value="gurme">Gurme & Şarküteri</option>
+            <option value="vejetaryen">Vejetaryen & Mantarlı</option>
+            <option value="yan-urun">Yan Lezzetler & Soslar</option>
+            <option value="tatli-icecek">Tatlı & İçecek</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editDesc">Malzemeler / Açıklama</label>
+          <textarea id="editDesc" class="form-input" rows="3" placeholder="İçindekiler ve lezzet detayları..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editBadge">Rozet (Opsiyonel)</label>
+          <input type="text" id="editBadge" class="form-input" placeholder="Örn: Şefin Seçimi, Çok Satan, Yeni">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ürün Tipi</label>
+          <div style="display: flex; gap: 16px; margin-top: 6px;">
+            <label><input type="radio" name="itemType" value="pizza" checked id="typePizza"> 3 Boylu Pizza (Small / Med / XL)</label>
+            <label><input type="radio" name="itemType" value="extra" id="typeExtra"> Sabit Porsiyon Fiyatlı</label>
+          </div>
+        </div>
+
+        <!-- Pizza Fiyat Alanları -->
+        <div id="pizzaPriceFields" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+          <div class="form-group">
+            <label class="form-label">Small (26cm) ₺</label>
+            <input type="number" id="editPriceSmall" class="form-input" value="390">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Medium (32cm) ₺</label>
+            <input type="number" id="editPriceMedium" class="form-input" value="520">
+          </div>
+          <div class="form-group">
+            <label class="form-label">XL (42cm) ₺</label>
+            <input type="number" id="editPriceXlarge" class="form-input" value="850">
+          </div>
+        </div>
+
+        <!-- Sabit Fiyat Alanı -->
+        <div id="extraPriceFields" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Porsiyon Fiyatı (₺)</label>
+            <input type="number" id="editFixedPrice" class="form-input" value="250">
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-header" id="btnCloseItemModal">İptal</button>
+          <button type="submit" class="btn-header btn-header-primary">Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       4. MODAL: SUPABASE / BULUT VERİTABANI AYARLARI
+       ======================================================================== -->
+  <div id="dbModal" class="modal-backdrop">
+    <div class="modal-box">
+      <h2 class="modal-title">Bulut Veritabanı (Supabase)</h2>
+      <p style="font-size: 0.88rem; color: var(--ink-500); margin-bottom: 16px;">
+        Ücretsiz bir Supabase projesi açıp aşağıdaki bilgileri girdiğinizde, menü doğrudan bulut PostgreSQL veritabanına bağlanır. Boş bırakırsanız tarayıcınızın yerel depolama alanı kullanılır.
+      </p>
+
+      <form id="dbConfigForm">
+        <div class="form-group">
+          <label class="form-label">Supabase Project URL</label>
+          <input type="url" id="sbUrl" class="form-input" placeholder="https://xyzcompany.supabase.co">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Supabase Anon Key</label>
+          <input type="password" id="sbKey" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+        </div>
+
+        <div style="background: var(--bg); border: 1px solid var(--sand-200); border-radius: 8px; padding: 12px; font-size: 0.82rem; margin-top: 14px;">
+          <strong>Kurulum Notu:</strong> Deponuzdaki <code>supabase_schema.sql</code> dosyasını Supabase SQL Editor'de bir kez çalıştırarak tüm tabloları ve Ginger Pizza menüsünü saniyeler içinde oluşturabilirsiniz.
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-header" id="btnCloseDbModal">Kapat</button>
+          <button type="button" class="btn-header" id="btnClearDbConfig" style="color: var(--danger);">Yerel Moda Geç</button>
+          <button type="submit" class="btn-header btn-header-primary">Kaydet & Bağlan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast-msg">Değişiklikler kaydedildi</div>
+
+  <!-- Menu API Bağlantısı -->
+  <script src="js/menu-api.js"></script>
+
+  <script>
+    // ========================================================================
+    // Admin Paneli Mantığı
+    // ========================================================================
+    let currentMenuItems = [];
+
+    // Toast bildirimi göster
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.style.display = "block";
+      setTimeout(() => { toast.style.display = "none"; }, 2500);
+    }
+
+    // Oturum Kontrolü
+    function checkAuth() {
+      const isAuth = sessionStorage.getItem("ginger_admin_logged_in") === "true";
+      if (isAuth) {
+        document.getElementById("loginView").style.display = "none";
+        document.getElementById("adminApp").style.display = "block";
+        loadDashboard();
+      } else {
+        document.getElementById("loginView").style.display = "grid";
+        document.getElementById("adminApp").style.display = "none";
+      }
+    }
+
+    // Verileri Yükle ve Render Et
+    async function loadDashboard() {
+      currentMenuItems = await MenuAPI.getMenu();
+      updateStats();
+      renderTable();
+      updateDbStatus();
+    }
+
+    // İstatistikleri Güncelle
+    function updateStats() {
+      const total = currentMenuItems.length;
+      const active = currentMenuItems.filter(i => i.isAvailable !== false).length;
+      const hidden = total - active;
+      const pizzas = currentMenuItems.filter(i => !!i.prices).length;
+
+      document.getElementById("statTotal").textContent = total;
+      document.getElementById("statActive").textContent = active;
+      document.getElementById("statHidden").textContent = hidden;
+      document.getElementById("statPizzas").textContent = pizzas;
+    }
+
+    // Veritabanı Durum Etiketi
+    async function updateDbStatus() {
+      const status = await MenuAPI.checkConnection();
+      const badge = document.getElementById("dbStatusBadge");
+      if (status.connected) {
+        badge.className = "db-status-badge db-status-connected";
+        badge.textContent = "● Supabase Bulut Bağlı";
+      } else {
+        badge.className = "db-status-badge db-status-local";
+        badge.textContent = "● Yerel Depolama Modu";
+      }
+    }
+
+    // Tabloyu Render Et
+    function renderTable() {
+      const tbody = document.getElementById("itemsTableBody");
+      const categoryFilter = document.getElementById("filterCategory").value;
+      const query = document.getElementById("searchAdmin").value.toLowerCase().trim();
+
+      let filtered = currentMenuItems;
+
+      if (categoryFilter !== "all") {
+        filtered = filtered.filter(item => item.category === categoryFilter);
+      }
+
+      if (query !== "") {
+        filtered = filtered.filter(item =>
+          item.name.toLowerCase().includes(query) ||
+          (item.ingredients && item.ingredients.toLowerCase().includes(query))
+        );
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 32px; color: var(--ink-400);">Aradığınız kriterlere uygun ürün bulunamadı.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(item => {
+        const isPizza = !!item.prices;
+        const isAvailable = item.isAvailable !== false;
+
+        let priceInputsHtml = "";
+        if (isPizza) {
+          priceInputsHtml = `
+            <div class="price-inputs-row">
+              <div class="price-box">
+                <span class="price-box-label">Small</span>
+                <input type="number" class="price-field-mini" id="input-sm-${item.id}" value="${item.prices.small || 0}">
+              </div>
+              <div class="price-box">
+                <span class="price-box-label">Med</span>
+                <input type="number" class="price-field-mini" id="input-md-${item.id}" value="${item.prices.medium || 0}">
+              </div>
+              <div class="price-box">
+                <span class="price-box-label">XL</span>
+                <input type="number" class="price-field-mini" id="input-xl-${item.id}" value="${item.prices.xlarge || 0}">
+              </div>
+              <button type="button" class="btn-quick-save" onclick="handleQuickPriceSave('${item.id}', true)">Kaydet</button>
+            </div>
+          `;
+        } else {
+          priceInputsHtml = `
+            <div class="price-inputs-row">
+              <div class="price-box">
+                <span class="price-box-label">Porsiyon (₺)</span>
+                <input type="number" class="price-field-mini" id="input-fixed-${item.id}" value="${item.fixedPrice || 0}">
+              </div>
+              <button type="button" class="btn-quick-save" onclick="handleQuickPriceSave('${item.id}', false)">Kaydet</button>
+            </div>
+          `;
+        }
+
+        return `
+          <tr id="row-${item.id}">
+            <td>
+              <div class="item-cell-title">${item.name}</div>
+              <div class="item-cell-desc">${item.ingredients || ""}</div>
+              ${item.badge ? `<span style="display:inline-block; margin-top:4px; font-size:0.7rem; font-weight:700; background:var(--sand-100); padding:2px 8px; border-radius:999px;">${item.badge}</span>` : ""}
+            </td>
+            <td>
+              <span style="font-size: 0.82rem; font-weight: 600; text-transform: capitalize; color: var(--ink-500);">${item.category}</span>
+            </td>
+            <td>
+              ${priceInputsHtml}
+            </td>
+            <td style="text-align: center;">
+              <label class="switch" title="${isAvailable ? 'Yayında' : 'Tükendi (Gizli)'}">
+                <input type="checkbox" ${isAvailable ? "checked" : ""} onchange="handleAvailabilityToggle('${item.id}', this.checked)">
+                <span class="slider"></span>
+              </label>
+            </td>
+            <td style="text-align: right;">
+              <div class="action-btns" style="justify-content: flex-end;">
+                <button type="button" class="btn-action-icon" title="Düzenle" onclick="openEditItemModal('${item.id}')">✏️</button>
+                <button type="button" class="btn-action-icon btn-action-delete" title="Sil" onclick="handleDeleteItem('${item.id}')">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // Hızlı Fiyat Kaydetme
+    window.handleQuickPriceSave = async function(itemId, isPizza) {
+      if (isPizza) {
+        const sm = Number(document.getElementById(`input-sm-${itemId}`).value);
+        const md = Number(document.getElementById(`input-md-${itemId}`).value);
+        const xl = Number(document.getElementById(`input-xl-${itemId}`).value);
+        await MenuAPI.updatePrice(itemId, { small: sm, medium: md, xlarge: xl });
+      } else {
+        const fixed = Number(document.getElementById(`input-fixed-${itemId}`).value);
+        await MenuAPI.updatePrice(itemId, fixed);
+      }
+      showToast("Fiyat güncellendi ve siteye yansıtıldı!");
+      loadDashboard();
+    };
+
+    // Stok / Yayında Durumu Değiştirme
+    window.handleAvailabilityToggle = async function(itemId, isAvailable) {
+      await MenuAPI.toggleAvailability(itemId, isAvailable);
+      showToast(isAvailable ? "Ürün yayına alındı!" : "Ürün 'Tükendi' olarak işaretlendi!");
+      loadDashboard();
+    };
+
+    // Ürün Silme
+    window.handleDeleteItem = async function(itemId) {
+      const item = currentMenuItems.find(i => i.id === itemId);
+      if (!item) return;
+      if (confirm(`"${item.name}" ürününü menüden silmek istediğinize emin misiniz?`)) {
+        await MenuAPI.deleteItem(itemId);
+        showToast("Ürün menüden silindi!");
+        loadDashboard();
+      }
+    };
+
+    // Modal Açma: Yeni Ürün
+    document.getElementById("btnOpenNewItem").addEventListener("click", () => {
+      document.getElementById("itemForm").reset();
+      document.getElementById("editItemId").value = "";
+      document.getElementById("itemModalTitle").textContent = "Yeni Ürün Ekle";
+      document.getElementById("typePizza").checked = true;
+      toggleTypeFields(true);
+      document.getElementById("itemModal").classList.add("open");
+    });
+
+    // Modal Açma: Düzenle
+    window.openEditItemModal = function(itemId) {
+      const item = currentMenuItems.find(i => i.id === itemId);
+      if (!item) return;
+
+      document.getElementById("editItemId").value = item.id;
+      document.getElementById("editName").value = item.name;
+      document.getElementById("editCategory").value = item.category;
+      document.getElementById("editDesc").value = item.ingredients || "";
+      document.getElementById("editBadge").value = item.badge || "";
+
+      const isPizza = !!item.prices;
+      if (isPizza) {
+        document.getElementById("typePizza").checked = true;
+        document.getElementById("editPriceSmall").value = item.prices.small || 0;
+        document.getElementById("editPriceMedium").value = item.prices.medium || 0;
+        document.getElementById("editPriceXlarge").value = item.prices.xlarge || 0;
+      } else {
+        document.getElementById("typeExtra").checked = true;
+        document.getElementById("editFixedPrice").value = item.fixedPrice || 0;
+      }
+
+      toggleTypeFields(isPizza);
+      document.getElementById("itemModalTitle").textContent = "Ürünü Düzenle";
+      document.getElementById("itemModal").classList.add("open");
+    };
+
+    function toggleTypeFields(isPizza) {
+      document.getElementById("pizzaPriceFields").style.display = isPizza ? "grid" : "none";
+      document.getElementById("extraPriceFields").style.display = !isPizza ? "block" : "none";
+    }
+
+    document.getElementById("typePizza").addEventListener("change", () => toggleTypeFields(true));
+    document.getElementById("typeExtra").addEventListener("change", () => toggleTypeFields(false));
+    document.getElementById("btnCloseItemModal").addEventListener("click", () => {
+      document.getElementById("itemModal").classList.remove("open");
+    });
+
+    // Ürün Formu Kaydet
+    document.getElementById("itemForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("editItemId").value;
+      const isPizza = document.getElementById("typePizza").checked;
+
+      const itemData = {
+        id: id || undefined,
+        name: document.getElementById("editName").value.trim(),
+        category: document.getElementById("editCategory").value,
+        ingredients: document.getElementById("editDesc").value.trim(),
+        badge: document.getElementById("editBadge").value.trim(),
+        badgeType: isPizza ? "popular" : "gourmet",
+        isAvailable: true
+      };
+
+      if (isPizza) {
+        itemData.prices = {
+          small: Number(document.getElementById("editPriceSmall").value),
+          medium: Number(document.getElementById("editPriceMedium").value),
+          xlarge: Number(document.getElementById("editPriceXlarge").value)
+        };
+        itemData.fixedPrice = null;
+      } else {
+        itemData.fixedPrice = Number(document.getElementById("editFixedPrice").value);
+        itemData.prices = null;
+      }
+
+      await MenuAPI.saveItem(itemData);
+      document.getElementById("itemModal").classList.remove("open");
+      showToast("Ürün başarıyla kaydedildi!");
+      loadDashboard();
+    });
+
+    // Filtre & Arama
+    document.getElementById("filterCategory").addEventListener("change", renderTable);
+    document.getElementById("searchAdmin").addEventListener("input", renderTable);
+
+    // Sıfırla Butonu
+    document.getElementById("btnResetDefaults").addEventListener("click", () => {
+      if (confirm("Tüm menü ve fiyatlar orijinal Ginger Pizza varsayılanlarına sıfırlansın mı?")) {
+        MenuAPI.resetDefaults();
+        showToast("Menü varsayılanlarına sıfırlandı.");
+        loadDashboard();
+      }
+    });
+
+    // Veritabanı Modalı
+    document.getElementById("btnOpenDbModal").addEventListener("click", () => {
+      const cfg = MenuAPI.getConfig();
+      if (cfg) {
+        document.getElementById("sbUrl").value = cfg.url || "";
+        document.getElementById("sbKey").value = cfg.key || "";
+      }
+      document.getElementById("dbModal").classList.add("open");
+    });
+
+    document.getElementById("btnCloseDbModal").addEventListener("click", () => {
+      document.getElementById("dbModal").classList.remove("open");
+    });
+
+    document.getElementById("btnClearDbConfig").addEventListener("click", () => {
+      MenuAPI.saveConfig("", "");
+      document.getElementById("sbUrl").value = "";
+      document.getElementById("sbKey").value = "";
+      document.getElementById("dbModal").classList.remove("open");
+      showToast("Yerel moda geçildi.");
+      loadDashboard();
+    });
+
+    document.getElementById("dbConfigForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const url = document.getElementById("sbUrl").value.trim();
+      const key = document.getElementById("sbKey").value.trim();
+      MenuAPI.saveConfig(url, key);
+      document.getElementById("dbModal").classList.remove("open");
+      showToast("Veritabanı ayarları kaydedildi!");
+      loadDashboard();
+    });
+
+    // Giriş / Çıkış
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      sessionStorage.setItem("ginger_admin_logged_in", "true");
+      checkAuth();
+      showToast("Hoş geldiniz!");
+    });
+
+    document.getElementById("btnQuickDemo").addEventListener("click", () => {
+      sessionStorage.setItem("ginger_admin_logged_in", "true");
+      checkAuth();
+      showToast("Demo yöneticisi olarak giriş yapıldı!");
+    });
+
+    document.getElementById("btnLogout").addEventListener("click", () => {
+      sessionStorage.removeItem("ginger_admin_logged_in");
+      checkAuth();
+    });
+
+    // Başlat
+    checkAuth();
+  </script>
+</body>
+</html>

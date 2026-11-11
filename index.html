@@ -1633,7 +1633,11 @@
 
       <div class="footer-bottom">
         <div>© 2026 Ginger Pizza. Tüm hakları saklıdır.</div>
-        <div>Kadıköy, İstanbul · Butik Artisan Pizza</div>
+        <div style="display: flex; gap: 16px; align-items: center;">
+          <span>Kadıköy, İstanbul · Butik Artisan Pizza</span>
+          <span>•</span>
+          <a href="admin.html" style="color: inherit; opacity: 0.7; text-decoration: underline;">Yönetici Girişi</a>
+        </div>
       </div>
     </div>
   </footer>
@@ -1659,223 +1663,40 @@
   </aside>
 
   <!-- ========================================================================
-       JavaScript: Menü Verisi, Boyut Değiştirici ve Filtreler
+       Menu API & Dinamik Veri Yükleyici
        ======================================================================== -->
+  <script src="js/menu-api.js"></script>
   <script>
-    /**
-     * Ginger Pizza Kadıköy Göztepe Menü Verileri
-     * Güncel fiyatlar ve pizza içerikleri
-     */
-    const menuData = [
-      // 1. İMZA PİZZALAR
-      {
-        id: "ginger-pizza",
-        name: "Ginger Pizza",
-        category: "imza",
-        badge: "İmza Lezzet",
-        badgeType: "signature",
-        ingredients: "Mozzarella peyniri, domates sos, dana bacon, karamelize soğan, özel cheddar sos, barbekü sos.",
-        prices: { small: 435, medium: 590, xlarge: 980 }
-      },
-      {
-        id: "banner-pizza",
-        name: "Banner Pizza",
-        category: "klasik",
-        badge: "Popüler",
-        badgeType: "popular",
-        ingredients: "Mozzarella peyniri, domates sos, taze dilim domates, ev yapımı fesleğen sos (pesto dokunuşu).",
-        prices: { small: 390, medium: 500, xlarge: 790 }
-      },
-      {
-        id: "montana-pizza",
-        name: "Montana Pizza",
-        category: "klasik",
-        badge: "Geleneksel",
-        badgeType: "popular",
-        ingredients: "Mozzarella peyniri, domates sos, fermente dana sucuk, kültür mantarı, siyah dilimli zeytin.",
-        prices: { small: 420, medium: 570, xlarge: 925 }
-      },
-      {
-        id: "switch-pizza",
-        name: "Switch Pizza",
-        category: "gurme",
-        badge: "Favori",
-        badgeType: "popular",
-        ingredients: "Mozzarella peyniri, domates sos, fermente dana sucuk, dana sosis, tatlı mısır, zeytin, yeşil biber.",
-        prices: { small: 430, medium: 620, xlarge: 925 }
-      },
-      {
-        id: "parker-pizza",
-        name: "Parker Pizza",
-        category: "gurme",
-        badge: "Et Sevenler",
-        badgeType: "gourmet",
-        ingredients: "Mozzarella peyniri, domates sos, dana jambon, fermente dana sucuk, dana sosis.",
-        prices: { small: 440, medium: 610, xlarge: 960 }
-      },
-      {
-        id: "floki-pizza",
-        name: "Floki Pizza",
-        category: "gurme",
-        badge: "Gurme Seçim",
-        badgeType: "signature",
-        ingredients: "Mozzarella peyniri, domates sos, dana bacon, rokfor peyniri (blue cheese), taze istiridye mantarı.",
-        prices: { small: 480, medium: 660, xlarge: 1050 }
-      },
-      {
-        id: "ragnar-pizza",
-        name: "Ragnar Pizza",
-        category: "gurme",
-        badge: "Şefin Spesiyali",
-        badgeType: "signature",
-        ingredients: "Mozzarella peyniri, domates sos, hakiki Rize kavurma, hellim peyniri, közlenmiş patlıcan, çeri domates.",
-        prices: { small: 495, medium: 690, xlarge: 1110 }
-      },
-      {
-        id: "garner-pizza",
-        name: "Garner Pizza",
-        category: "vejetaryen",
-        badge: "3 Mantarlı",
-        badgeType: "veg",
-        ingredients: "Mozzarella peyniri, domates sos, kültür mantarı, taze kestane mantarı, istiridye mantarı, dağ kekiği.",
-        prices: { small: 420, medium: 560, xlarge: 890 }
-      },
-      {
-        id: "marty-pizza",
-        name: "Marty Pizza",
-        category: "vejetaryen",
-        badge: "Vejetaryen",
-        badgeType: "veg",
-        ingredients: "Mozzarella peyniri, domates sos, kültür mantarı, dilimli siyah zeytin, tatlı mısır, domates, yeşil köy biberi.",
-        prices: { small: 450, medium: 560, xlarge: 870 }
-      },
-      {
-        id: "benny-pizza",
-        name: "Benny Pizza",
-        category: "vejetaryen",
-        badge: "Soğan Severler",
-        badgeType: "veg",
-        ingredients: "Mozzarella peyniri, domates sos, beyaz soğan, mor soğan, karamelize soğan, çıtır kızarmış soğan, taze kekik.",
-        prices: { small: 410, medium: 540, xlarge: 860 }
-      },
-      {
-        id: "chuck-pizza",
-        name: "Chuck Pizza",
-        category: "klasik",
-        badge: "Çıtır Tavuk",
-        badgeType: "popular",
-        ingredients: "Mozzarella peyniri, domates sos, çıtır nugget parçaları, tatlı mısır, cheddar sos, barbekü sos.",
-        prices: { small: 415, medium: 560, xlarge: 890 }
-      },
-      {
-        id: "ross-pizza",
-        name: "Ross Pizza",
-        category: "klasik",
-        badge: "Çift Peynir",
-        badgeType: "popular",
-        ingredients: "Çift kat mozzarella peyniri, zengin domates sosu, fesleğen yağı, kurutulmuş kekik.",
-        prices: { small: 395, medium: 510, xlarge: 810 }
-      },
-
-      // 2. YAN LEZZETLER & SOSLAR
-      {
-        id: "firin-patates",
-        name: "Baharatlı Elma Dilim Fırın Patates (300 gr)",
-        category: "yan-urun",
-        badge: "Fırından",
-        badgeType: "gourmet",
-        ingredients: "Zeytinyağı, kaya tuzu, kekik, tatlı toz kırmızı biber ile taş fırında çıtır fırınlanmış patates.",
-        fixedPrice: 265
-      },
-      {
-        id: "cheddarli-patates",
-        name: "Cheddar Soslu Fırın Patates",
-        category: "yan-urun",
-        badge: "Sıcak Soslu",
-        badgeType: "popular",
-        ingredients: "Taş fırında nar gibi kızarmış baharatlı patates, üzerinde sıcak erimiş özel cheddar sos.",
-        fixedPrice: 295
-      },
-      {
-        id: "citir-tavuk-sepeti",
-        name: "Çıtır Nugget Sepeti (8 Adet)",
-        category: "yan-urun",
-        badge: "Çıtır",
-        badgeType: "gourmet",
-        ingredients: "Altın sarısı çıtır tavuk nugget parçaları, yanında seçeceğiniz dip sos ile.",
-        fixedPrice: 240
-      },
-      {
-        id: "sos-cesitleri",
-        name: "Ev Yapımı Dip Soslar (Pesto / Cheddar / BBQ)",
-        category: "yan-urun",
-        badge: "Sos",
-        badgeType: "popular",
-        ingredients: "Pizzanızın çıtır kenarlarına eşlik eden taze fesleğenli pesto sos, eritme cheddar veya tütsülü barbekü sos.",
-        fixedPrice: 50
-      },
-
-      // 3. TATLI & İÇECEK
-      {
-        id: "cikolatali-sufle",
-        name: "Taş Fırında Çikolatalı Sufle",
-        category: "tatli-icecek",
-        badge: "Tatlı",
-        badgeType: "signature",
-        ingredients: "İçi akışkan Belçika çikolatalı sıcak fırın sufle, pudra şekeri dokunuşu ile.",
-        fixedPrice: 220
-      },
-      {
-        id: "tiramisu",
-        name: "Ev Yapımı Klasik Tiramisu",
-        category: "tatli-icecek",
-        badge: "İtalyan",
-        badgeType: "popular",
-        ingredients: "Mascarpone kreması ve espresso ıslatmalı kedi dili ile hazırlanan hafif ev yapımı tiramisu.",
-        fixedPrice: 195
-      },
-      {
-        id: "ginger-limonata",
-        name: "Ev Yapımı Zencefilli Taze Limonata",
-        category: "tatli-icecek",
-        badge: "Ev Yapımı",
-        badgeType: "signature",
-        ingredients: "Taze sıkım limon, hafif taze zencefil dokunuşu ve nane yaprakları ile ferahlatıcı lezzet.",
-        fixedPrice: 95
-      },
-      {
-        id: "icecekler",
-        name: "Kutu Meşrubatlar (330 ml)",
-        category: "tatli-icecek",
-        badge: "Soğuk İçecek",
-        badgeType: "popular",
-        ingredients: "Coca-Cola, Coca-Cola Zero, Fanta, Sprite, Fuse Tea Şeftali/Limon, Ayran, San Pellegrino.",
-        fixedPrice: 65
-      }
-    ];
-
-    // Aktif kart boyut durumları (Her pizza kartı için bağımsız)
+    let menuData = [];
     const cardSelectedSizes = {};
+    let currentFilter = "all";
+    let currentSearchTerm = "";
 
     function renderMenu(items) {
       const grid = document.getElementById("menuGrid");
       if (!grid) return;
 
-      if (items.length === 0) {
+      if (!items || items.length === 0) {
         grid.innerHTML = `
           <div style="grid-column: 1 / -1; text-align: center; padding: 48px 24px; color: var(--ink-500);">
             <p style="font-size: 1.1rem; margin-bottom: 8px;">Aradığınız kriterlere uygun lezzet bulunamadı.</p>
-            <p style="font-size: 0.9rem;">Farklı bir kelime deneyebilir veya kategorileri değiştirebilirsiniz.</p>
+            <p style="font-size: 0.9rem;">Farklı bir arama kelimesi deneyebilir veya kategorileri değiştirebilirsiniz.</p>
           </div>
         `;
         return;
       }
 
       grid.innerHTML = items.map(item => {
-        // Pizza Kartı (3 boy seçeneği olanlar)
+        const isAvailable = item.isAvailable !== false;
+        const disabledStyle = !isAvailable ? 'style="opacity: 0.68; filter: grayscale(20%);"' : '';
+        const statusBadge = !isAvailable
+          ? `<span class="badge-pill" style="background:#444; color:#fff;">Tükendi</span>`
+          : (item.badge ? `<span class="badge-pill badge-${item.badgeType || 'popular'}">${item.badge}</span>` : '');
+
+        // 1. Pizza Kartı (Boyut seçenekli)
         if (item.prices) {
           const currentSize = cardSelectedSizes[item.id] || "medium";
-          const currentPrice = item.prices[currentSize];
+          const currentPrice = item.prices[currentSize] || item.prices.medium || item.prices.small || 0;
           const sizeLabels = {
             small: "Small (26 cm)",
             medium: "Medium (32 cm)",
@@ -1883,13 +1704,13 @@
           };
 
           return `
-            <article class="pizza-card" data-category="${item.category}" id="card-${item.id}">
+            <article class="pizza-card" data-category="${item.category}" id="card-${item.id}" ${disabledStyle}>
               <div class="pizza-card-top">
                 <div class="pizza-card-header">
                   <h3 class="pizza-name">${item.name}</h3>
-                  <span class="badge-pill badge-${item.badgeType}">${item.badge}</span>
+                  ${statusBadge}
                 </div>
-                <p class="pizza-ingredients">${item.ingredients}</p>
+                <p class="pizza-ingredients">${item.ingredients || ''}</p>
 
                 <div class="size-selector-box">
                   <div class="size-label">Boyut Seçimi</div>
@@ -1910,47 +1731,58 @@
               <div class="pizza-card-bottom">
                 <div class="price-display">
                   <span class="price-value" id="price-${item.id}">${currentPrice} ₺</span>
-                  <span class="price-label" id="size-label-${item.id}">${sizeLabels[currentSize]}</span>
+                  <span class="price-label" id="size-label-${item.id}">${sizeLabels[currentSize] || ''}</span>
                 </div>
+                ${isAvailable ? `
+                  <a href="#siparis" class="btn-card-order" title="Sipariş Ver">
+                    <span>Sipariş</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </a>
+                ` : `
+                  <span style="font-size:0.8rem; font-weight:700; color:var(--ink-400); padding: 8px 12px; background:var(--sand-100); border-radius:999px;">
+                    Geçici Olarak Yok
+                  </span>
+                `}
+              </div>
+            </article>
+          `;
+        }
+
+        // 2. Yan Lezzet / Tatlı / İçecek Kartı (Sabit fiyatlı)
+        return `
+          <article class="extra-item-card" data-category="${item.category}" ${disabledStyle}>
+            <div>
+              <div class="pizza-card-header">
+                <h3 class="extra-item-name">${item.name}</h3>
+                ${statusBadge}
+              </div>
+              <p class="extra-item-desc">${item.ingredients || ''}</p>
+            </div>
+            <div class="pizza-card-bottom">
+              <div class="price-display">
+                <span class="extra-item-price">${item.fixedPrice || 0} ₺</span>
+                <span class="price-label">Porsiyon Fiyatı</span>
+              </div>
+              ${isAvailable ? `
                 <a href="#siparis" class="btn-card-order" title="Sipariş Ver">
                   <span>Sipariş</span>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
                 </a>
-              </div>
-            </article>
-          `;
-        }
-
-        // Yan Ürün / Tatlı / İçecek Kartı (Sabit fiyatlı)
-        return `
-          <article class="extra-item-card" data-category="${item.category}">
-            <div>
-              <div class="pizza-card-header">
-                <h3 class="extra-item-name">${item.name}</h3>
-                <span class="badge-pill badge-${item.badgeType}">${item.badge}</span>
-              </div>
-              <p class="extra-item-desc">${item.ingredients}</p>
-            </div>
-            <div class="pizza-card-bottom">
-              <div class="price-display">
-                <span class="extra-item-price">${item.fixedPrice} ₺</span>
-                <span class="price-label">Porsiyon Fiyatı</span>
-              </div>
-              <a href="#siparis" class="btn-card-order" title="Sipariş Ver">
-                <span>Sipariş</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-              </a>
+              ` : `
+                <span style="font-size:0.8rem; font-weight:700; color:var(--ink-400); padding: 8px 12px; background:var(--sand-100); border-radius:999px;">
+                  Geçici Olarak Yok
+                </span>
+              `}
             </div>
           </article>
         `;
       }).join("");
     }
 
-    // Boyut değiştirme fonksiyonu
     function changePizzaSize(pizzaId, sizeKey) {
       cardSelectedSizes[pizzaId] = sizeKey;
       const pizza = menuData.find(p => p.id === pizzaId);
@@ -1966,7 +1798,7 @@
         xlarge: "X-Large (42 cm)"
       };
 
-      if (priceElem) priceElem.textContent = `${pizza.prices[sizeKey]} ₺`;
+      if (priceElem) priceElem.textContent = `${pizza.prices[sizeKey] || 0} ₺`;
       if (labelElem) labelElem.textContent = sizeLabels[sizeKey];
 
       if (card) {
@@ -1976,10 +1808,6 @@
         if (buttons[btnIndex]) buttons[btnIndex].classList.add("active");
       }
     }
-
-    // Filtreleme ve Arama
-    let currentFilter = "all";
-    let currentSearchTerm = "";
 
     function applyFilters() {
       let filtered = menuData;
@@ -2000,19 +1828,36 @@
         const query = currentSearchTerm.toLowerCase();
         filtered = filtered.filter(item => {
           return item.name.toLowerCase().includes(query) ||
-                 item.ingredients.toLowerCase().includes(query);
+                 (item.ingredients && item.ingredients.toLowerCase().includes(query));
         });
       }
 
       renderMenu(filtered);
     }
 
-    // Event Listeners
-    document.addEventListener("DOMContentLoaded", () => {
-      // Başlangıç Menü Render
-      renderMenu(menuData);
+    async function loadMenuFromAPI() {
+      try {
+        if (window.MenuAPI) {
+          menuData = await MenuAPI.getMenu();
+        }
+      } catch (e) {
+        console.warn("Menu load error, fallback:", e);
+      }
+      applyFilters();
+    }
 
-      // Kategori butonları
+    document.addEventListener("DOMContentLoaded", () => {
+      loadMenuFromAPI();
+
+      // Canlı güncelleme dinleyicisi (Admin panelinde değişiklik yapıldığında)
+      window.addEventListener("ginger-menu-updated", (e) => {
+        if (e.detail) {
+          menuData = e.detail;
+          applyFilters();
+        }
+      });
+
+      // Kategori filtre butonları
       const filterBtns = document.querySelectorAll(".filter-btn");
       filterBtns.forEach(btn => {
         btn.addEventListener("click", () => {
