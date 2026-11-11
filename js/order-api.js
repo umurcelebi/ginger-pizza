@@ -29,9 +29,9 @@ const Cart = {
     const items = this.getItems();
     const isPizza = !!item.prices;
     const sizeLabels = {
-      small: "Small (26 cm)",
-      medium: "Medium (32 cm)",
-      xlarge: "X-Large (42 cm)"
+      small: "Small (24-26 cm)",
+      medium: "Medium (30-32 cm)",
+      xlarge: "Mega / XL (40-42 cm)"
     };
 
     const price = isPizza ? (item.prices[sizeKey] || 0) : (item.fixedPrice || 0);

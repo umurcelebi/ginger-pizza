@@ -672,6 +672,41 @@
       justify-content: space-between;
       transition: all 0.22s ease;
       position: relative;
+      overflow: hidden;
+    }
+
+    .pizza-card.has-media {
+      padding: 0;
+    }
+
+    .pizza-card-media {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      background: var(--sand-50);
+      overflow: hidden;
+      border-bottom: 1px solid var(--sand-100);
+      position: relative;
+    }
+
+    .pizza-card-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      transition: transform 0.35s ease;
+    }
+
+    .pizza-card:hover .pizza-card-media img {
+      transform: scale(1.04);
+    }
+
+    .pizza-card-body {
+      padding: 20px 22px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex: 1;
     }
 
     .pizza-card:hover {
@@ -842,6 +877,40 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .extra-item-card:hover {
+      border-color: var(--ginger-200);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .extra-card-head {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .extra-card-head-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .extra-card-thumb {
+      width: 72px;
+      height: 72px;
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid var(--sand-200);
+      background: var(--white);
+    }
+
+    .extra-card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
     }
 
     .extra-item-name {
@@ -3220,65 +3289,74 @@
         return;
       }
 
+      const sizeLabels = {
+        small: "Small (24-26 cm)",
+        medium: "Medium (30-32 cm)",
+        xlarge: "Mega / XL (40-42 cm)"
+      };
+
       grid.innerHTML = items.map(item => {
         const isAvailable = item.isAvailable !== false;
         const disabledStyle = !isAvailable ? 'style="opacity: 0.68; filter: grayscale(20%);"' : '';
         const statusBadge = !isAvailable
           ? `<span class="badge-pill" style="background:#444; color:#fff;">Tükendi</span>`
           : (item.badge ? `<span class="badge-pill badge-${item.badgeType || 'popular'}">${item.badge}</span>` : '');
+        const hasImage = !!(item.image && item.image.trim());
 
         // 1. Pizza Kartı (Boyut seçenekli)
         if (item.prices) {
           const currentSize = cardSelectedSizes[item.id] || "medium";
           const currentPrice = item.prices[currentSize] || item.prices.medium || item.prices.small || 0;
-          const sizeLabels = {
-            small: "Small (26 cm)",
-            medium: "Medium (32 cm)",
-            xlarge: "X-Large (42 cm)"
-          };
 
           return `
-            <article class="pizza-card" data-category="${item.category}" id="card-${item.id}" ${disabledStyle}>
-              <div class="pizza-card-top">
-                <div class="pizza-card-header">
-                  <h3 class="pizza-name">${item.name}</h3>
-                  ${statusBadge}
+            <article class="pizza-card ${hasImage ? 'has-media' : ''}" data-category="${item.category}" id="card-${item.id}" ${disabledStyle}>
+              ${hasImage ? `
+                <div class="pizza-card-media">
+                  <img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.closest('.pizza-card-media').remove(); document.getElementById('card-${item.id}')?.classList.remove('has-media');">
                 </div>
-                <p class="pizza-ingredients">${item.ingredients || ''}</p>
+              ` : ''}
+              <div class="${hasImage ? 'pizza-card-body' : ''}">
+                <div class="pizza-card-top">
+                  <div class="pizza-card-header">
+                    <h3 class="pizza-name">${item.name}</h3>
+                    ${statusBadge}
+                  </div>
+                  <p class="pizza-ingredients">${item.ingredients || ''}</p>
 
-                <div class="size-selector-box">
-                  <div class="size-label">Boyut Seçimi</div>
-                  <div class="size-tabs-row" role="radiogroup" aria-label="${item.name} boyut seçimi">
-                    <button type="button" class="size-option-btn ${currentSize === 'small' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'small')">
-                      Small · 26cm
-                    </button>
-                    <button type="button" class="size-option-btn ${currentSize === 'medium' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'medium')">
-                      Medium · 32cm
-                    </button>
-                    <button type="button" class="size-option-btn ${currentSize === 'xlarge' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'xlarge')">
-                      XL · 42cm
-                    </button>
+                  <div class="size-selector-box">
+                    <div class="size-label">Boyut Seçimi</div>
+                    <div class="size-tabs-row" role="radiogroup" aria-label="${item.name} boyut seçimi">
+                      <button type="button" class="size-option-btn ${currentSize === 'small' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'small')">
+                        Small · 24-26
+                      </button>
+                      <button type="button" class="size-option-btn ${currentSize === 'medium' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'medium')">
+                        Orta · 30-32
+                      </button>
+                      <button type="button" class="size-option-btn ${currentSize === 'xlarge' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'xlarge')">
+                        Mega · 40-42
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="pizza-card-bottom">
-                <div class="price-display">
-                  <span class="price-value" id="price-${item.id}">${currentPrice} ₺</span>
-                  <span class="price-label" id="size-label-${item.id}">${sizeLabels[currentSize] || ''}</span>
+                <div class="pizza-card-bottom">
+                  <div class="price-display">
+                    <span class="price-value" id="price-${item.id}">${currentPrice} ₺</span>
+                    <span class="price-label" id="size-label-${item.id}">${sizeLabels[currentSize] || ''}</span>
+                  </div>
+                  ${isAvailable ? `
+                    <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="Sepete Ekle" style="border:none; cursor:pointer;">
+                      <span>+ Sepete Ekle</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                      </svg>
+                    </button>
+                  ` : `
+                    <span style="font-size:0.8rem; font-weight:700; color:var(--ink-400); padding: 8px 12px; background:var(--sand-100); border-radius:999px;">
+                      Geçici Olarak Yok
+                    </span>
+                  `}
                 </div>
-                ${isAvailable ? `
-                  <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="Sepete Ekle" style="border:none; cursor:pointer;">
-                    <span>+ Sepete Ekle</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                  </button>
-                ` : `
-                  <span style="font-size:0.8rem; font-weight:700; color:var(--ink-400); padding: 8px 12px; background:var(--sand-100); border-radius:999px;">
-                    Geçici Olarak Yok
-                  </span>
-                `}
               </div>
             </article>
           `;
@@ -3287,12 +3365,19 @@
         // 2. Yan Lezzet / Tatlı / İçecek Kartı (Sabit fiyatlı)
         return `
           <article class="extra-item-card" data-category="${item.category}" ${disabledStyle}>
-            <div>
-              <div class="pizza-card-header">
-                <h3 class="extra-item-name">${item.name}</h3>
-                ${statusBadge}
+            <div class="${hasImage ? 'extra-card-head' : ''}">
+              ${hasImage ? `
+                <div class="extra-card-thumb">
+                  <img src="${item.image}" alt="${item.name}" loading="lazy" onerror="this.closest('.extra-card-thumb').remove();">
+                </div>
+              ` : ''}
+              <div class="${hasImage ? 'extra-card-head-info' : ''}">
+                <div class="pizza-card-header">
+                  <h3 class="extra-item-name">${item.name}</h3>
+                  ${statusBadge}
+                </div>
+                <p class="extra-item-desc">${item.ingredients || ''}</p>
               </div>
-              <p class="extra-item-desc">${item.ingredients || ''}</p>
             </div>
             <div class="pizza-card-bottom">
               <div class="price-display">
@@ -3327,9 +3412,9 @@
       const card = document.getElementById(`card-${pizzaId}`);
 
       const sizeLabels = {
-        small: "Small (26 cm)",
-        medium: "Medium (32 cm)",
-        xlarge: "X-Large (42 cm)"
+        small: "Small (24-26 cm)",
+        medium: "Medium (30-32 cm)",
+        xlarge: "Mega / XL (40-42 cm)"
       };
 
       if (priceElem) priceElem.textContent = `${pizza.prices[sizeKey] || 0} ₺`;
