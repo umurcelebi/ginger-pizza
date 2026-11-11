@@ -602,6 +602,9 @@
         <div class="admin-nav-actions">
           <span id="currentUserInfo" style="font-size: 0.82rem; color: var(--ink-500); font-weight: 600; margin-right: 4px;"></span>
           <span id="dbStatusBadge" class="db-status-badge db-status-local">● Bulut Bağlantısı</span>
+          <button type="button" class="btn-header" id="btnOpenUsersModal" title="Kullanıcıları Yönet (Sadece Süper Admin)">
+            👥 Kullanıcılar
+          </button>
           <button type="button" class="btn-header" id="btnOpenDbModal" title="Sadece Süper Admin görebilir">
             ⚙️ Veritabanı Ayarı
           </button>
@@ -796,6 +799,68 @@
     </div>
   </div>
 
+  <!-- ========================================================================
+       5. MODAL: KULLANICI YÖNETİMİ (SÜPER ADMİN)
+       ======================================================================== -->
+  <div id="usersModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 650px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+        <div>
+          <h2 class="modal-title" style="margin-bottom:4px;">Kullanıcı & Personel Yönetimi</h2>
+          <p style="font-size:0.86rem; color:var(--ink-500);">
+            Yeni kullanıcı ekleyin, şifre değiştirin veya silin. Müdür ve Personel hesapları veritabanı ayarlarını göremez.
+          </p>
+        </div>
+        <span class="admin-pill-tag">👑 Süper Admin</span>
+      </div>
+
+      <!-- Kullanıcı Listesi -->
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 0.88rem; font-weight: 700; color: var(--ink-700); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em;">
+          Kayıtlı Kullanıcılar
+        </h3>
+        <div id="usersListContainer" style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Dinamik doldurulacak -->
+        </div>
+      </div>
+
+      <!-- Yeni Kullanıcı Ekle Formu -->
+      <div style="background: var(--bg); border: 1px solid var(--sand-200); border-radius: var(--radius-md); padding: 18px;">
+        <h3 style="font-size: 0.92rem; font-weight: 700; color: var(--ink-900); margin-bottom: 12px;">
+          + Yeni Kullanıcı Tanımla
+        </h3>
+        <form id="newUserForm">
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 10px;">
+            <div>
+              <label class="form-label" style="font-size:0.78rem;">E-Posta Adresi</label>
+              <input type="email" id="newEmail" class="form-input" placeholder="kasa2@gingerpizza.com" required>
+            </div>
+            <div>
+              <label class="form-label" style="font-size:0.78rem;">Giriş Şifresi</label>
+              <input type="text" id="newPass" class="form-input" placeholder="Şifre belirleyin" required>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: flex-end;">
+            <div>
+              <label class="form-label" style="font-size:0.78rem;">Rol / Yetki Seviyesi</label>
+              <select id="newRole" class="form-input">
+                <option value="manager">Restoran Müdürü (Fiyat & Menü Yönetimi)</option>
+                <option value="staff">Mutfak / Kasa Personeli (Stok & Fiyat Güncelleme)</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-header btn-header-primary" style="height: 42px; padding: 0 20px;">
+              Kullanıcı Ekle
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 20px;">
+        <button type="button" class="btn-header" id="btnCloseUsersModal">Kapat</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast" class="toast-msg">Değişiklikler kaydedildi</div>
 
@@ -805,9 +870,10 @@
 
   <script>
     // ========================================================================
-    // Kullanıcılar ve Yetkilendirme (RBAC)
+    // Kullanıcılar ve Yetkilendirme (RBAC & Kullanıcı Yönetimi)
     // ========================================================================
-    const USERS = [
+    const USERS_STORAGE_KEY = "ginger_pizza_users_list_v1";
+    const DEFAULT_USERS = [
       {
         email: "admin@gingerpizza.com",
         password: "ginger123",
@@ -834,31 +900,122 @@
       }
     ];
 
+    function getStoredUsers() {
+      try {
+        const raw = localStorage.getItem(USERS_STORAGE_KEY);
+        if (!raw) {
+          localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
+          return DEFAULT_USERS;
+        }
+        return JSON.parse(raw);
+      } catch (e) {
+        return DEFAULT_USERS;
+      }
+    }
+
+    function saveStoredUsers(list) {
+      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(list));
+    }
+
     window.selectLoginUser = function(userType) {
       const emailField = document.getElementById("loginEmail");
       const passField = document.getElementById("loginPass");
       const buttons = document.querySelectorAll(".login-card .size-option-btn");
       buttons.forEach(b => b.classList.remove("active"));
+      const users = getStoredUsers();
 
       if (userType === 'admin') {
-        emailField.value = "admin@gingerpizza.com";
-        passField.value = "ginger123";
+        const u = users.find(x => x.role === 'admin') || DEFAULT_USERS[0];
+        emailField.value = u.email;
+        passField.value = u.password;
         if (buttons[0]) buttons[0].classList.add("active");
       } else if (userType === 'mudur') {
-        emailField.value = "mudur@gingerpizza.com";
-        passField.value = "pizza2026";
+        const u = users.find(x => x.role === 'manager') || DEFAULT_USERS[1];
+        emailField.value = u.email;
+        passField.value = u.password;
         if (buttons[1]) buttons[1].classList.add("active");
       } else if (userType === 'mutfak') {
-        emailField.value = "mutfak@gingerpizza.com";
-        passField.value = "mutfak2026";
+        const u = users.find(x => x.role === 'staff') || DEFAULT_USERS[2];
+        emailField.value = u.email;
+        passField.value = u.password;
         if (buttons[2]) buttons[2].classList.add("active");
       }
     };
 
     function getCurrentUser() {
       const email = sessionStorage.getItem("ginger_user_email") || "admin@gingerpizza.com";
-      return USERS.find(u => u.email === email) || USERS[1];
+      const users = getStoredUsers();
+      return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || users[0];
     }
+
+    // Kullanıcı Yönetim Listesi Render
+    function renderUsersManagement() {
+      const container = document.getElementById("usersListContainer");
+      if (!container) return;
+      const users = getStoredUsers();
+
+      container.innerHTML = users.map(u => {
+        const isSuperAdmin = u.role === "admin";
+        return `
+          <div style="background:var(--white); border:1px solid var(--sand-200); border-radius:10px; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <strong style="font-size:0.92rem; color:var(--ink-900);">${u.email}</strong>
+                <span class="admin-pill-tag" style="font-size:0.7rem;">${u.roleLabel}</span>
+              </div>
+              <div style="font-size:0.78rem; color:var(--ink-400); margin-top:2px;">
+                Şifre: <span style="font-family:monospace; background:var(--sand-50); padding:2px 6px; border-radius:4px; color:var(--ink-700);">${u.password}</span>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button type="button" class="btn-header" style="font-size:0.78rem; padding:6px 12px;" onclick="handleChangePassword('${u.email}')">
+                🔑 Şifre Değiştir
+              </button>
+              ${!isSuperAdmin ? `
+                <button type="button" class="btn-action-icon btn-action-delete" title="Kullanıcıyı Sil" onclick="handleDeleteUser('${u.email}')">
+                  🗑️
+                </button>
+              ` : `
+                <span style="font-size:0.75rem; color:var(--ink-400); padding:0 8px;">(Ana Hesap)</span>
+              `}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Şifre Değiştir
+    window.handleChangePassword = function(email) {
+      const users = getStoredUsers();
+      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (!user) return;
+
+      const newPass = prompt(`"${user.email}" için yeni şifreyi giriniz:`, user.password);
+      if (newPass && newPass.trim() !== "") {
+        user.password = newPass.trim();
+        saveStoredUsers(users);
+        renderUsersManagement();
+        showToast("Şifre başarıyla güncellendi!");
+      }
+    };
+
+    // Kullanıcı Sil
+    window.handleDeleteUser = function(email) {
+      let users = getStoredUsers();
+      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      if (!user) return;
+      if (user.role === "admin") {
+        alert("Süper Admin hesabı silinemez!");
+        return;
+      }
+
+      if (confirm(`"${user.email}" kullanıcısını silmek istediğinize emin misiniz?`)) {
+        users = users.filter(u => u.email.toLowerCase() !== email.toLowerCase());
+        saveStoredUsers(users);
+        renderUsersManagement();
+        showToast("Kullanıcı silindi.");
+      }
+    };
 
     // ========================================================================
     // Admin Paneli Mantığı
@@ -892,6 +1049,8 @@
         if (userInfo) userInfo.textContent = user.email;
 
         // Veritabanı ve Sıfırlama Kısıtlaması (Admin dışındakilere tamamen gizli)
+        const btnUsers = document.getElementById("btnOpenUsersModal");
+        if (btnUsers) btnUsers.style.display = user.canEditDb ? "inline-flex" : "none";
         if (btnDb) btnDb.style.display = user.canEditDb ? "inline-flex" : "none";
         if (btnReset) btnReset.style.display = user.canReset ? "inline-flex" : "none";
         if (dbBadge) dbBadge.style.display = user.canEditDb ? "inline-flex" : "none";
@@ -1154,6 +1313,54 @@
       }
     });
 
+    // Kullanıcı Yönetim Modalı Açma/Kapatma (Sadece Süper Admin)
+    document.getElementById("btnOpenUsersModal").addEventListener("click", () => {
+      const user = getCurrentUser();
+      if (!user.canEditDb) {
+        alert("Yetkisiz Erişim: Bu alanı yalnızca Süper Admin görüntüleyebilir.");
+        return;
+      }
+      renderUsersManagement();
+      document.getElementById("usersModal").classList.add("open");
+    });
+
+    document.getElementById("btnCloseUsersModal").addEventListener("click", () => {
+      document.getElementById("usersModal").classList.remove("open");
+    });
+
+    // Yeni Kullanıcı Ekle Formu
+    document.getElementById("newUserForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("newEmail").value.trim().toLowerCase();
+      const pass = document.getElementById("newPass").value.trim();
+      const role = document.getElementById("newRole").value;
+
+      let users = getStoredUsers();
+      if (users.some(u => u.email.toLowerCase() === email)) {
+        alert("Bu e-posta adresiyle kayıtlı bir kullanıcı zaten mevcut!");
+        return;
+      }
+
+      const roleLabels = {
+        manager: "💼 Restoran Müdürü",
+        staff: "🍕 Mutfak / Kasa"
+      };
+
+      users.push({
+        email: email,
+        password: pass,
+        role: role,
+        roleLabel: roleLabels[role] || "Personel",
+        canEditDb: false,
+        canReset: false
+      });
+
+      saveStoredUsers(users);
+      renderUsersManagement();
+      document.getElementById("newUserForm").reset();
+      showToast("Yeni kullanıcı başarıyla eklendi!");
+    });
+
     // Veritabanı Modalı (Sadece yetkili süper admin açabilir)
     document.getElementById("btnOpenDbModal").addEventListener("click", () => {
       const user = getCurrentUser();
@@ -1199,7 +1406,8 @@
       const pass = document.getElementById("loginPass").value;
       const errBox = document.getElementById("loginError");
 
-      const matched = USERS.find(u => u.email.toLowerCase() === email && u.password === pass);
+      const users = getStoredUsers();
+      const matched = users.find(u => u.email.toLowerCase() === email && u.password === pass);
       if (matched) {
         errBox.style.display = "none";
         sessionStorage.setItem("ginger_admin_logged_in", "true");
