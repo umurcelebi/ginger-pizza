@@ -179,18 +179,21 @@
     .admin-header-inner {
       max-width: 1300px;
       margin: 0 auto;
-      padding: 0 24px;
-      height: 70px;
+      padding: 10px 24px;
+      min-height: 70px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .admin-brand {
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-shrink: 0;
+      white-space: nowrap;
     }
 
     .admin-brand-title {
@@ -210,12 +213,14 @@
       padding: 3px 8px;
       border-radius: var(--radius-full);
       border: 1px solid var(--ginger-100);
+      white-space: nowrap;
     }
 
     .admin-nav-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .btn-header {
@@ -232,6 +237,8 @@
       color: var(--ink-700);
       text-decoration: none;
       transition: all 0.18s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .btn-header:hover { border-color: var(--ginger-500); color: var(--ginger-600); }

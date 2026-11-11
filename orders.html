@@ -65,6 +65,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
       position: sticky;
       top: 0;
       z-index: 50;
@@ -74,6 +76,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-wrap: wrap;
     }
 
     .brand-title {
@@ -114,7 +117,8 @@
     .kds-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .btn-kds {
@@ -132,6 +136,8 @@
       text-decoration: none;
       transition: all 0.18s ease;
       font-family: inherit;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .btn-kds:hover {
@@ -665,9 +671,12 @@
           </div>
         `;
       } else if (isPrep) {
+        const nextBtnText = order.delivery_type === "takeaway"
+          ? "🥡 Hazırlandı (Teslim Bekliyor)"
+          : "🛵 Kuryeye Teslim Et (Yola Çıkar)";
         actionsHtml = `
           <button type="button" class="btn-step-next" onclick="updateStatus('${order.id}', 'on_way')">
-            🛵 Kuryeye Teslim Et (Yola Çıkar)
+            ${nextBtnText}
           </button>
         `;
       } else if (isWay) {
