@@ -6,6 +6,8 @@
   <title>Ginger Pizza — Yeni Sitemiz & Online Sipariş Çok Yakında</title>
   <meta name="description" content="Kadıköy Göztepe'nin butik pizzacısı Ginger Pizza. Yeni web sitemiz ve online sipariş sistemimiz hazırlanıyor. Sipariş ve bilgi için: 0216 337 02 01">
   <meta name="theme-color" content="#d86a1a">
+  <link rel="icon" type="image/jpeg" href="images/logo.jpg">
+  <link rel="apple-touch-icon" href="images/logo.jpg">
 
   <!-- Open Graph -->
   <meta property="og:title" content="Ginger Pizza — Kadıköy Göztepe Butik Pizzacısı">
@@ -87,15 +89,25 @@
     }
 
     .brand-mark {
-      width: 44px;
-      height: 44px;
-      border-radius: 13px;
-      background: linear-gradient(135deg, var(--ginger-400), var(--ginger-600));
-      color: var(--white);
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--white);
+      padding: 2px;
+      border: 1px solid var(--sand-100);
       display: grid;
       place-items: center;
-      box-shadow: 0 8px 20px rgba(216, 106, 26, 0.25);
+      box-shadow: 0 6px 18px rgba(216, 106, 26, 0.16);
       flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .brand-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
     }
 
     .brand-text {
@@ -379,13 +391,8 @@
 
   <header class="top-bar">
     <div class="brand-logo">
-      <div class="brand-mark" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2L2 22h20L12 2z"/>
-          <circle cx="12" cy="14" r="2" fill="currentColor"/>
-          <circle cx="8" cy="18" r="1.2" fill="currentColor"/>
-          <circle cx="16" cy="18" r="1.2" fill="currentColor"/>
-        </svg>
+      <div class="brand-mark">
+        <img src="images/logo.jpg" alt="Ginger Pizza Logo">
       </div>
       <div class="brand-text">
         <span class="brand-title">Ginger <span>Pizza</span></span>
