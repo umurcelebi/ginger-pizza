@@ -226,7 +226,11 @@ function getSupabaseClient() {
 function getSupabaseConfig() {
   try {
     const raw = localStorage.getItem(CONFIG_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (raw) return JSON.parse(raw);
+    if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.anonKey) {
+      return { url: window.SUPABASE_CONFIG.url, key: window.SUPABASE_CONFIG.anonKey };
+    }
+    return null;
   } catch (e) {
     return null;
   }
