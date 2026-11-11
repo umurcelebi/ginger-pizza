@@ -565,21 +565,14 @@
       <h1 class="login-title">Ginger <span>Pizza</span></h1>
       <p class="login-desc">Menü ve fiyat yönetim paneline hoş geldiniz.</p>
 
-      <!-- Hızlı Kullanıcı Seçici -->
-      <div style="display: flex; gap: 6px; margin-bottom: 20px; background: var(--bg); padding: 4px; border-radius: var(--radius-sm); border: 1px solid var(--sand-200);">
-        <button type="button" class="size-option-btn active" style="flex:1; padding:8px 4px; font-size:0.78rem;" onclick="selectLoginUser('admin')">👑 Yönetici</button>
-        <button type="button" class="size-option-btn" style="flex:1; padding:8px 4px; font-size:0.78rem;" onclick="selectLoginUser('mudur')">💼 Müdür</button>
-        <button type="button" class="size-option-btn" style="flex:1; padding:8px 4px; font-size:0.78rem;" onclick="selectLoginUser('mutfak')">🍕 Mutfak</button>
-      </div>
-
       <form id="loginForm">
         <div class="form-group">
           <label class="form-label" for="loginEmail">E-Posta Adresi</label>
-          <input type="email" id="loginEmail" class="form-input" value="admin@gingerpizza.com" required>
+          <input type="email" id="loginEmail" class="form-input" placeholder="ornek@gingerpizza.com" required>
         </div>
         <div class="form-group">
           <label class="form-label" for="loginPass">Şifre</label>
-          <input type="password" id="loginPass" class="form-input" value="ginger123" required>
+          <input type="password" id="loginPass" class="form-input" placeholder="••••••••" required>
         </div>
         <div id="loginError" style="display: none; color: var(--danger); font-size: 0.82rem; margin-bottom: 12px; font-weight: 600;"></div>
         <button type="submit" class="btn-login">Panele Giriş Yap</button>
