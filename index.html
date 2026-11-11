@@ -3,21 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ginger Pizza — Çok Yakında</title>
-  <meta name="description" content="Ginger Pizza çok yakında sizlerle. Fırınımız ısınıyor, hazırlanıyoruz.">
+  <title>Ginger Pizza — Kadıköy Göztepe Butik Pizzacısı</title>
+  <meta name="description" content="Kadıköy Göztepe'nin butik pizzacısı Ginger Pizza. Özel mayalanmış ince hamur, taş fırın lezzeti, zengin gurme pizza çeşitleri ve taze malzemeler.">
+  <meta name="theme-color" content="#d86a1a">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Ginger Pizza — Kadıköy Göztepe Butik Pizzacısı">
+  <meta property="og:description" content="Özel mayalanmış ince hamur, taş fırın lezzeti ve zengin gurme pizza menüsü.">
+  <meta property="og:type" content="restaurant.restaurant">
+  <meta property="og:url" content="https://www.gingerpizza.com">
+
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg: #fdf8f2;
-      --surface: #fffdf9;
-      --ink: #231814;
-      --muted: #6f5a50;
-      --accent: #d95d24;
-      --accent-soft: #f6e3d4;
-      --ginger: #e59a3a;
-      --border: rgba(35, 24, 20, 0.1);
+      /* Renk Paleti: Beyaz Zemin Üzerine Ginger & Amber */
+      --white: #ffffff;
+      --off-white: #fcf9f4;
+      --sand-50: #f7f2ea;
+      --sand-100: #eee5d8;
+      --sand-200: #dfd2bf;
+
+      --ginger-50: #fff6ee;
+      --ginger-100: #feecd9;
+      --ginger-200: #fcd5b0;
+      --ginger-400: #f09540;
+      --ginger-500: #d86a1a; /* Ana Ginger */
+      --ginger-600: #b8500c; /* Koyu Ginger */
+      --ginger-700: #8c3a07;
+
+      --ink-900: #1b1411; /* Ana Yazı Rengi */
+      --ink-700: #423630;
+      --ink-500: #6d5d54;
+      --ink-400: #9c8b82;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 22px;
+      --radius-full: 999px;
+
+      --shadow-sm: 0 2px 8px rgba(27, 20, 17, 0.04);
+      --shadow-md: 0 8px 24px rgba(27, 20, 17, 0.06);
+      --shadow-lg: 0 16px 40px rgba(216, 106, 26, 0.08);
+
+      --font-display: "Fraunces", Georgia, serif;
+      --font-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     * {
@@ -26,114 +59,2016 @@
       padding: 0;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
-      min-height: 100vh;
+      background-color: var(--white);
+      color: var(--ink-900);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ==========================================================================
+       Header / Navbar
+       ========================================================================== */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--sand-100);
+      transition: box-shadow 0.2s ease;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 76px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--ginger-400), var(--ginger-500));
       display: grid;
       place-items: center;
-      padding: 24px;
-      background:
-        radial-gradient(circle at 15% 18%, rgba(229, 154, 58, 0.16), transparent 42%),
-        radial-gradient(circle at 85% 82%, rgba(217, 93, 36, 0.14), transparent 44%),
-        var(--bg);
-      color: var(--ink);
-      font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      -webkit-font-smoothing: antialiased;
+      color: var(--white);
+      box-shadow: 0 4px 12px rgba(216, 106, 26, 0.28);
     }
 
-    .card {
-      width: 100%;
-      max-width: 600px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: clamp(32px, 6vw, 56px);
-      text-align: center;
-      box-shadow: 0 24px 60px rgba(35, 24, 20, 0.08);
+    .brand-text {
+      display: flex;
+      flex-direction: column;
     }
 
-    .badge {
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--ink-900);
+    }
+
+    .brand-title span {
+      color: var(--ginger-500);
+    }
+
+    .brand-subtitle {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-500);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.94rem;
+      font-weight: 600;
+      color: var(--ink-700);
+      transition: color 0.15s ease;
+      position: relative;
+    }
+
+    .nav-links a:hover {
+      color: var(--ginger-500);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn-phone {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 16px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 600;
+      color: var(--ink-700);
+      padding: 10px 16px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--sand-200);
+      transition: all 0.2s ease;
+    }
+
+    .btn-phone:hover {
+      border-color: var(--ginger-500);
+      color: var(--ginger-500);
+      background: var(--ginger-50);
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--ginger-500);
+      color: var(--white);
+      font-size: 0.92rem;
+      font-weight: 700;
+      padding: 11px 22px;
+      border-radius: var(--radius-full);
+      box-shadow: 0 4px 14px rgba(216, 106, 26, 0.25);
+      transition: all 0.2s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      background: var(--ginger-600);
+      box-shadow: 0 6px 18px rgba(216, 106, 26, 0.35);
+      transform: translateY(-1px);
+    }
+
+    /* ==========================================================================
+       Hero Section
+       ========================================================================== */
+    .hero {
+      position: relative;
+      padding: clamp(48px, 8vw, 84px) 0 clamp(40px, 6vw, 64px);
+      background:
+        radial-gradient(circle at 92% 15%, rgba(240, 149, 64, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 8% 85%, rgba(216, 106, 26, 0.08) 0%, transparent 40%),
+        var(--white);
+      border-bottom: 1px solid var(--sand-100);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      align-items: center;
+      gap: 48px;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: var(--ginger-50);
+      border: 1px solid var(--ginger-200);
+      color: var(--ginger-600);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .hero-tag .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--ginger-500);
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 5.2vw, 4.2rem);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      color: var(--ink-900);
+      margin-bottom: 20px;
+    }
+
+    .hero-title .highlight {
+      color: var(--ginger-500);
+      position: relative;
+      display: inline-block;
+    }
+
+    .hero-desc {
+      font-size: clamp(1.05rem, 1.8vw, 1.2rem);
+      line-height: 1.65;
+      color: var(--ink-700);
+      margin-bottom: 32px;
+      max-width: 540px;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--sand-50);
+      color: var(--ink-900);
+      font-size: 0.92rem;
+      font-weight: 700;
+      padding: 11px 22px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--sand-200);
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: var(--white);
+      border-color: var(--ginger-400);
+      color: var(--ginger-600);
+    }
+
+    .hero-badges {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      padding-top: 24px;
+      border-top: 1px solid var(--sand-100);
+    }
+
+    .hero-badge-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hero-badge-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--ginger-500);
+    }
+
+    .hero-badge-desc {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--ink-500);
+      line-height: 1.35;
+    }
+
+    .hero-visual {
+      position: relative;
+    }
+
+    .hero-card-featured {
+      background: var(--white);
+      border: 1px solid var(--sand-100);
+      border-radius: 28px;
+      padding: 16px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .featured-image-wrapper {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      background: var(--sand-50);
+    }
+
+    .featured-image-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .hero-card-featured:hover .featured-image-wrapper img {
+      transform: scale(1.03);
+    }
+
+    .featured-ribbon {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(27, 20, 17, 0.85);
+      backdrop-filter: blur(6px);
+      color: var(--white);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .featured-meta {
+      padding: 18px 8px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .featured-name {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+
+    .featured-desc-mini {
+      font-size: 0.84rem;
+      color: var(--ink-500);
+      margin-top: 2px;
+    }
+
+    .featured-pill-price {
+      background: var(--ginger-50);
+      color: var(--ginger-600);
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--ginger-200);
+      font-size: 0.95rem;
+    }
+
+    .floating-seal {
+      position: absolute;
+      bottom: -18px;
+      right: -18px;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: var(--ginger-500);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1.15;
+      text-transform: uppercase;
+      box-shadow: 0 12px 28px rgba(216, 106, 26, 0.35);
+      border: 3px solid var(--white);
+      transform: rotate(8deg);
+      z-index: 2;
+    }
+
+    .floating-seal svg {
+      width: 22px;
+      height: 22px;
+      margin-bottom: 2px;
+    }
+
+    /* ==========================================================================
+       Craft & Story Section
+       ========================================================================== */
+    .section-craft {
+      padding: clamp(56px, 8vw, 88px) 0;
+      background: var(--off-white);
+      border-bottom: 1px solid var(--sand-100);
+    }
+
+    .craft-header {
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 48px;
+    }
+
+    .section-sub {
+      color: var(--ginger-500);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 3.8vw, 2.9rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--ink-900);
+      margin-bottom: 14px;
+    }
+
+    .section-desc {
+      font-size: 1.02rem;
+      color: var(--ink-700);
+    }
+
+    .craft-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+
+    .craft-card {
+      background: var(--white);
+      border: 1px solid var(--sand-100);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .craft-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--ginger-200);
+    }
+
+    .craft-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--ginger-50);
+      color: var(--ginger-500);
+      display: grid;
+      place-items: center;
+      margin-bottom: 20px;
+    }
+
+    .craft-title {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--ink-900);
+      margin-bottom: 10px;
+    }
+
+    .craft-text {
+      font-size: 0.94rem;
+      color: var(--ink-500);
+      line-height: 1.6;
+    }
+
+    /* ==========================================================================
+       Interactive Menu Section
+       ========================================================================== */
+    .section-menu {
+      padding: clamp(64px, 9vw, 96px) 0;
+      background: var(--white);
+    }
+
+    .menu-header-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-bottom: 36px;
+    }
+
+    .menu-header-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .menu-search-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .menu-search-input {
+      width: 100%;
+      padding: 12px 18px 12px 42px;
+      background: var(--sand-50);
+      border: 1px solid var(--sand-200);
+      border-radius: var(--radius-full);
+      font-size: 0.92rem;
+      color: var(--ink-900);
+      outline: none;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .menu-search-input:focus {
+      background: var(--white);
+      border-color: var(--ginger-500);
+      box-shadow: 0 0 0 3px var(--ginger-100);
+    }
+
+    .menu-search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ink-400);
+      pointer-events: none;
+    }
+
+    .filter-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      list-style: none;
+      border-bottom: 1px solid var(--sand-100);
+      padding-bottom: 16px;
+    }
+
+    .filter-btn {
+      background: var(--sand-50);
+      border: 1px solid transparent;
+      padding: 9px 18px;
+      border-radius: var(--radius-full);
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--ink-700);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-btn:hover {
+      background: var(--sand-100);
+      color: var(--ink-900);
+    }
+
+    .filter-btn.active {
+      background: var(--ginger-500);
+      color: var(--white);
+      border-color: var(--ginger-500);
+      box-shadow: 0 3px 10px rgba(216, 106, 26, 0.25);
+    }
+
+    /* Size guide banner */
+    .size-guide-strip {
+      background: linear-gradient(135deg, var(--ginger-50), var(--sand-50));
+      border: 1px dashed var(--ginger-200);
+      border-radius: var(--radius-md);
+      padding: 14px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 32px;
+      font-size: 0.88rem;
+    }
+
+    .size-guide-strip-title {
+      font-weight: 700;
+      color: var(--ginger-700);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .size-guide-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      color: var(--ink-700);
+    }
+
+    .size-guide-items strong {
+      color: var(--ink-900);
+    }
+
+    /* Pizza cards grid */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 28px;
+    }
+
+    .pizza-card {
+      background: var(--white);
+      border: 1px solid var(--sand-100);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.22s ease;
+      position: relative;
+    }
+
+    .pizza-card:hover {
+      border-color: var(--ginger-200);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-3px);
+    }
+
+    .pizza-card-top {
+      margin-bottom: 18px;
+    }
+
+    .pizza-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .pizza-name {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--ink-900);
+      line-height: 1.2;
+    }
+
+    .badge-pill {
+      font-size: 0.72rem;
+      font-weight: 700;
       letter-spacing: 0.04em;
       text-transform: uppercase;
-      margin-bottom: 24px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      white-space: nowrap;
     }
 
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: pulse 2s ease-in-out infinite;
+    .badge-signature {
+      background: var(--ginger-500);
+      color: var(--white);
     }
 
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-      50% {
-        transform: scale(1.35);
-        opacity: 0.55;
-      }
+    .badge-popular {
+      background: var(--ginger-100);
+      color: var(--ginger-700);
     }
 
-    h1 {
-      font-family: "Fraunces", Georgia, serif;
-      font-size: clamp(2.5rem, 7vw, 3.8rem);
-      line-height: 1.06;
-      letter-spacing: -0.02em;
-      margin-bottom: 18px;
-      color: var(--ink);
+    .badge-veg {
+      background: #edf7ed;
+      color: #1e6b24;
+      border: 1px solid #c8e6c9;
     }
 
-    h1 span {
-      color: var(--accent);
+    .badge-gourmet {
+      background: var(--sand-100);
+      color: var(--ink-700);
     }
 
-    p {
-      font-size: clamp(1rem, 2.4vw, 1.125rem);
-      line-height: 1.65;
-      color: var(--muted);
-      max-width: 44ch;
-      margin: 0 auto;
-    }
-
-    .divider {
-      width: 56px;
-      height: 3px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, var(--ginger), var(--accent));
-      margin: 28px auto;
-    }
-
-    .status {
+    .pizza-ingredients {
       font-size: 0.92rem;
-      font-weight: 500;
-      color: var(--ink);
-      opacity: 0.78;
+      color: var(--ink-500);
+      line-height: 1.55;
+      margin-top: 6px;
+    }
+
+    /* Size selector inside card */
+    .size-selector-box {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--sand-100);
+    }
+
+    .size-label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--ink-400);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .size-tabs-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      background: var(--sand-50);
+      padding: 4px;
+      border-radius: var(--radius-sm);
+    }
+
+    .size-option-btn {
+      background: transparent;
+      border: none;
+      padding: 6px 4px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--ink-700);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .size-option-btn.active {
+      background: var(--white);
+      color: var(--ginger-600);
+      font-weight: 700;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .pizza-card-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--sand-100);
+    }
+
+    .price-display {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .price-value {
+      font-family: var(--font-display);
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--ginger-600);
+      line-height: 1;
+    }
+
+    .price-label {
+      font-size: 0.74rem;
+      color: var(--ink-400);
+      margin-top: 3px;
+    }
+
+    .btn-card-order {
+      background: var(--ginger-50);
+      border: 1px solid var(--ginger-200);
+      color: var(--ginger-600);
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-card-order:hover {
+      background: var(--ginger-500);
+      color: var(--white);
+      border-color: var(--ginger-500);
+    }
+
+    /* Non-pizza card styling */
+    .extra-item-card {
+      background: var(--sand-50);
+      border: 1px solid var(--sand-100);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .extra-item-name {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+
+    .extra-item-desc {
+      font-size: 0.86rem;
+      color: var(--ink-500);
+      margin: 6px 0 14px;
+      line-height: 1.45;
+    }
+
+    .extra-item-price {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--ginger-600);
+    }
+
+    /* ==========================================================================
+       Order Platforms Hub
+       ========================================================================== */
+    .section-order-hub {
+      padding: clamp(60px, 8vw, 84px) 0;
+      background: var(--off-white);
+      border-top: 1px solid var(--sand-100);
+      border-bottom: 1px solid var(--sand-100);
+    }
+
+    .hub-header {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 40px;
+    }
+
+    .hub-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .hub-card {
+      background: var(--white);
+      border: 1px solid var(--sand-100);
+      border-radius: var(--radius-lg);
+      padding: 28px 20px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.22s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hub-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--ginger-400);
+    }
+
+    .hub-logo-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 16px;
+      font-weight: 800;
+      font-size: 1.3rem;
+    }
+
+    .hub-logo-phone {
+      background: var(--ginger-500);
+      color: var(--white);
+    }
+
+    .hub-logo-trendyol {
+      background: #f27a1a;
+      color: var(--white);
+    }
+
+    .hub-logo-yemeksepeti {
+      background: #ea004b;
+      color: var(--white);
+    }
+
+    .hub-logo-migros {
+      background: #ff5000;
+      color: var(--white);
+    }
+
+    .hub-card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--ink-900);
+      margin-bottom: 6px;
+    }
+
+    .hub-card-desc {
+      font-size: 0.82rem;
+      color: var(--ink-500);
+      margin-bottom: 18px;
+    }
+
+    .btn-hub-action {
+      margin-top: auto;
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: var(--radius-full);
+      background: var(--sand-50);
+      color: var(--ink-900);
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid var(--sand-200);
+      transition: all 0.18s ease;
+    }
+
+    .hub-card:hover .btn-hub-action {
+      background: var(--ginger-500);
+      color: var(--white);
+      border-color: var(--ginger-500);
+    }
+
+    /* ==========================================================================
+       Location & Contact Section
+       ========================================================================== */
+    .section-contact {
+      padding: clamp(64px, 8vw, 96px) 0;
+      background: var(--white);
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 48px;
+      align-items: stretch;
+    }
+
+    .contact-info-card {
+      background: var(--sand-50);
+      border: 1px solid var(--sand-100);
+      border-radius: 28px;
+      padding: clamp(32px, 5vw, 44px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .contact-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin: 32px 0;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .contact-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--white);
+      color: var(--ginger-500);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .contact-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--ink-400);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 2px;
+    }
+
+    .contact-val {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ink-900);
+    }
+
+    .contact-val a:hover {
+      color: var(--ginger-500);
+    }
+
+    .map-frame-wrapper {
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid var(--sand-100);
+      box-shadow: var(--shadow-md);
+      position: relative;
+      min-height: 400px;
+    }
+
+    .map-frame-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      min-height: 400px;
+      border: 0;
+    }
+
+    /* ==========================================================================
+       Footer
+       ========================================================================== */
+    .site-footer {
+      background: var(--ink-900);
+      color: var(--sand-100);
+      padding: 60px 0 32px;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 40px;
+      padding-bottom: 44px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .footer-brand-title {
+      font-family: var(--font-display);
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+
+    .footer-brand-title span {
+      color: var(--ginger-400);
+    }
+
+    .footer-tagline {
+      font-size: 0.92rem;
+      color: rgba(255, 255, 255, 0.65);
+      max-width: 380px;
+      line-height: 1.6;
+    }
+
+    .footer-col-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.92rem;
+    }
+
+    .footer-links a {
+      color: rgba(255, 255, 255, 0.7);
+      transition: color 0.15s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--ginger-400);
+    }
+
+    .footer-bottom {
+      padding-top: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* ==========================================================================
+       Mobile Sticky Order Bar
+       ========================================================================== */
+    .mobile-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 99;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--sand-200);
+      padding: 10px 16px;
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    .mobile-bar-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-mobile-call {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      border-radius: var(--radius-full);
+      background: var(--sand-50);
+      color: var(--ink-900);
+      border: 1px solid var(--sand-200);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .btn-mobile-order {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      border-radius: var(--radius-full);
+      background: var(--ginger-500);
+      color: var(--white);
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       Responsive Breakpoints
+       ========================================================================== */
+    @media (max-width: 992px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      .craft-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      .hub-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+      .footer-top {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links, .btn-phone {
+        display: none;
+      }
+      .hero-badges {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+      .hub-grid {
+        grid-template-columns: 1fr;
+      }
+      .mobile-bar {
+        display: block;
+      }
+      body {
+        padding-bottom: 70px;
+      }
     }
   </style>
 </head>
 <body>
-  <main class="card">
-    <div class="badge">
-      <span class="dot" aria-hidden="true"></span>
-      Hazırlanıyoruz
+
+  <!-- ========================================================================
+       Header
+       ======================================================================== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#hero" class="brand-logo" aria-label="Ginger Pizza Ana Sayfa">
+        <div class="brand-mark" aria-hidden="true">
+          <!-- Pizza slice / flame icon -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 22h20L12 2z"/>
+            <circle cx="12" cy="14" r="2" fill="currentColor"/>
+            <circle cx="8" cy="18" r="1.2" fill="currentColor"/>
+            <circle cx="16" cy="18" r="1.2" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">Ginger <span>Pizza</span></span>
+          <span class="brand-subtitle">Kadıköy · Göztepe</span>
+        </div>
+      </a>
+
+      <nav aria-label="Ana Menü">
+        <ul class="nav-links">
+          <li><a href="#hikaye">Hakkımızda</a></li>
+          <li><a href="#menu">Menü & Fiyatlar</a></li>
+          <li><a href="#siparis">Online Sipariş</a></li>
+          <li><a href="#iletisim">Konum & Saatler</a></li>
+        </ul>
+      </nav>
+
+      <div class="header-actions">
+        <a href="tel:02163370201" class="btn-phone" title="Hemen Ara">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          0216 337 02 01
+        </a>
+        <a href="#menu" class="btn-primary">Menüyü İncele</a>
+      </div>
     </div>
-    <h1>Ginger <span>Pizza</span></h1>
-    <p>
-      Hamurumuz dinleniyor, fırınımız ısınıyor. Çok yakında yepyeni sitemiz ve lezzetlerimizle buradayız.
-    </p>
-    <div class="divider" aria-hidden="true"></div>
-    <p class="status">Çok yakında yayında</p>
-  </main>
+  </header>
+
+  <!-- ========================================================================
+       Hero
+       ======================================================================== -->
+  <section id="hero" class="hero">
+    <div class="container hero-grid">
+      <div class="hero-content">
+        <div class="hero-tag">
+          <span class="dot"></span>
+          Kadıköy Göztepe Butik Pizzacısı
+        </div>
+        <h1 class="hero-title">
+          Gerçek hamur,<br>
+          tutkulu fırın,<br>
+          <span class="highlight">Ginger</span> lezzeti.
+        </h1>
+        <p class="hero-desc">
+          Doğal mayalanmış çıtır ince hamur, özel domates sosu ve seçkin gurme şarküteri malzemeleri. Göztepe mahalle sıcaklığında samimi bir artisan pizza deneyimi.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="#menu" class="btn-primary">
+            Menüyü Keşfet
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+          <a href="tel:02163370201" class="btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            Telefonla Sipariş
+          </a>
+        </div>
+
+        <div class="hero-badges">
+          <div class="hero-badge-item">
+            <span class="hero-badge-title">48 Saat</span>
+            <span class="hero-badge-desc">Soğuk fermantasyon ile sindirimi kolay, hafif çıtır hamur.</span>
+          </div>
+          <div class="hero-badge-item">
+            <span class="hero-badge-title">Taş Fırın</span>
+            <span class="hero-badge-desc">Yüksek ısıda fırınlanan altın sarısı kenarlar ve erimiş mozzarella.</span>
+          </div>
+          <div class="hero-badge-item">
+            <span class="hero-badge-title">%100 Doğal</span>
+            <span class="hero-badge-desc">Seçkin yerel şarküteri, taze fesleğen ve katkısız domates sosu.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-card-featured">
+          <div class="featured-image-wrapper">
+            <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=900&q=80" alt="Ginger Pizza Özel İmza Pizza">
+            <div class="featured-ribbon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              İmza Lezzet
+            </div>
+          </div>
+          <div class="featured-meta">
+            <div>
+              <h3 class="featured-name">Ginger Pizza</h3>
+              <p class="featured-desc-mini">Dana bacon, karamelize soğan, cheddar sos & BBQ</p>
+            </div>
+            <div class="featured-pill-price">3 Boy Seçeneği</div>
+          </div>
+        </div>
+
+        <div class="floating-seal" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          Göztepe<br>Kadıköy
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Craft & Story Section
+       ======================================================================== -->
+  <section id="hikaye" class="section-craft">
+    <div class="container">
+      <div class="craft-header">
+        <p class="section-sub">Bizim Felsefemiz</p>
+        <h2 class="section-title">İyi pizza aceleye gelmez.</h2>
+        <p class="section-desc">
+          Kadıköy Göztepe'deki fırınımızda her sabah aynı tutkuyla güne başlıyoruz. İyi bir pizzanın sırrı, gösterişli süslemelerde değil; sabırla dinlenmiş hamurda ve dürüst malzemede gizlidir.
+        </p>
+      </div>
+
+      <div class="craft-grid">
+        <div class="craft-card">
+          <div class="craft-icon">
+            <!-- Wheat icon -->
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 22l10-10M16 8a4 4 0 0 0-5.66 0l-.34.34 6 6 .34-.34A4 4 0 0 0 16 8zM8.34 15.66l6-6M9 11a4 4 0 0 0-5.66 0l-.34.34 6 6 .34-.34A4 4 0 0 0 9 11z"/>
+            </svg>
+          </div>
+          <h3 class="craft-title">Özel Mayalanmış Hamur</h3>
+          <p class="craft-text">
+            Hamurumuzu en az 48 saat soğuk fermantasyona bırakıyoruz. Böylece mideyi yormayan, dışı çıtır içi yumuşacık ve hava kabarcıklı gerçek artisan bir doku elde ediyoruz.
+          </p>
+        </div>
+
+        <div class="craft-card">
+          <div class="craft-icon">
+            <!-- Flame icon -->
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+            </svg>
+          </div>
+          <h3 class="craft-title">Yüksek Isıda Taş Fırın</h3>
+          <p class="craft-text">
+            Pizzalarımız taş tabanlı fırında yüksek sıcaklıkta pişer. Mozzarella peyniri lezzetini kaybetmeden erir, malzemeler suyunu korur ve kenarlar hafif köz tadıyla lezzetlenir.
+          </p>
+        </div>
+
+        <div class="craft-card">
+          <div class="craft-icon">
+            <!-- Heart / Quality icon -->
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          </div>
+          <h3 class="craft-title">Özenle Seçilmiş Malzemeler</h3>
+          <p class="craft-text">
+            Fermente dana sucuk, dana bacon, Rize kavurma, kestane & istiridye mantarı, taze fesleğen ve zengin peynir çeşitleri. Asla hazır konserve veya düşük kaliteli katkı kullanmıyoruz.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Menu Section
+       ======================================================================== -->
+  <section id="menu" class="section-menu">
+    <div class="container">
+      <div class="menu-header-bar">
+        <div class="menu-header-top">
+          <div>
+            <p class="section-sub">Taze & Lezzetli</p>
+            <h2 class="section-title">Ginger Pizza Menüsü</h2>
+            <p class="section-desc">Her biri özenle reçetelendirilmiş özel pizzalar ve eşlikçiler.</p>
+          </div>
+
+          <!-- Arama Kutusu -->
+          <div class="menu-search-wrapper">
+            <svg class="menu-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="menuSearch" class="menu-search-input" placeholder="Pizza veya malzeme ara (örn: mantar, bacon...)" aria-label="Menüde ara">
+          </div>
+        </div>
+
+        <!-- Kategori Filtreleri -->
+        <ul class="filter-tabs" role="tablist">
+          <li><button class="filter-btn active" data-filter="all">Tümü</button></li>
+          <li><button class="filter-btn" data-filter="imza">İmza & Spesiyaller</button></li>
+          <li><button class="filter-btn" data-filter="klasik">Klasik Lezzetler</button></li>
+          <li><button class="filter-btn" data-filter="gurme">Gurme & Şarküteri</button></li>
+          <li><button class="filter-btn" data-filter="vejetaryen">Vejetaryen & Mantarlı</button></li>
+          <li><button class="filter-btn" data-filter="yan-urun">Yan Lezzetler & Soslar</button></li>
+          <li><button class="filter-btn" data-filter="tatli-icecek">Tatlı & İçecek</button></li>
+        </ul>
+      </div>
+
+      <!-- Boyut & Porsiyon Rehberi -->
+      <div class="size-guide-strip">
+        <div class="size-guide-strip-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
+          Boyut & Dilim Rehberi:
+        </div>
+        <div class="size-guide-items">
+          <span><strong>Small (24-26 cm):</strong> 1 Kişilik / 4 Dilim</span>
+          <span>•</span>
+          <span><strong>Medium (30-32 cm):</strong> 1–2 Kişilik / 6 Dilim</span>
+          <span>•</span>
+          <span><strong>X-Large (40-42 cm):</strong> 3–4 Kişilik / 8 Dilim</span>
+        </div>
+      </div>
+
+      <!-- Menü Listesi (JavaScript ile doldurulacak) -->
+      <div id="menuGrid" class="menu-grid">
+        <!-- Dinamik Pizza ve Yan Ürün Kartları -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Online Sipariş Platformları
+       ======================================================================== -->
+  <section id="siparis" class="section-order-hub">
+    <div class="container">
+      <div class="hub-header">
+        <p class="section-sub">Kapınıza Gelsin</p>
+        <h2 class="section-title">Online Sipariş Kanalları</h2>
+        <p class="section-desc">
+          İster doğrudan fırınımızı arayın, ister favori yemek uygulamanız üzerinden sipariş verin. Sıcak ve taze kapınızda.
+        </p>
+      </div>
+
+      <div class="hub-grid">
+        <!-- Telefon -->
+        <a href="tel:02163370201" class="hub-card">
+          <div class="hub-logo-circle hub-logo-phone">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+          </div>
+          <h3 class="hub-card-title">Doğrudan Arayın</h3>
+          <p class="hub-card-desc">Özel istekler ve hızlı paket sipariş için restoranımızı arayın.</p>
+          <span class="btn-hub-action">0216 337 02 01</span>
+        </a>
+
+        <!-- Trendyol Go -->
+        <a href="https://www.trendyol.com/yemek" target="_blank" rel="noopener noreferrer" class="hub-card">
+          <div class="hub-logo-circle hub-logo-trendyol">TY</div>
+          <h3 class="hub-card-title">Trendyol Go</h3>
+          <p class="hub-card-desc">Göztepe ve çevre mahallelere hızlı Trendyol Go kuryesiyle teslimat.</p>
+          <span class="btn-hub-action">Trendyol'dan Söyle</span>
+        </a>
+
+        <!-- Yemeksepeti -->
+        <a href="https://www.yemeksepeti.com" target="_blank" rel="noopener noreferrer" class="hub-card">
+          <div class="hub-logo-circle hub-logo-yemeksepeti">YS</div>
+          <h3 class="hub-card-title">Yemeksepeti</h3>
+          <p class="hub-card-desc">Yemeksepeti güvencesiyle menüyü inceleyip hemen sipariş verin.</p>
+          <span class="btn-hub-action">Yemeksepeti'nden Söyle</span>
+        </a>
+
+        <!-- Migros Yemek -->
+        <a href="https://www.migros.com.tr/yemek" target="_blank" rel="noopener noreferrer" class="hub-card">
+          <div class="hub-logo-circle hub-logo-migros">MY</div>
+          <h3 class="hub-card-title">Migros Yemek</h3>
+          <p class="hub-card-desc">Migros Yemek avantajları ve indirim kuponlarıyla kapınızda.</p>
+          <span class="btn-hub-action">Migros Yemek'ten Söyle</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Location & Contact
+       ======================================================================== -->
+  <section id="iletisim" class="section-contact">
+    <div class="container">
+      <div class="contact-grid">
+        <div class="contact-info-card">
+          <div>
+            <p class="section-sub">Bizi Ziyaret Edin</p>
+            <h2 class="section-title">Göztepe'de Sıcak Bir Pizza Molası</h2>
+            <p class="section-desc">
+              Kadıköy Göztepe'de fırından yeni çıkmış çıtır pizzalarımızla sizleri ağırlamaktan mutluluk duyuyoruz.
+            </p>
+
+            <ul class="contact-list">
+              <li class="contact-item">
+                <div class="contact-icon" aria-hidden="true">
+                  <!-- Map pin -->
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="contact-label">Adres</div>
+                  <div class="contact-val">
+                    Göztepe Mah. Rıdvanpaşa Sokak No: 16<br>
+                    Kadıköy / İstanbul (Göztepe Metro Yakını)
+                  </div>
+                </div>
+              </li>
+
+              <li class="contact-item">
+                <div class="contact-icon" aria-hidden="true">
+                  <!-- Phone -->
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="contact-label">Telefon</div>
+                  <div class="contact-val">
+                    <a href="tel:02163370201">0216 337 02 01</a>
+                  </div>
+                </div>
+              </li>
+
+              <li class="contact-item">
+                <div class="contact-icon" aria-hidden="true">
+                  <!-- Clock -->
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="contact-label">Çalışma Saatleri</div>
+                  <div class="contact-val">
+                    Haftanın her günü:<br>
+                    11:30 – 23:00 (Paket Servis & Gel Al)
+                  </div>
+                </div>
+              </li>
+
+              <li class="contact-item">
+                <div class="contact-icon" aria-hidden="true">
+                  <!-- Instagram -->
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="contact-label">Instagram</div>
+                  <div class="contact-val">
+                    <a href="https://instagram.com/gingerpizza" target="_blank" rel="noopener noreferrer">@gingerpizza</a>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <a href="https://maps.google.com/?q=Ginger+Pizza+Göztepe+Kadıköy" target="_blank" rel="noopener noreferrer" class="btn-primary" style="align-self: flex-start;">
+            Google Haritalar'da Aç
+          </a>
+        </div>
+
+        <div class="map-frame-wrapper">
+          <!-- Google Maps Embed for Göztepe Kadıköy -->
+          <iframe
+            title="Ginger Pizza Göztepe Konumu"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3011.666141380315!2d29.0620025!3d40.9841829!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cac7c8d9e7943d%3A0x6b44760447395e92!2sG%C3%B6ztepe%2C%20R%C4%B1dvanpa%C5%9Fa%20Sk.%20No%3A16%2C%2034730%20Kad%C4%B1k%C3%B6y%2F%C4%B0stanbul!5e0!3m2!1str!2str!4v1700000000000!5m2!1str!2str"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Footer
+       ======================================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div>
+          <h3 class="footer-brand-title">Ginger <span>Pizza</span></h3>
+          <p class="footer-tagline">
+            Kadıköy Göztepe'nin butik taş fırın pizzacısı. 48 saat fermente hamur, özel soslar ve samimi mahalle sıcaklığı.
+          </p>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">Hızlı Bağlantılar</h4>
+          <ul class="footer-links">
+            <li><a href="#hero">Ana Sayfa</a></li>
+            <li><a href="#hikaye">Hakkımızda & Felsefe</a></li>
+            <li><a href="#menu">Menü & Fiyatlar</a></li>
+            <li><a href="#siparis">Online Sipariş</a></li>
+            <li><a href="#iletisim">Konum & Saatler</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-col-title">İletişim & Paket</h4>
+          <ul class="footer-links">
+            <li><a href="tel:02163370201">0216 337 02 01</a></li>
+            <li>Göztepe Mah. Rıdvanpaşa Sk. No: 16</li>
+            <li>Kadıköy / İstanbul</li>
+            <li><a href="https://instagram.com/gingerpizza" target="_blank" rel="noopener noreferrer">Instagram: @gingerpizza</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 Ginger Pizza. Tüm hakları saklıdır.</div>
+        <div>Kadıköy, İstanbul · Butik Artisan Pizza</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================================================
+       Mobile Bottom Sticky Bar
+       ======================================================================== -->
+  <aside class="mobile-bar" aria-label="Mobil Hızlı İşlemler">
+    <div class="mobile-bar-inner">
+      <a href="tel:02163370201" class="btn-mobile-call">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        Telefon
+      </a>
+      <a href="#menu" class="btn-mobile-order">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 22h20L12 2z"/>
+        </svg>
+        Menüyü Gör
+      </a>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       JavaScript: Menü Verisi, Boyut Değiştirici ve Filtreler
+       ======================================================================== -->
+  <script>
+    /**
+     * Ginger Pizza Kadıköy Göztepe Menü Verileri
+     * Güncel fiyatlar ve pizza içerikleri
+     */
+    const menuData = [
+      // 1. İMZA PİZZALAR
+      {
+        id: "ginger-pizza",
+        name: "Ginger Pizza",
+        category: "imza",
+        badge: "İmza Lezzet",
+        badgeType: "signature",
+        ingredients: "Mozzarella peyniri, domates sos, dana bacon, karamelize soğan, özel cheddar sos, barbekü sos.",
+        prices: { small: 435, medium: 590, xlarge: 980 }
+      },
+      {
+        id: "banner-pizza",
+        name: "Banner Pizza",
+        category: "klasik",
+        badge: "Popüler",
+        badgeType: "popular",
+        ingredients: "Mozzarella peyniri, domates sos, taze dilim domates, ev yapımı fesleğen sos (pesto dokunuşu).",
+        prices: { small: 390, medium: 500, xlarge: 790 }
+      },
+      {
+        id: "montana-pizza",
+        name: "Montana Pizza",
+        category: "klasik",
+        badge: "Geleneksel",
+        badgeType: "popular",
+        ingredients: "Mozzarella peyniri, domates sos, fermente dana sucuk, kültür mantarı, siyah dilimli zeytin.",
+        prices: { small: 420, medium: 570, xlarge: 925 }
+      },
+      {
+        id: "switch-pizza",
+        name: "Switch Pizza",
+        category: "gurme",
+        badge: "Favori",
+        badgeType: "popular",
+        ingredients: "Mozzarella peyniri, domates sos, fermente dana sucuk, dana sosis, tatlı mısır, zeytin, yeşil biber.",
+        prices: { small: 430, medium: 620, xlarge: 925 }
+      },
+      {
+        id: "parker-pizza",
+        name: "Parker Pizza",
+        category: "gurme",
+        badge: "Et Sevenler",
+        badgeType: "gourmet",
+        ingredients: "Mozzarella peyniri, domates sos, dana jambon, fermente dana sucuk, dana sosis.",
+        prices: { small: 440, medium: 610, xlarge: 960 }
+      },
+      {
+        id: "floki-pizza",
+        name: "Floki Pizza",
+        category: "gurme",
+        badge: "Gurme Seçim",
+        badgeType: "signature",
+        ingredients: "Mozzarella peyniri, domates sos, dana bacon, rokfor peyniri (blue cheese), taze istiridye mantarı.",
+        prices: { small: 480, medium: 660, xlarge: 1050 }
+      },
+      {
+        id: "ragnar-pizza",
+        name: "Ragnar Pizza",
+        category: "gurme",
+        badge: "Şefin Spesiyali",
+        badgeType: "signature",
+        ingredients: "Mozzarella peyniri, domates sos, hakiki Rize kavurma, hellim peyniri, közlenmiş patlıcan, çeri domates.",
+        prices: { small: 495, medium: 690, xlarge: 1110 }
+      },
+      {
+        id: "garner-pizza",
+        name: "Garner Pizza",
+        category: "vejetaryen",
+        badge: "3 Mantarlı",
+        badgeType: "veg",
+        ingredients: "Mozzarella peyniri, domates sos, kültür mantarı, taze kestane mantarı, istiridye mantarı, dağ kekiği.",
+        prices: { small: 420, medium: 560, xlarge: 890 }
+      },
+      {
+        id: "marty-pizza",
+        name: "Marty Pizza",
+        category: "vejetaryen",
+        badge: "Vejetaryen",
+        badgeType: "veg",
+        ingredients: "Mozzarella peyniri, domates sos, kültür mantarı, dilimli siyah zeytin, tatlı mısır, domates, yeşil köy biberi.",
+        prices: { small: 450, medium: 560, xlarge: 870 }
+      },
+      {
+        id: "benny-pizza",
+        name: "Benny Pizza",
+        category: "vejetaryen",
+        badge: "Soğan Severler",
+        badgeType: "veg",
+        ingredients: "Mozzarella peyniri, domates sos, beyaz soğan, mor soğan, karamelize soğan, çıtır kızarmış soğan, taze kekik.",
+        prices: { small: 410, medium: 540, xlarge: 860 }
+      },
+      {
+        id: "chuck-pizza",
+        name: "Chuck Pizza",
+        category: "klasik",
+        badge: "Çıtır Tavuk",
+        badgeType: "popular",
+        ingredients: "Mozzarella peyniri, domates sos, çıtır nugget parçaları, tatlı mısır, cheddar sos, barbekü sos.",
+        prices: { small: 415, medium: 560, xlarge: 890 }
+      },
+      {
+        id: "ross-pizza",
+        name: "Ross Pizza",
+        category: "klasik",
+        badge: "Çift Peynir",
+        badgeType: "popular",
+        ingredients: "Çift kat mozzarella peyniri, zengin domates sosu, fesleğen yağı, kurutulmuş kekik.",
+        prices: { small: 395, medium: 510, xlarge: 810 }
+      },
+
+      // 2. YAN LEZZETLER & SOSLAR
+      {
+        id: "firin-patates",
+        name: "Baharatlı Elma Dilim Fırın Patates (300 gr)",
+        category: "yan-urun",
+        badge: "Fırından",
+        badgeType: "gourmet",
+        ingredients: "Zeytinyağı, kaya tuzu, kekik, tatlı toz kırmızı biber ile taş fırında çıtır fırınlanmış patates.",
+        fixedPrice: 265
+      },
+      {
+        id: "cheddarli-patates",
+        name: "Cheddar Soslu Fırın Patates",
+        category: "yan-urun",
+        badge: "Sıcak Soslu",
+        badgeType: "popular",
+        ingredients: "Taş fırında nar gibi kızarmış baharatlı patates, üzerinde sıcak erimiş özel cheddar sos.",
+        fixedPrice: 295
+      },
+      {
+        id: "citir-tavuk-sepeti",
+        name: "Çıtır Nugget Sepeti (8 Adet)",
+        category: "yan-urun",
+        badge: "Çıtır",
+        badgeType: "gourmet",
+        ingredients: "Altın sarısı çıtır tavuk nugget parçaları, yanında seçeceğiniz dip sos ile.",
+        fixedPrice: 240
+      },
+      {
+        id: "sos-cesitleri",
+        name: "Ev Yapımı Dip Soslar (Pesto / Cheddar / BBQ)",
+        category: "yan-urun",
+        badge: "Sos",
+        badgeType: "popular",
+        ingredients: "Pizzanızın çıtır kenarlarına eşlik eden taze fesleğenli pesto sos, eritme cheddar veya tütsülü barbekü sos.",
+        fixedPrice: 50
+      },
+
+      // 3. TATLI & İÇECEK
+      {
+        id: "cikolatali-sufle",
+        name: "Taş Fırında Çikolatalı Sufle",
+        category: "tatli-icecek",
+        badge: "Tatlı",
+        badgeType: "signature",
+        ingredients: "İçi akışkan Belçika çikolatalı sıcak fırın sufle, pudra şekeri dokunuşu ile.",
+        fixedPrice: 220
+      },
+      {
+        id: "tiramisu",
+        name: "Ev Yapımı Klasik Tiramisu",
+        category: "tatli-icecek",
+        badge: "İtalyan",
+        badgeType: "popular",
+        ingredients: "Mascarpone kreması ve espresso ıslatmalı kedi dili ile hazırlanan hafif ev yapımı tiramisu.",
+        fixedPrice: 195
+      },
+      {
+        id: "ginger-limonata",
+        name: "Ev Yapımı Zencefilli Taze Limonata",
+        category: "tatli-icecek",
+        badge: "Ev Yapımı",
+        badgeType: "signature",
+        ingredients: "Taze sıkım limon, hafif taze zencefil dokunuşu ve nane yaprakları ile ferahlatıcı lezzet.",
+        fixedPrice: 95
+      },
+      {
+        id: "icecekler",
+        name: "Kutu Meşrubatlar (330 ml)",
+        category: "tatli-icecek",
+        badge: "Soğuk İçecek",
+        badgeType: "popular",
+        ingredients: "Coca-Cola, Coca-Cola Zero, Fanta, Sprite, Fuse Tea Şeftali/Limon, Ayran, San Pellegrino.",
+        fixedPrice: 65
+      }
+    ];
+
+    // Aktif kart boyut durumları (Her pizza kartı için bağımsız)
+    const cardSelectedSizes = {};
+
+    function renderMenu(items) {
+      const grid = document.getElementById("menuGrid");
+      if (!grid) return;
+
+      if (items.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 48px 24px; color: var(--ink-500);">
+            <p style="font-size: 1.1rem; margin-bottom: 8px;">Aradığınız kriterlere uygun lezzet bulunamadı.</p>
+            <p style="font-size: 0.9rem;">Farklı bir kelime deneyebilir veya kategorileri değiştirebilirsiniz.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = items.map(item => {
+        // Pizza Kartı (3 boy seçeneği olanlar)
+        if (item.prices) {
+          const currentSize = cardSelectedSizes[item.id] || "medium";
+          const currentPrice = item.prices[currentSize];
+          const sizeLabels = {
+            small: "Small (26 cm)",
+            medium: "Medium (32 cm)",
+            xlarge: "X-Large (42 cm)"
+          };
+
+          return `
+            <article class="pizza-card" data-category="${item.category}" id="card-${item.id}">
+              <div class="pizza-card-top">
+                <div class="pizza-card-header">
+                  <h3 class="pizza-name">${item.name}</h3>
+                  <span class="badge-pill badge-${item.badgeType}">${item.badge}</span>
+                </div>
+                <p class="pizza-ingredients">${item.ingredients}</p>
+
+                <div class="size-selector-box">
+                  <div class="size-label">Boyut Seçimi</div>
+                  <div class="size-tabs-row" role="radiogroup" aria-label="${item.name} boyut seçimi">
+                    <button type="button" class="size-option-btn ${currentSize === 'small' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'small')">
+                      Small · 26cm
+                    </button>
+                    <button type="button" class="size-option-btn ${currentSize === 'medium' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'medium')">
+                      Medium · 32cm
+                    </button>
+                    <button type="button" class="size-option-btn ${currentSize === 'xlarge' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'xlarge')">
+                      XL · 42cm
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pizza-card-bottom">
+                <div class="price-display">
+                  <span class="price-value" id="price-${item.id}">${currentPrice} ₺</span>
+                  <span class="price-label" id="size-label-${item.id}">${sizeLabels[currentSize]}</span>
+                </div>
+                <a href="#siparis" class="btn-card-order" title="Sipariş Ver">
+                  <span>Sipariş</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </a>
+              </div>
+            </article>
+          `;
+        }
+
+        // Yan Ürün / Tatlı / İçecek Kartı (Sabit fiyatlı)
+        return `
+          <article class="extra-item-card" data-category="${item.category}">
+            <div>
+              <div class="pizza-card-header">
+                <h3 class="extra-item-name">${item.name}</h3>
+                <span class="badge-pill badge-${item.badgeType}">${item.badge}</span>
+              </div>
+              <p class="extra-item-desc">${item.ingredients}</p>
+            </div>
+            <div class="pizza-card-bottom">
+              <div class="price-display">
+                <span class="extra-item-price">${item.fixedPrice} ₺</span>
+                <span class="price-label">Porsiyon Fiyatı</span>
+              </div>
+              <a href="#siparis" class="btn-card-order" title="Sipariş Ver">
+                <span>Sipariş</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </a>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    // Boyut değiştirme fonksiyonu
+    function changePizzaSize(pizzaId, sizeKey) {
+      cardSelectedSizes[pizzaId] = sizeKey;
+      const pizza = menuData.find(p => p.id === pizzaId);
+      if (!pizza || !pizza.prices) return;
+
+      const priceElem = document.getElementById(`price-${pizzaId}`);
+      const labelElem = document.getElementById(`size-label-${pizzaId}`);
+      const card = document.getElementById(`card-${pizzaId}`);
+
+      const sizeLabels = {
+        small: "Small (26 cm)",
+        medium: "Medium (32 cm)",
+        xlarge: "X-Large (42 cm)"
+      };
+
+      if (priceElem) priceElem.textContent = `${pizza.prices[sizeKey]} ₺`;
+      if (labelElem) labelElem.textContent = sizeLabels[sizeKey];
+
+      if (card) {
+        const buttons = card.querySelectorAll(".size-option-btn");
+        buttons.forEach(btn => btn.classList.remove("active"));
+        const btnIndex = sizeKey === "small" ? 0 : (sizeKey === "medium" ? 1 : 2);
+        if (buttons[btnIndex]) buttons[btnIndex].classList.add("active");
+      }
+    }
+
+    // Filtreleme ve Arama
+    let currentFilter = "all";
+    let currentSearchTerm = "";
+
+    function applyFilters() {
+      let filtered = menuData;
+
+      if (currentFilter !== "all") {
+        filtered = filtered.filter(item => {
+          if (currentFilter === "imza") return item.category === "imza";
+          if (currentFilter === "klasik") return item.category === "klasik";
+          if (currentFilter === "gurme") return item.category === "gurme" || item.category === "imza";
+          if (currentFilter === "vejetaryen") return item.category === "vejetaryen";
+          if (currentFilter === "yan-urun") return item.category === "yan-urun";
+          if (currentFilter === "tatli-icecek") return item.category === "tatli-icecek";
+          return true;
+        });
+      }
+
+      if (currentSearchTerm.trim() !== "") {
+        const query = currentSearchTerm.toLowerCase();
+        filtered = filtered.filter(item => {
+          return item.name.toLowerCase().includes(query) ||
+                 item.ingredients.toLowerCase().includes(query);
+        });
+      }
+
+      renderMenu(filtered);
+    }
+
+    // Event Listeners
+    document.addEventListener("DOMContentLoaded", () => {
+      // Başlangıç Menü Render
+      renderMenu(menuData);
+
+      // Kategori butonları
+      const filterBtns = document.querySelectorAll(".filter-btn");
+      filterBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          filterBtns.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentFilter = btn.getAttribute("data-filter") || "all";
+          applyFilters();
+        });
+      });
+
+      // Arama inputu
+      const searchInput = document.getElementById("menuSearch");
+      if (searchInput) {
+        searchInput.addEventListener("input", (e) => {
+          currentSearchTerm = e.target.value;
+          applyFilters();
+        });
+      }
+    });
+  </script>
 </body>
 </html>
