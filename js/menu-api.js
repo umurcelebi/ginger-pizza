@@ -871,7 +871,7 @@ const MenuAPI = {
       await window.ensureRestaurantConfigReady();
     }
     const sb = getSupabaseClient();
-    const activeSlug = getActiveSlug();
+    const activeSlug = getMenuRestaurantSlug();
     if (!sb) return [];
     try {
       const { data: rest } = await sb
