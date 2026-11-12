@@ -2812,8 +2812,40 @@
     };
 
     // Verileri Yükle ve Render Et
+    async function syncAdminDynamicCategories() {
+      if (getActiveAdminSlug() === "ginger-pizza") return;
+      if (!window.MenuAPI || typeof window.MenuAPI.getCategories !== "function") return;
+      let cats = await MenuAPI.getCategories();
+      if (!cats || cats.length === 0) {
+        const seen = new Map();
+        currentMenuItems.forEach(it => {
+          if (it.category && !seen.has(it.category)) {
+            seen.set(it.category, { slug: it.category, name: it.categoryName || it.category });
+          }
+        });
+        cats = Array.from(seen.values());
+      }
+      if (cats.length === 0) return;
+
+      const filterSel = document.getElementById("filterCategory");
+      if (filterSel) {
+        const prev = filterSel.value || "all";
+        filterSel.innerHTML = `<option value="all">Tüm Kategoriler</option>` +
+          cats.map(c => `<option value="${c.slug}">${c.name}</option>`).join("");
+        filterSel.value = cats.some(c => c.slug === prev) ? prev : "all";
+      }
+
+      const editSel = document.getElementById("editCategory");
+      if (editSel) {
+        const prevEdit = editSel.value;
+        editSel.innerHTML = cats.map(c => `<option value="${c.slug}">${c.name}</option>`).join("");
+        if (cats.some(c => c.slug === prevEdit)) editSel.value = prevEdit;
+      }
+    }
+
     async function loadDashboard() {
       currentMenuItems = await MenuAPI.getMenu();
+      await syncAdminDynamicCategories();
       updateStats();
       renderTable();
       updateDbStatus();

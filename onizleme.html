@@ -4296,13 +4296,8 @@
 
       if (currentFilter !== "all") {
         filtered = filtered.filter(item => {
-          if (currentFilter === "imza") return item.category === "imza";
-          if (currentFilter === "klasik") return item.category === "klasik";
           if (currentFilter === "gurme") return item.category === "gurme" || item.category === "imza";
-          if (currentFilter === "vejetaryen") return item.category === "vejetaryen";
-          if (currentFilter === "yan-urun") return item.category === "yan-urun";
-          if (currentFilter === "tatli-icecek") return item.category === "tatli-icecek";
-          return true;
+          return item.category === currentFilter;
         });
       }
 
@@ -4317,10 +4312,40 @@
       renderMenu(filtered);
     }
 
+    async function renderDynamicCategoriesIfNeeded() {
+      const slug = typeof window.getActiveRestaurantSlug === "function" ? window.getActiveRestaurantSlug() : "ginger-pizza";
+      if (slug === "ginger-pizza") return;
+
+      const tabsEl = document.querySelector(".filter-tabs");
+      if (tabsEl && window.MenuAPI && typeof window.MenuAPI.getCategories === "function") {
+        let cats = await MenuAPI.getCategories();
+        if (!cats || cats.length === 0) {
+          const seen = new Map();
+          menuData.forEach(it => {
+            if (it.category && !seen.has(it.category)) {
+              seen.set(it.category, { slug: it.category, name: it.categoryName || it.category });
+            }
+          });
+          cats = Array.from(seen.values());
+        }
+        if (cats.length > 0) {
+          tabsEl.innerHTML =
+            `<li><button class="filter-btn ${currentFilter === "all" ? "active" : ""}" data-filter="all">Tümü</button></li>` +
+            cats.map(c => `<li><button class="filter-btn ${currentFilter === c.slug ? "active" : ""}" data-filter="${c.slug}">${c.name}</button></li>`).join("");
+        }
+      }
+
+      const sizeGuide = document.querySelector(".size-guide-strip");
+      if (sizeGuide && !menuData.some(i => i.prices)) {
+        sizeGuide.style.display = "none";
+      }
+    }
+
     async function loadMenuFromAPI() {
       try {
         if (window.MenuAPI) {
           menuData = await MenuAPI.getMenu();
+          await renderDynamicCategoriesIfNeeded();
         }
       } catch (e) {
         console.warn("Menu load error, fallback:", e);
@@ -4371,16 +4396,18 @@
         }
       });
 
-      // Kategori filtre butonları
-      const filterBtns = document.querySelectorAll(".filter-btn");
-      filterBtns.forEach(btn => {
-        btn.addEventListener("click", () => {
-          filterBtns.forEach(b => b.classList.remove("active"));
+      // Kategori filtre butonları (dinamik kategoriler için event delegation)
+      const filterTabsEl = document.querySelector(".filter-tabs");
+      if (filterTabsEl) {
+        filterTabsEl.addEventListener("click", (e) => {
+          const btn = e.target.closest(".filter-btn");
+          if (!btn) return;
+          filterTabsEl.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
           currentFilter = btn.getAttribute("data-filter") || "all";
           applyFilters();
         });
-      });
+      }
 
       // Arama inputu
       const searchInput = document.getElementById("menuSearch");

@@ -819,7 +819,7 @@ const MenuAPI = {
 
         let query = sb
           .from("menu_items")
-          .select("*, item_variants(*), categories(slug)")
+          .select("*, item_variants(*), categories(slug, name)")
           .order("sort_order", { ascending: true });
 
         if (restId) {
@@ -846,6 +846,7 @@ const MenuAPI = {
               id: item.id,
               name: item.name,
               category: item.categories ? item.categories.slug : (isPizza ? "klasik" : "yan-urun"),
+              categoryName: item.categories ? item.categories.name : "",
               badge: item.badge || "",
               badgeType: item.badge_type || "popular",
               ingredients: item.description || "",
@@ -863,6 +864,32 @@ const MenuAPI = {
     }
 
     return getLocalMenu();
+  },
+
+  async getCategories() {
+    if (typeof window !== "undefined" && typeof window.ensureRestaurantConfigReady === "function") {
+      await window.ensureRestaurantConfigReady();
+    }
+    const sb = getSupabaseClient();
+    const activeSlug = getActiveSlug();
+    if (!sb) return [];
+    try {
+      const { data: rest } = await sb
+        .from("restaurants")
+        .select("id")
+        .eq("slug", activeSlug)
+        .maybeSingle();
+      if (!rest || !rest.id) return [];
+      const { data, error } = await sb
+        .from("categories")
+        .select("id, slug, name, sort_order")
+        .eq("restaurant_id", rest.id)
+        .order("sort_order", { ascending: true });
+      if (!error && Array.isArray(data)) return data;
+    } catch (e) {
+      console.warn("getCategories failed:", e);
+    }
+    return [];
   },
 
   // Tekil ürün fiyatını güncelle
