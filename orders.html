@@ -910,6 +910,16 @@
           `).join("")}
         </div>
 
+        ${Number(order.discount_amount) > 0 ? `
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+            <span>ARA TOPLAM:</span>
+            <span>${order.subtotal_amount || (Number(order.total_amount) + Number(order.discount_amount))} TL</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+            <span>ONLINE İNDİRİM (%${order.discount_percent || 0}):</span>
+            <span>-${order.discount_amount} TL</span>
+          </div>
+        ` : ''}
         <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-bottom: 4px;">
           <span>TOPLAM:</span>
           <span>${order.total_amount} TL</span>
@@ -1029,9 +1039,18 @@
           <div class="order-total-row">
             <div>
               <div class="payment-tag">${paymentLabel}</div>
-              <div style="font-size:0.74rem; color:var(--ink-muted);">Toplam Tutar</div>
+              ${Number(order.discount_amount) > 0 ? `
+                <div style="font-size:0.72rem; color:#6ee7a0; font-weight:700; margin-top:2px;">
+                  🎁 %${order.discount_percent || 0} İndirim (-${order.discount_amount} ₺)
+                </div>
+              ` : `
+                <div style="font-size:0.74rem; color:var(--ink-muted);">Toplam Tutar</div>
+              `}
             </div>
-            <div class="order-total-val">${order.total_amount} ₺</div>
+            <div style="text-align:right;">
+              ${Number(order.discount_amount) > 0 ? `<div style="font-size:0.74rem; color:var(--ink-muted); text-decoration:line-through;">${order.subtotal_amount || (Number(order.total_amount) + Number(order.discount_amount))} ₺</div>` : ''}
+              <div class="order-total-val">${order.total_amount} ₺</div>
+            </div>
           </div>
 
           ${actionsHtml}

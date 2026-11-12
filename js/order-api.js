@@ -220,9 +220,10 @@ const OrderAPI = {
   // Yeni Sipariş Oluştur
   async createOrder(customerData, cartItems) {
     // 0. Dükkan Açık/Kapalı & Yoğun Modu Ön Kontrolü (Türkiye Saati)
+    let liveSettings = null;
     if (window.StoreStatus) {
-      const settings = await window.StoreStatus.getSettings();
-      const status = window.StoreStatus.evaluate(settings);
+      liveSettings = await window.StoreStatus.getSettings();
+      const status = window.StoreStatus.evaluate(liveSettings);
       if (!status.isOpen) {
         const closedErr = new Error(status.detail || status.title || "Dükkanımız şu anda siparişe kapalıdır.");
         closedErr.code = "STORE_CLOSED";
@@ -231,7 +232,11 @@ const OrderAPI = {
       }
     }
 
-    const totalAmount = cartItems.reduce((sum, i) => sum + (i.unitPrice * i.quantity), 0);
+    const subtotalAmount = cartItems.reduce((sum, i) => sum + (i.unitPrice * i.quantity), 0);
+    const discountInfo = window.StoreStatus
+      ? window.StoreStatus.calculateDiscount(subtotalAmount, liveSettings)
+      : { enabled: false, percent: 0, subtotal: subtotalAmount, discountAmount: 0, finalTotal: subtotalAmount };
+
     const orderPayload = {
       customer_name: customerData.name,
       customer_phone: customerData.phone,
@@ -239,7 +244,10 @@ const OrderAPI = {
       delivery_address: customerData.address || "Gel-Al Siparişi",
       order_notes: customerData.notes || "",
       payment_method: customerData.paymentMethod || "door_card",
-      total_amount: totalAmount,
+      subtotal_amount: discountInfo.subtotal,
+      discount_percent: discountInfo.percent,
+      discount_amount: discountInfo.discountAmount,
+      total_amount: discountInfo.finalTotal,
       status: "new"
     };
 
@@ -248,11 +256,37 @@ const OrderAPI = {
 
     if (sb) {
       try {
-        const { data: orderRes, error: orderErr } = await sb
+        let { data: orderRes, error: orderErr } = await sb
           .from("orders")
           .insert([orderPayload])
           .select()
           .single();
+
+        // İndirim sütunları veritabanına henüz eklenmediyse temel payload ile dene
+        if (orderErr && /(subtotal_amount|discount_percent|discount_amount)/i.test(String(orderErr.message || ""))) {
+          const fallbackPayload = {
+            customer_name: orderPayload.customer_name,
+            customer_phone: orderPayload.customer_phone,
+            delivery_type: orderPayload.delivery_type,
+            delivery_address: orderPayload.delivery_address,
+            order_notes: discountInfo.discountAmount > 0
+              ? `${orderPayload.order_notes ? orderPayload.order_notes + " | " : ""}Online İndirim (%${discountInfo.percent}): -${discountInfo.discountAmount} ₺ (Ara Toplam: ${discountInfo.subtotal} ₺)`
+              : orderPayload.order_notes,
+            payment_method: orderPayload.payment_method,
+            total_amount: orderPayload.total_amount,
+            status: orderPayload.status
+          };
+          const retryRes = await sb.from("orders").insert([fallbackPayload]).select().single();
+          orderRes = retryRes.data
+            ? {
+                ...retryRes.data,
+                subtotal_amount: orderPayload.subtotal_amount,
+                discount_percent: orderPayload.discount_percent,
+                discount_amount: orderPayload.discount_amount
+              }
+            : null;
+          orderErr = retryRes.error;
+        }
 
         if (orderErr) {
           const msg = String(orderErr.message || "");

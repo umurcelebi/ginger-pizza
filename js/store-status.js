@@ -38,6 +38,8 @@ function createDefaultStoreSettings() {
     busy_until: null,
     status_message: "",
     weekly_hours: createDefaultWeeklyHours(),
+    online_discount_enabled: false,
+    online_discount_percent: 0,
     updated_at: new Date().toISOString()
   };
 }
@@ -61,12 +63,17 @@ function normalizeStoreSettings(raw) {
     }
   }
 
+  const rawPercent = Number(src.online_discount_percent);
+  const clampedPercent = Number.isFinite(rawPercent) ? Math.min(90, Math.max(0, Math.round(rawPercent * 100) / 100)) : 0;
+
   return {
     id: STORE_SETTINGS_ROW_ID,
     order_mode: mode,
     busy_until: src.busy_until || null,
     status_message: typeof src.status_message === "string" ? src.status_message : "",
     weekly_hours: hours,
+    online_discount_enabled: Boolean(src.online_discount_enabled),
+    online_discount_percent: clampedPercent,
     updated_at: src.updated_at || new Date().toISOString()
   };
 }
@@ -190,6 +197,29 @@ const StoreStatus = {
   createDefaultSettings: createDefaultStoreSettings,
   normalizeSettings: normalizeStoreSettings,
   getIstanbulClock,
+
+  calculateDiscount(subtotal, rawSettings) {
+    const s = normalizeStoreSettings(rawSettings);
+    const cleanSub = Math.max(0, Number(subtotal) || 0);
+    if (!s.online_discount_enabled || s.online_discount_percent <= 0 || cleanSub <= 0) {
+      return {
+        enabled: false,
+        percent: 0,
+        subtotal: cleanSub,
+        discountAmount: 0,
+        finalTotal: cleanSub
+      };
+    }
+    const discountAmount = Math.round(cleanSub * (s.online_discount_percent / 100));
+    const finalTotal = Math.max(0, cleanSub - discountAmount);
+    return {
+      enabled: true,
+      percent: s.online_discount_percent,
+      subtotal: cleanSub,
+      discountAmount,
+      finalTotal
+    };
+  },
 
   evaluate(rawSettings, now = new Date()) {
     const settings = normalizeStoreSettings(rawSettings);
@@ -350,14 +380,44 @@ const StoreStatus = {
           busy_until: normalized.busy_until,
           status_message: normalized.status_message,
           weekly_hours: normalized.weekly_hours,
+          online_discount_enabled: normalized.online_discount_enabled,
+          online_discount_percent: normalized.online_discount_percent,
           updated_at: normalized.updated_at
         };
 
-        const { data, error } = await sb
+        let { data, error } = await sb
           .from("store_settings")
           .upsert([payload], { onConflict: "id" })
           .select()
           .single();
+
+        // Veritabanında indirim sütunları henüz yoksa temel kolonlarla tekrar dene
+        if (error && /online_discount/i.test(String(error.message || ""))) {
+          const basePayload = {
+            id: STORE_SETTINGS_ROW_ID,
+            order_mode: normalized.order_mode,
+            busy_until: normalized.busy_until,
+            status_message: normalized.status_message,
+            weekly_hours: normalized.weekly_hours,
+            updated_at: normalized.updated_at
+          };
+          const retry = await sb
+            .from("store_settings")
+            .upsert([basePayload], { onConflict: "id" })
+            .select()
+            .single();
+          if (!retry.error && retry.data) {
+            return {
+              settings: normalizeStoreSettings({
+                ...retry.data,
+                online_discount_enabled: normalized.online_discount_enabled,
+                online_discount_percent: normalized.online_discount_percent
+              }),
+              synced: false,
+              error
+            };
+          }
+        }
 
         if (error) {
           return { settings: normalized, synced: false, error };

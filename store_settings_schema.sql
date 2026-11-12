@@ -18,14 +18,29 @@ CREATE TABLE IF NOT EXISTS public.store_settings (
       "6": {"enabled": true, "open": "11:30", "close": "23:00"},
       "0": {"enabled": true, "open": "11:30", "close": "23:00"}
     }'::jsonb,
+    online_discount_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    online_discount_percent NUMERIC(5, 2) NOT NULL DEFAULT 0,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Önceden oluşturulmuş tablolar için order_mode kısıtını güncelle (manual_open desteği)
+-- Önceden oluşturulmuş tablolar için order_mode ve online indirim sütunlarını güncelle
 ALTER TABLE public.store_settings DROP CONSTRAINT IF EXISTS store_settings_order_mode_check;
 ALTER TABLE public.store_settings
     ADD CONSTRAINT store_settings_order_mode_check
     CHECK (order_mode IN ('auto', 'busy', 'manual_open', 'manual_closed'));
+
+ALTER TABLE public.store_settings
+    ADD COLUMN IF NOT EXISTS online_discount_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE public.store_settings
+    ADD COLUMN IF NOT EXISTS online_discount_percent NUMERIC(5, 2) NOT NULL DEFAULT 0;
+
+-- Siparişler tablosuna ara toplam / online indirim sütunları ekle
+ALTER TABLE public.orders
+    ADD COLUMN IF NOT EXISTS subtotal_amount NUMERIC(10, 2);
+ALTER TABLE public.orders
+    ADD COLUMN IF NOT EXISTS discount_percent NUMERIC(5, 2) NOT NULL DEFAULT 0;
+ALTER TABLE public.orders
+    ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(10, 2) NOT NULL DEFAULT 0;
 
 -- Başlangıç satırı (varsa dokunma)
 INSERT INTO public.store_settings (id)

@@ -2942,6 +2942,10 @@
         <span>Ara Toplam</span>
         <span id="cartDrawerSubtotal">0 ₺</span>
       </div>
+      <div class="drawer-summary-row" id="cartDrawerDiscountRow" style="display:none; color:#16883b; font-weight:700;">
+        <span>🎁 Online Sipariş İndirimi (<span id="cartDrawerDiscountLabel">%0</span>)</span>
+        <span id="cartDrawerDiscountAmount">-0 ₺</span>
+      </div>
       <div class="drawer-summary-row">
         <span>Paket Servis / Teslimat</span>
         <span class="free-tag">ÜCRETSİZ</span>
@@ -3030,9 +3034,12 @@
             </div>
           </div>
 
-          <div style="background: var(--sand-50); border: 1px dashed var(--sand-300); padding: 12px 16px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <span style="font-size: 0.88rem; color: var(--ink-600); font-weight: 600;">Ödenecek Tutar</span>
-            <span id="checkoutSummaryTotal" style="font-size: 1.25rem; font-weight: 800; color: var(--ginger-600);">0 ₺</span>
+          <div style="background: var(--sand-50); border: 1px dashed var(--sand-300); padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+            <div id="checkoutDiscountBreakdown" style="display:none; font-size: 0.8rem; color: #16883b; font-weight: 700; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed var(--sand-200);"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.88rem; color: var(--ink-600); font-weight: 600;">Ödenecek Tutar</span>
+              <span id="checkoutSummaryTotal" style="font-size: 1.25rem; font-weight: 800; color: var(--ginger-600);">0 ₺</span>
+            </div>
           </div>
 
           <div style="display: flex; gap: 10px;">
@@ -3118,6 +3125,9 @@
             ? `Bugün ${st.todaySchedule.open} – ${st.todaySchedule.close}`
             : (st.nextOpenText || "Saatler kapalı"));
 
+        const discEnabled = Boolean(st.settings && st.settings.online_discount_enabled && Number(st.settings.online_discount_percent) > 0);
+        const discPct = discEnabled ? Number(st.settings.online_discount_percent) : 0;
+
         banner.innerHTML = `
           <div class="store-banner-left">
             <span class="store-banner-dot" aria-hidden="true"></span>
@@ -3126,7 +3136,10 @@
               <div class="store-banner-detail">${escapeHtml(st.detail)}</div>
             </div>
           </div>
-          <div class="store-banner-meta">${escapeHtml(scheduleMeta)}</div>
+          <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+            ${discEnabled ? `<div class="store-banner-meta" style="background:#eaf6ed; color:#165e2d; border-color:#bfe6ca;">🎁 Online Siparişe Özel %${discPct} İndirim</div>` : ''}
+            <div class="store-banner-meta">${escapeHtml(scheduleMeta)}</div>
+          </div>
         `;
       }
 
@@ -3158,6 +3171,8 @@
       const settings = await StoreStatus.getSettings();
       currentStoreStatus = StoreStatus.evaluate(settings);
       renderStoreStatusUI();
+      syncCartBadges();
+      renderCartDrawer();
       if (prevOpen !== currentStoreStatus.isOpen && menuData.length > 0) {
         renderMenu();
       }
@@ -3500,8 +3515,24 @@
       }
 
       if (footer) footer.style.display = "block";
-      if (subtotalElem) subtotalElem.textContent = `${total} ₺`;
-      if (totalElem) totalElem.textContent = `${total} ₺`;
+      const disc = window.StoreStatus
+        ? StoreStatus.calculateDiscount(total, currentStoreStatus.settings)
+        : { enabled: false, percent: 0, subtotal: total, discountAmount: 0, finalTotal: total };
+
+      if (subtotalElem) subtotalElem.textContent = `${disc.subtotal} ₺`;
+      const discRow = document.getElementById("cartDrawerDiscountRow");
+      const discLabel = document.getElementById("cartDrawerDiscountLabel");
+      const discAmount = document.getElementById("cartDrawerDiscountAmount");
+      if (discRow) {
+        if (disc.enabled && disc.discountAmount > 0) {
+          discRow.style.display = "flex";
+          if (discLabel) discLabel.textContent = `%${disc.percent}`;
+          if (discAmount) discAmount.textContent = `-${disc.discountAmount} ₺`;
+        } else {
+          discRow.style.display = "none";
+        }
+      }
+      if (totalElem) totalElem.textContent = `${disc.finalTotal} ₺`;
       renderStoreStatusUI();
 
       body.innerHTML = `
@@ -3551,7 +3582,10 @@
     // Sepet Güncellendiğinde Sayaçları ve Butonları Senkronize Et
     function syncCartBadges() {
       const count = Cart.getCount();
-      const total = Cart.getTotal();
+      const rawTotal = Cart.getTotal();
+      const disc = window.StoreStatus
+        ? StoreStatus.calculateDiscount(rawTotal, currentStoreStatus.settings)
+        : { finalTotal: rawTotal };
 
       const floatingBadge = document.getElementById("floatingCartBadge");
       const floatingTotal = document.getElementById("floatingCartTotal");
@@ -3560,7 +3594,7 @@
       const floatingBtn = document.getElementById("floatingCartBtn");
 
       if (floatingBadge) floatingBadge.textContent = count;
-      if (floatingTotal) floatingTotal.textContent = `${total} ₺`;
+      if (floatingTotal) floatingTotal.textContent = `${disc.finalTotal} ₺`;
       if (headerBadge) headerBadge.textContent = count;
       if (mobileCount) mobileCount.textContent = count;
 
@@ -3600,7 +3634,23 @@
 
       const modal = document.getElementById("checkoutModalBackdrop");
       const summaryTotal = document.getElementById("checkoutSummaryTotal");
-      if (summaryTotal) summaryTotal.textContent = `${Cart.getTotal()} ₺`;
+      const breakdownEl = document.getElementById("checkoutDiscountBreakdown");
+      const rawTotal = Cart.getTotal();
+      const disc = window.StoreStatus
+        ? StoreStatus.calculateDiscount(rawTotal, currentStoreStatus.settings)
+        : { enabled: false, percent: 0, subtotal: rawTotal, discountAmount: 0, finalTotal: rawTotal };
+
+      if (breakdownEl) {
+        if (disc.enabled && disc.discountAmount > 0) {
+          breakdownEl.style.display = "flex";
+          breakdownEl.style.justifyContent = "space-between";
+          breakdownEl.innerHTML = `<span>🎁 Online Sipariş İndirimi (%${disc.percent})</span><span>${disc.subtotal} ₺ → -${disc.discountAmount} ₺</span>`;
+        } else {
+          breakdownEl.style.display = "none";
+          breakdownEl.innerHTML = "";
+        }
+      }
+      if (summaryTotal) summaryTotal.textContent = `${disc.finalTotal} ₺`;
       if (modal) modal.classList.add("open");
       document.body.style.overflow = "hidden";
     };
@@ -3867,7 +3917,17 @@
               </div>
             `).join("")}
           </div>
-          <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--sand-300); padding-top: 10px; font-weight: 800; font-size: 1.05rem; color: var(--ink-900);">
+          ${Number(order.discount_amount) > 0 ? `
+            <div style="display: flex; justify-content: space-between; font-size: 0.84rem; color: var(--ink-600); border-top: 1px dashed var(--sand-300); padding-top: 8px; margin-bottom: 4px;">
+              <span>Ara Toplam:</span>
+              <span>${order.subtotal_amount || (Number(order.total_amount) + Number(order.discount_amount))} ₺</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.84rem; color: #16883b; font-weight: 700; margin-bottom: 6px;">
+              <span>🎁 Online Sipariş İndirimi (%${order.discount_percent || 0}):</span>
+              <span>-${order.discount_amount} ₺</span>
+            </div>
+          ` : ''}
+          <div style="display: flex; justify-content: space-between; ${Number(order.discount_amount) > 0 ? '' : 'border-top: 1px dashed var(--sand-300); '}padding-top: 10px; font-weight: 800; font-size: 1.05rem; color: var(--ink-900);">
             <span>Toplam Tutar:</span>
             <span style="color: var(--ginger-600);">${order.total_amount} ₺</span>
           </div>
@@ -4111,6 +4171,8 @@
           const prevOpen = currentStoreStatus.isOpen;
           currentStoreStatus = StoreStatus.evaluate(newSettings);
           renderStoreStatusUI();
+          syncCartBadges();
+          renderCartDrawer();
           if (prevOpen !== currentStoreStatus.isOpen && menuData.length > 0) {
             renderMenu();
           }

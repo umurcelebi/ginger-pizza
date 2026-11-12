@@ -768,6 +768,53 @@
       gap: 12px;
     }
 
+    .online-discount-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      background: #f5fbf6;
+      border: 1px solid #cce8d4;
+      border-radius: var(--radius-md);
+      padding: 13px 16px;
+      margin-bottom: 18px;
+    }
+
+    .online-discount-box.is-off {
+      background: var(--bg);
+      border-color: var(--sand-200);
+    }
+
+    .discount-controls-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .discount-rate-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--white);
+      border: 1px solid var(--sand-200);
+      border-radius: 8px;
+      padding: 4px 10px;
+    }
+
+    .discount-rate-input {
+      width: 62px;
+      border: none;
+      outline: none;
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--ink-900);
+      text-align: right;
+      background: transparent;
+    }
+
     /* Ürün Ekle / Çıkar / Ek Ürün Editörü */
     #itemModal .modal-box {
       max-width: 720px;
@@ -1035,6 +1082,35 @@
           </label>
           <input type="text" id="adminStoreMessage" class="store-message-input" placeholder="Örn: Fırın yoğunluğu nedeniyle 30 dk siparişe ara verdik.">
           <button type="button" class="btn-header" onclick="handleSaveStoreMessage()">💬 Mesajı Güncelle</button>
+        </div>
+
+        <!-- Online Siparişe Özel Otomatik İndirim -->
+        <div id="adminDiscountBox" class="online-discount-box is-off">
+          <div>
+            <div style="font-size: 0.9rem; font-weight: 800; color: var(--ink-900);">🎁 Online Siparişe Özel Otomatik İndirim</div>
+            <div id="adminDiscountStatusHint" style="font-size: 0.8rem; color: var(--ink-500); margin-top: 2px;">
+              Şu an pasif — online siparişlere indirim uygulanmıyor.
+            </div>
+          </div>
+
+          <div class="discount-controls-group">
+            <div style="display:inline-flex; align-items:center; gap:8px; font-size:0.84rem; font-weight:700; color:var(--ink-900);">
+              <label class="switch" title="Online indirimi aç / kapat">
+                <input type="checkbox" id="adminDiscountEnabled" onchange="renderAdminDiscountUI()">
+                <span class="slider"></span>
+              </label>
+              <label for="adminDiscountEnabled" id="adminDiscountToggleText" style="cursor:pointer;">Kapalı</label>
+            </div>
+
+            <div class="discount-rate-wrap">
+              <span style="font-size:0.78rem; font-weight:700; color:var(--ink-500);">Oran: %</span>
+              <input type="number" id="adminDiscountPercent" class="discount-rate-input" min="0" max="90" step="1" value="10" oninput="renderAdminDiscountUI()">
+            </div>
+
+            <button type="button" class="btn-header btn-header-primary" id="btnSaveOnlineDiscount" onclick="saveOnlineDiscountSettings()">
+              💾 İndirimi Kaydet
+            </button>
+          </div>
         </div>
 
         <div class="store-hours-topbar">
@@ -1684,12 +1760,77 @@
       return result;
     }
 
+    window.renderAdminDiscountUI = function() {
+      const box = document.getElementById("adminDiscountBox");
+      const chk = document.getElementById("adminDiscountEnabled");
+      const inp = document.getElementById("adminDiscountPercent");
+      const toggleText = document.getElementById("adminDiscountToggleText");
+      const hint = document.getElementById("adminDiscountStatusHint");
+      if (!box || !chk || !inp) return;
+
+      const enabled = chk.checked;
+      const pct = Math.min(90, Math.max(0, Number(inp.value) || 0));
+      box.classList.toggle("is-off", !enabled || pct <= 0);
+      if (toggleText) toggleText.textContent = enabled ? "Aktif" : "Kapalı";
+      if (hint) {
+        if (enabled && pct > 0) {
+          hint.textContent = `Şu an aktif — tüm online siparişlerde sepette otomatik %${pct} indirim uygulanır.`;
+          hint.style.color = "var(--success)";
+        } else {
+          hint.textContent = "Şu an pasif — online siparişlere indirim uygulanmıyor.";
+          hint.style.color = "var(--ink-500)";
+        }
+      }
+    };
+
+    function syncAdminDiscountInputsFromSettings(settings) {
+      if (!settings) return;
+      const chk = document.getElementById("adminDiscountEnabled");
+      const inp = document.getElementById("adminDiscountPercent");
+      if (chk) chk.checked = Boolean(settings.online_discount_enabled);
+      if (inp && document.activeElement !== inp) {
+        inp.value = Number(settings.online_discount_percent) || 0;
+      }
+      window.renderAdminDiscountUI();
+    }
+
+    window.saveOnlineDiscountSettings = async function() {
+      if (!window.StoreStatus) return;
+      const btn = document.getElementById("btnSaveOnlineDiscount");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Kaydediliyor...";
+      }
+      try {
+        const current = adminStoreSettings || await StoreStatus.getSettings();
+        const enabled = Boolean(document.getElementById("adminDiscountEnabled")?.checked);
+        const rawPct = Number(document.getElementById("adminDiscountPercent")?.value) || 0;
+        const pct = Math.min(90, Math.max(0, rawPct));
+
+        const next = {
+          ...current,
+          online_discount_enabled: enabled,
+          online_discount_percent: pct
+        };
+        const res = await StoreStatus.saveSettings(next);
+        adminStoreSettings = res.settings;
+        syncAdminDiscountInputsFromSettings(adminStoreSettings);
+        showToast(res.synced ? "Online indirim ayarları kaydedildi!" : "İndirim yerel olarak kaydedildi.");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "💾 İndirimi Kaydet";
+        }
+      }
+    };
+
     async function loadStoreControlPanel() {
       if (!window.StoreStatus) return;
       adminStoreSettings = await StoreStatus.getSettings();
       const msgInput = document.getElementById("adminStoreMessage");
       if (msgInput) msgInput.value = adminStoreSettings.status_message || "";
       renderAdminStoreStatusOnly();
+      syncAdminDiscountInputsFromSettings(adminStoreSettings);
       renderWeeklyHoursEditor();
 
       if (!storeSubscriptionActive) {
@@ -1701,6 +1842,7 @@
             msgInput.value = adminStoreSettings.status_message || "";
           }
           renderAdminStoreStatusOnly();
+          syncAdminDiscountInputsFromSettings(adminStoreSettings);
           renderWeeklyHoursEditor();
         });
         setInterval(renderAdminStoreStatusOnly, 30000);
