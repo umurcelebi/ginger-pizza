@@ -5,7 +5,75 @@
 
 const CART_STORAGE_KEY = "ginger_pizza_cart_v1";
 const ORDERS_STORAGE_KEY = "ginger_pizza_orders_v1";
+const CUSTOMERS_STORAGE_KEY = "ginger_pizza_customers_v1";
 const ACTIVE_ORDER_KEY = "ginger_active_order_id_v1";
+
+function getRestaurantSlug() {
+  const raw = window.SUPABASE_CONFIG && typeof window.SUPABASE_CONFIG.restaurantSlug === "string"
+    ? window.SUPABASE_CONFIG.restaurantSlug.trim()
+    : "";
+  return raw || "ginger-pizza";
+}
+
+function normalizePhone(rawPhone) {
+  let digits = String(rawPhone || "").replace(/[^0-9]/g, "");
+  if (!digits) return "";
+  if (digits.length === 12 && digits.startsWith("90")) {
+    digits = "0" + digits.slice(2);
+  } else if (digits.length === 10 && digits.startsWith("5")) {
+    digits = "0" + digits;
+  }
+  return digits;
+}
+
+function getIstanbulTodayStr() {
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Istanbul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(new Date());
+  } catch (e) {
+    const d = new Date(Date.now() + 3 * 3600000);
+    return d.toISOString().slice(0, 10);
+  }
+}
+
+function toIstanbulDateStr(input) {
+  if (!input) return "";
+  const dt = new Date(input);
+  if (Number.isNaN(dt.getTime())) return "";
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Istanbul",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(dt);
+  } catch (e) {
+    const shifted = new Date(dt.getTime() + 3 * 3600000);
+    return shifted.toISOString().slice(0, 10);
+  }
+}
+
+function getIstanbulDateRangeBounds(startDateStr, endDateStr) {
+  const today = getIstanbulTodayStr();
+  const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+  let start = dateRe.test(String(startDateStr || "")) ? String(startDateStr) : today;
+  let end = dateRe.test(String(endDateStr || "")) ? String(endDateStr) : start;
+  if (end < start) {
+    const tmp = start;
+    start = end;
+    end = tmp;
+  }
+  return {
+    startDate: start,
+    endDate: end,
+    startIso: `${start}T00:00:00+03:00`,
+    endIso: `${end}T23:59:59.999+03:00`
+  };
+}
 
 // ============================================================================
 // 1. SEPET YÖNETİMİ (CART)
@@ -216,6 +284,120 @@ function saveLocalOrders(orders) {
   window.dispatchEvent(new CustomEvent("ginger-orders-updated", { detail: orders }));
 }
 
+function getLocalCustomers() {
+  try {
+    const raw = localStorage.getItem(CUSTOMERS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveLocalCustomers(customers) {
+  localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(customers));
+}
+
+function aggregateCustomersFromOrders(orders, targetSlug = getRestaurantSlug()) {
+  const map = new Map();
+  const sorted = [...(Array.isArray(orders) ? orders : [])]
+    .filter(o => (o.restaurant_slug || "ginger-pizza") === targetSlug && o.status !== "cancelled")
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+
+  for (const o of sorted) {
+    const normPhone = normalizePhone(o.customer_phone);
+    if (!normPhone) continue;
+    const addr = (o.delivery_address || "").trim();
+    const validAddr = addr && addr !== "Gel-Al Siparişi" ? addr : "";
+    const existing = map.get(normPhone);
+    const amount = Number(o.total_amount) || 0;
+
+    if (!existing) {
+      map.set(normPhone, {
+        id: `local-${targetSlug}-${normPhone}`,
+        restaurant_slug: targetSlug,
+        phone_normalized: normPhone,
+        phone_display: (o.customer_phone || normPhone).trim(),
+        customer_name: (o.customer_name || "Müşteri").trim(),
+        last_address: validAddr || addr,
+        order_count: 1,
+        total_spent: Math.round(amount * 100) / 100,
+        last_order_at: o.created_at || new Date().toISOString(),
+        notes: ""
+      });
+    } else {
+      existing.order_count += 1;
+      existing.total_spent = Math.round((existing.total_spent + amount) * 100) / 100;
+      if ((!existing.last_address || existing.last_address === "Gel-Al Siparişi") && validAddr) {
+        existing.last_address = validAddr;
+      }
+    }
+  }
+  return Array.from(map.values());
+}
+
+function syncLocalCustomerFromOrder(order) {
+  if (!order || order.status === "cancelled") return;
+  const slug = order.restaurant_slug || getRestaurantSlug();
+  const normPhone = normalizePhone(order.customer_phone);
+  if (!normPhone) return;
+
+  const list = getLocalCustomers();
+  const idx = list.findIndex(c => c.restaurant_slug === slug && c.phone_normalized === normPhone);
+  const amount = Number(order.total_amount) || 0;
+  const addr = (order.delivery_address || "").trim();
+  const validAddr = addr && addr !== "Gel-Al Siparişi" ? addr : "";
+  const orderDate = order.created_at || new Date().toISOString();
+
+  if (idx >= 0) {
+    const cur = list[idx];
+    cur.phone_display = (order.customer_phone || cur.phone_display || normPhone).trim();
+    cur.customer_name = (order.customer_name || cur.customer_name || "Müşteri").trim();
+    if (validAddr) cur.last_address = validAddr;
+    cur.order_count = Math.max(0, Number(cur.order_count) || 0) + 1;
+    cur.total_spent = Math.round(((Number(cur.total_spent) || 0) + amount) * 100) / 100;
+    if (!cur.last_order_at || new Date(orderDate) > new Date(cur.last_order_at)) {
+      cur.last_order_at = orderDate;
+    }
+    list[idx] = cur;
+  } else {
+    list.push({
+      id: `local-${slug}-${normPhone}`,
+      restaurant_slug: slug,
+      phone_normalized: normPhone,
+      phone_display: (order.customer_phone || normPhone).trim(),
+      customer_name: (order.customer_name || "Müşteri").trim(),
+      last_address: validAddr || addr,
+      order_count: 1,
+      total_spent: Math.round(amount * 100) / 100,
+      last_order_at: orderDate,
+      notes: ""
+    });
+  }
+  saveLocalCustomers(list);
+}
+
+function reconcileLocalCustomerStatusChange(order, oldStatus, newStatus) {
+  if (!order || oldStatus === newStatus) return;
+  const slug = order.restaurant_slug || getRestaurantSlug();
+  const normPhone = normalizePhone(order.customer_phone);
+  if (!normPhone) return;
+
+  const list = getLocalCustomers();
+  const idx = list.findIndex(c => c.restaurant_slug === slug && c.phone_normalized === normPhone);
+  if (idx < 0) return;
+
+  const amount = Number(order.total_amount) || 0;
+  if (oldStatus !== "cancelled" && newStatus === "cancelled") {
+    list[idx].order_count = Math.max(0, (Number(list[idx].order_count) || 0) - 1);
+    list[idx].total_spent = Math.max(0, Math.round(((Number(list[idx].total_spent) || 0) - amount) * 100) / 100);
+    saveLocalCustomers(list);
+  } else if (oldStatus === "cancelled" && newStatus !== "cancelled") {
+    list[idx].order_count = (Number(list[idx].order_count) || 0) + 1;
+    list[idx].total_spent = Math.round(((Number(list[idx].total_spent) || 0) + amount) * 100) / 100;
+    saveLocalCustomers(list);
+  }
+}
+
 const OrderAPI = {
   // Yeni Sipariş Oluştur
   async createOrder(customerData, cartItems) {
@@ -237,7 +419,9 @@ const OrderAPI = {
       ? window.StoreStatus.calculateDiscount(subtotalAmount, liveSettings)
       : { enabled: false, percent: 0, subtotal: subtotalAmount, discountAmount: 0, finalTotal: subtotalAmount };
 
+    const restaurantSlug = getRestaurantSlug();
     const orderPayload = {
+      restaurant_slug: restaurantSlug,
       customer_name: customerData.name,
       customer_phone: customerData.phone,
       delivery_type: customerData.deliveryType || "delivery", // 'delivery' veya 'takeaway'
@@ -262,24 +446,30 @@ const OrderAPI = {
           .select()
           .single();
 
-        // İndirim sütunları veritabanına henüz eklenmediyse temel payload ile dene
-        if (orderErr && /(subtotal_amount|discount_percent|discount_amount)/i.test(String(orderErr.message || ""))) {
-          const fallbackPayload = {
-            customer_name: orderPayload.customer_name,
-            customer_phone: orderPayload.customer_phone,
-            delivery_type: orderPayload.delivery_type,
-            delivery_address: orderPayload.delivery_address,
-            order_notes: discountInfo.discountAmount > 0
-              ? `${orderPayload.order_notes ? orderPayload.order_notes + " | " : ""}Online İndirim (%${discountInfo.percent}): -${discountInfo.discountAmount} ₺ (Ara Toplam: ${discountInfo.subtotal} ₺)`
-              : orderPayload.order_notes,
-            payment_method: orderPayload.payment_method,
-            total_amount: orderPayload.total_amount,
-            status: orderPayload.status
-          };
-          const retryRes = await sb.from("orders").insert([fallbackPayload]).select().single();
+        // Çoklu restoran veya indirim sütunları veritabanına henüz eklenmediyse kademeli yedek payload ile dene
+        if (orderErr && /(restaurant_slug|subtotal_amount|discount_percent|discount_amount)/i.test(String(orderErr.message || ""))) {
+          const errMsg = String(orderErr.message || "");
+          const retryPayload = { ...orderPayload };
+          if (/restaurant_slug/i.test(errMsg)) {
+            delete retryPayload.restaurant_slug;
+          }
+          if (/(subtotal_amount|discount_percent|discount_amount)/i.test(errMsg)) {
+            delete retryPayload.subtotal_amount;
+            delete retryPayload.discount_percent;
+            delete retryPayload.discount_amount;
+            if (discountInfo.discountAmount > 0) {
+              retryPayload.order_notes = `${orderPayload.order_notes ? orderPayload.order_notes + " | " : ""}Online İndirim (%${discountInfo.percent}): -${discountInfo.discountAmount} ₺ (Ara Toplam: ${discountInfo.subtotal} ₺)`;
+            }
+          }
+          let retryRes = await sb.from("orders").insert([retryPayload]).select().single();
+          if (retryRes.error && /restaurant_slug/i.test(String(retryRes.error.message || ""))) {
+            delete retryPayload.restaurant_slug;
+            retryRes = await sb.from("orders").insert([retryPayload]).select().single();
+          }
           orderRes = retryRes.data
             ? {
                 ...retryRes.data,
+                restaurant_slug: retryRes.data.restaurant_slug || restaurantSlug,
                 subtotal_amount: orderPayload.subtotal_amount,
                 discount_percent: orderPayload.discount_percent,
                 discount_amount: orderPayload.discount_amount
@@ -343,6 +533,7 @@ const OrderAPI = {
       };
       localOrders.unshift(createdOrder);
       saveLocalOrders(localOrders);
+      syncLocalCustomerFromOrder(createdOrder);
     }
 
     // Aktif sipariş ID'sini sakla (müşteri takip edebilsin)
@@ -380,23 +571,25 @@ const OrderAPI = {
 
   // Aktif ve Arşivlenmemiş Siparişleri Listele (Mutfak / Admin İçin)
   async getOrders() {
+    const slug = getRestaurantSlug();
     const sb = getSupabaseClient();
     if (sb) {
       try {
         let { data: orders, error } = await sb
           .from("orders")
           .select("*, order_items(*)")
+          .eq("restaurant_slug", slug)
           .or("is_archived.is.null,is_archived.eq.false")
           .order("created_at", { ascending: false })
           .limit(100);
 
-        // Eğer Supabase'de is_archived sütunu henüz eklenmediyse geriye dönük uyumluluk
-        if (error && (error.code === "42703" || error.code === "PGRST204" || (error.message && error.message.includes("is_archived")))) {
+        // Eğer Supabase'de restaurant_slug veya is_archived sütunu henüz eklenmediyse geriye dönük uyumluluk
+        if (error && (error.code === "42703" || error.code === "PGRST204" || /(is_archived|restaurant_slug)/i.test(String(error.message || "")))) {
           const fallbackRes = await sb
             .from("orders")
             .select("*, order_items(*)")
             .order("created_at", { ascending: false })
-            .limit(50);
+            .limit(100);
           orders = fallbackRes.data;
           error = fallbackRes.error;
         }
@@ -412,7 +605,7 @@ const OrderAPI = {
       }
     }
 
-    return getLocalOrders().filter(o => !o.is_archived);
+    return getLocalOrders().filter(o => !o.is_archived && (o.restaurant_slug || "ginger-pizza") === slug);
   },
 
   // Tamamlanan Siparişleri Arşivle (Gün Sonu Temizliği)
@@ -465,12 +658,231 @@ const OrderAPI = {
     const localOrders = getLocalOrders();
     const order = localOrders.find(o => o.id === orderId);
     if (order) {
+      const oldStatus = order.status;
       order.status = newStatus;
       order.updated_at = new Date().toISOString();
       saveLocalOrders(localOrders);
+      reconcileLocalCustomerStatusChange(order, oldStatus, newStatus);
     }
 
     return true;
+  },
+
+  // ============================================================================
+  // RAPORLAMA & MÜŞTERİLER API (Admin Panel İçin)
+  // ============================================================================
+  getIstanbulTodayStr,
+  normalizePhone,
+  getRestaurantSlug,
+
+  // Tek gün veya tarih aralığına göre tüm siparişleri (arşivlenmiş dahil) getir
+  async getOrdersByDateRange(startDateStr, endDateStr) {
+    const slug = getRestaurantSlug();
+    const bounds = getIstanbulDateRangeBounds(startDateStr, endDateStr);
+    const sb = getSupabaseClient();
+
+    if (sb) {
+      try {
+        let { data: orders, error } = await sb
+          .from("orders")
+          .select("*, order_items(*)")
+          .eq("restaurant_slug", slug)
+          .gte("created_at", bounds.startIso)
+          .lte("created_at", bounds.endIso)
+          .order("created_at", { ascending: false })
+          .limit(1500);
+
+        if (error && (error.code === "42703" || error.code === "PGRST204" || /restaurant_slug/i.test(String(error.message || "")))) {
+          const fallbackRes = await sb
+            .from("orders")
+            .select("*, order_items(*)")
+            .gte("created_at", bounds.startIso)
+            .lte("created_at", bounds.endIso)
+            .order("created_at", { ascending: false })
+            .limit(1500);
+          orders = fallbackRes.data;
+          error = fallbackRes.error;
+        }
+
+        if (!error && Array.isArray(orders)) {
+          return orders.map(o => ({
+            ...o,
+            items: o.order_items || []
+          }));
+        }
+      } catch (e) {
+        console.warn("Report getOrdersByDateRange Supabase error, falling back to local:", e);
+      }
+    }
+
+    return getLocalOrders()
+      .filter(o => {
+        if ((o.restaurant_slug || "ginger-pizza") !== slug) return false;
+        const dStr = toIstanbulDateStr(o.created_at);
+        return dStr >= bounds.startDate && dStr <= bounds.endDate;
+      })
+      .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+  },
+
+  async getOrdersByDate(dateStr) {
+    return this.getOrdersByDateRange(dateStr, dateStr);
+  },
+
+  // Sipariş listesini ürün ve boyut kırılımına göre özetle (İptaller hariç)
+  aggregateProductReport(orders) {
+    const map = new Map();
+    const validOrders = (Array.isArray(orders) ? orders : []).filter(o => o && o.status !== "cancelled");
+
+    for (const order of validOrders) {
+      const items = Array.isArray(order.items) ? order.items : (Array.isArray(order.order_items) ? order.order_items : []);
+      for (const item of items) {
+        const name = String(item.item_name || item.name || "Ürün").trim() || "Ürün";
+        const key = name.toLocaleLowerCase("tr-TR");
+        const qty = Math.max(0, Number(item.quantity) || 0);
+        if (qty <= 0) continue;
+
+        const lineRevenue = item.total_price !== undefined && item.total_price !== null
+          ? (Number(item.total_price) || 0)
+          : (Number(item.unit_price) || 0) * qty;
+
+        const sizeText = String(item.size_label || item.sizeLabel || "").trim();
+        let entry = map.get(key);
+        if (!entry) {
+          entry = {
+            name,
+            totalQty: 0,
+            smallQty: 0,
+            mediumQty: 0,
+            xlargeQty: 0,
+            singleQty: 0,
+            revenue: 0
+          };
+          map.set(key, entry);
+        }
+
+        entry.totalQty += qty;
+        entry.revenue = Math.round((entry.revenue + lineRevenue) * 100) / 100;
+
+        if (/(small|küçük|\b24\b)/i.test(sizeText)) {
+          entry.smallQty += qty;
+        } else if (/(medium|orta|\b30\b)/i.test(sizeText)) {
+          entry.mediumQty += qty;
+        } else if (/(mega|\bxl\b|xlarge|büyük|\b40\b)/i.test(sizeText)) {
+          entry.xlargeQty += qty;
+        } else {
+          entry.singleQty += qty;
+        }
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) => {
+      if (b.totalQty !== a.totalQty) return b.totalQty - a.totalQty;
+      return b.revenue - a.revenue;
+    });
+  },
+
+  // Müşteri Listesini Getir (Önce hafif public.customers tablosundan, yoksa siparişlerden üret)
+  async getCustomers(searchQuery = "", sortBy = "total_spent") {
+    const slug = getRestaurantSlug();
+    const sb = getSupabaseClient();
+    let customers = null;
+
+    if (sb) {
+      try {
+        const { data, error } = await sb
+          .from("customers")
+          .select("id, restaurant_slug, phone_normalized, phone_display, customer_name, last_address, order_count, total_spent, last_order_at, notes")
+          .eq("restaurant_slug", slug)
+          .order("total_spent", { ascending: false })
+          .limit(1000);
+
+        if (!error && Array.isArray(data)) {
+          customers = data;
+        } else if (error && (error.code === "42P01" || error.code === "PGRST205" || /customers/i.test(String(error.message || "")))) {
+          // customers tablosu henüz oluşturulmadıysa siparişlerden geçici olarak hesapla
+          let { data: ordData, error: ordErr } = await sb
+            .from("orders")
+            .select("restaurant_slug, customer_name, customer_phone, delivery_address, total_amount, status, created_at")
+            .eq("restaurant_slug", slug)
+            .neq("status", "cancelled")
+            .order("created_at", { ascending: false })
+            .limit(1500);
+
+          if (ordErr && /restaurant_slug/i.test(String(ordErr.message || ""))) {
+            const fbOrd = await sb
+              .from("orders")
+              .select("customer_name, customer_phone, delivery_address, total_amount, status, created_at")
+              .neq("status", "cancelled")
+              .order("created_at", { ascending: false })
+              .limit(1500);
+            ordData = fbOrd.data;
+          }
+          if (Array.isArray(ordData)) {
+            customers = aggregateCustomersFromOrders(ordData, slug);
+          }
+        }
+      } catch (e) {
+        console.warn("getCustomers Supabase error, using local:", e);
+      }
+    }
+
+    if (!customers) {
+      const localList = getLocalCustomers().filter(c => (c.restaurant_slug || "ginger-pizza") === slug);
+      customers = localList.length > 0
+        ? localList
+        : aggregateCustomersFromOrders(getLocalOrders(), slug);
+    }
+
+    const q = String(searchQuery || "").trim().toLocaleLowerCase("tr-TR");
+    const qDigits = normalizePhone(q);
+    let filtered = q
+      ? customers.filter(c => {
+          const hay = `${c.customer_name || ""} ${c.phone_display || ""} ${c.phone_normalized || ""} ${c.last_address || ""} ${c.notes || ""}`.toLocaleLowerCase("tr-TR");
+          return hay.includes(q) || (qDigits && String(c.phone_normalized || "").includes(qDigits));
+        })
+      : [...customers];
+
+    filtered.sort((a, b) => {
+      if (sortBy === "order_count") {
+        return (Number(b.order_count) || 0) - (Number(a.order_count) || 0) || (Number(b.total_spent) || 0) - (Number(a.total_spent) || 0);
+      }
+      if (sortBy === "last_order_at") {
+        return new Date(b.last_order_at || 0).getTime() - new Date(a.last_order_at || 0).getTime();
+      }
+      return (Number(b.total_spent) || 0) - (Number(a.total_spent) || 0);
+    });
+
+    return filtered;
+  },
+
+  async updateCustomerNote(phoneNormalized, notes) {
+    const slug = getRestaurantSlug();
+    const normPhone = normalizePhone(phoneNormalized) || String(phoneNormalized || "").trim();
+    const cleanNotes = String(notes || "").trim();
+    if (!normPhone) return { success: false };
+
+    let synced = false;
+    const sb = getSupabaseClient();
+    if (sb) {
+      try {
+        const { error } = await sb
+          .from("customers")
+          .update({ notes: cleanNotes, updated_at: new Date().toISOString() })
+          .match({ restaurant_slug: slug, phone_normalized: normPhone });
+        if (!error) synced = true;
+      } catch (e) {
+        console.warn("updateCustomerNote error:", e);
+      }
+    }
+
+    const list = getLocalCustomers();
+    const idx = list.findIndex(c => (c.restaurant_slug || "ginger-pizza") === slug && c.phone_normalized === normPhone);
+    if (idx >= 0) {
+      list[idx].notes = cleanNotes;
+      saveLocalCustomers(list);
+    }
+
+    return { success: true, synced };
   },
 
   // Müşterinin Son Aktif Sipariş ID'sini Al

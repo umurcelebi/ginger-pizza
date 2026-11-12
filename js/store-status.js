@@ -5,7 +5,15 @@
 
 const STORE_SETTINGS_STORAGE_KEY = "ginger_pizza_store_settings_v1";
 const STORE_SETTINGS_CONFIG_KEY = "ginger_pizza_supabase_config_v1";
-const STORE_SETTINGS_ROW_ID = "ginger-pizza";
+
+function getStoreSettingsRowId() {
+  const rawSlug = window.SUPABASE_CONFIG && typeof window.SUPABASE_CONFIG.restaurantSlug === "string"
+    ? window.SUPABASE_CONFIG.restaurantSlug.trim()
+    : "";
+  return rawSlug || "ginger-pizza";
+}
+
+const STORE_SETTINGS_ROW_ID = getStoreSettingsRowId();
 
 const STORE_DAY_NAMES = {
   "1": "Pazartesi",
@@ -472,6 +480,7 @@ const StoreStatus = {
           .channel("store-settings-live")
           .on("postgres_changes", { event: "*", schema: "public", table: "store_settings" }, (payload) => {
             if (payload && payload.new) {
+              if (payload.new.id && payload.new.id !== getStoreSettingsRowId()) return;
               const normalized = saveLocalStoreSettings(payload.new);
               callback(normalized);
             } else {

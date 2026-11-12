@@ -956,6 +956,205 @@
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .price-inputs-row { flex-wrap: wrap; }
     }
+
+    /* Raporlar & Sekme Yönetimi */
+    .admin-section-tabs {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      background: var(--white);
+      border: 1px solid var(--sand-200);
+      padding: 6px;
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .admin-section-tab {
+      border: none;
+      background: transparent;
+      color: var(--ink-500);
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      padding: 9px 16px;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+
+    .admin-section-tab:hover {
+      color: var(--ink-900);
+      background: var(--bg);
+    }
+
+    .admin-section-tab.active {
+      background: var(--ginger-500);
+      color: var(--white);
+    }
+
+    .reports-card {
+      background: var(--white);
+      border: 1px solid var(--sand-200);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 18px;
+    }
+
+    .reports-subtabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      border-bottom: 1px solid var(--sand-100);
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+    }
+
+    .reports-subtab {
+      background: var(--bg);
+      border: 1px solid var(--sand-200);
+      color: var(--ink-700);
+      font-family: inherit;
+      font-size: 0.84rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: var(--radius-full);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .reports-subtab:hover {
+      border-color: var(--ink-400);
+    }
+
+    .reports-subtab.active {
+      background: var(--ink-900);
+      border-color: var(--ink-900);
+      color: var(--white);
+    }
+
+    .reports-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .reports-filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .report-input {
+      padding: 8px 11px;
+      border: 1px solid var(--sand-200);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      color: var(--ink-900);
+      background: var(--white);
+    }
+
+    .report-quick-btn {
+      background: var(--bg);
+      border: 1px solid var(--sand-200);
+      color: var(--ink-700);
+      padding: 7px 11px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .report-quick-btn:hover {
+      background: var(--sand-100);
+    }
+
+    .report-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .report-kpi {
+      background: var(--bg);
+      border: 1px solid var(--sand-200);
+      border-radius: var(--radius-md);
+      padding: 13px 15px;
+    }
+
+    .report-kpi-label {
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink-500);
+      margin-bottom: 4px;
+    }
+
+    .report-kpi-value {
+      font-family: 'Fraunces', serif;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--ink-900);
+      line-height: 1.15;
+    }
+
+    .report-kpi-sub {
+      font-size: 0.75rem;
+      color: var(--ink-500);
+      margin-top: 4px;
+    }
+
+    .report-status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: var(--radius-full);
+      font-size: 0.74rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .report-status-new { background: #fff3e0; color: #b8500c; }
+    .report-status-preparing { background: #e3f2fd; color: #0d47a1; }
+    .report-status-on_way { background: #ede7f6; color: #4527a0; }
+    .report-status-delivered { background: #eaf7ef; color: #1b6b3a; }
+    .report-status-cancelled { background: #fdf0f1; color: #b4232c; }
+
+    .report-summary-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--sand-200);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.83rem;
+      color: var(--ink-700);
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .report-empty-cell {
+      text-align: center;
+      padding: 36px 16px;
+      color: var(--ink-500);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 900px) {
+      .report-kpis { grid-template-columns: repeat(2, 1fr); }
+    }
   </style>
 </head>
 <body>
@@ -1021,6 +1220,17 @@
     </header>
 
     <main class="admin-main">
+      <!-- Ana Bölüm Sekmeleri (Menü & Mağaza Yönetimi / Raporlar) -->
+      <div id="adminMainTabs" class="admin-section-tabs" role="tablist" aria-label="Admin bölümleri">
+        <button type="button" class="admin-section-tab active" id="tabBtnMenu" data-main-tab="menu" onclick="switchAdminMainTab('menu')">
+          🍕 Menü &amp; Dükkan Yönetimi
+        </button>
+        <button type="button" class="admin-section-tab" id="tabBtnReports" data-main-tab="reports" onclick="switchAdminMainTab('reports')">
+          📊 Raporlar
+        </button>
+      </div>
+
+      <div id="adminMenuSection">
       <!-- İstatistikler -->
       <div class="stats-row">
         <div class="stat-card">
@@ -1176,6 +1386,167 @@
           </tbody>
         </table>
       </div>
+      </div><!-- /adminMenuSection -->
+
+      <!-- ====================================================================
+           RAPORLAR ALANI (Günlük Siparişler, Müşteriler, Ürün Raporu)
+           ==================================================================== -->
+      <section id="adminReportsSection" style="display: none;">
+        <div class="reports-card">
+          <div class="reports-subtabs" role="tablist" aria-label="Rapor alt sekmeleri">
+            <button type="button" class="reports-subtab active" id="subtabBtnDaily" onclick="switchReportSubtab('daily')">
+              📅 Günlük Siparişler
+            </button>
+            <button type="button" class="reports-subtab" id="subtabBtnCustomers" onclick="switchReportSubtab('customers')">
+              👥 Müşteriler
+            </button>
+            <button type="button" class="reports-subtab" id="subtabBtnProducts" onclick="switchReportSubtab('products')">
+              🍕 Ürün Raporu
+            </button>
+          </div>
+
+          <!-- 1. GÜNLÜK SİPARİŞLER -->
+          <div id="reportPanelDaily">
+            <div class="reports-filter-bar">
+              <div class="reports-filter-group">
+                <label class="form-label" for="reportDailyDate" style="margin:0;">Tarih:</label>
+                <input type="date" id="reportDailyDate" class="report-input">
+                <button type="button" class="report-quick-btn" onclick="setDailyReportOffset(0)">Bugün</button>
+                <button type="button" class="report-quick-btn" onclick="setDailyReportOffset(-1)">Dün</button>
+                <button type="button" class="btn-header btn-header-primary" onclick="loadDailyOrdersReport()">🔍 Getir</button>
+              </div>
+              <div class="reports-filter-group">
+                <button type="button" class="btn-header" onclick="exportDailyReportCSV()">📥 CSV İndir</button>
+              </div>
+            </div>
+
+            <div class="report-kpis">
+              <div class="report-kpi">
+                <div class="report-kpi-label">Geçerli Sipariş</div>
+                <div class="report-kpi-value" id="kpiDailyOrders">--</div>
+                <div class="report-kpi-sub" id="kpiDailyDeliverySplit">Kurye / Gel-Al</div>
+              </div>
+              <div class="report-kpi">
+                <div class="report-kpi-label">Net Ciro</div>
+                <div class="report-kpi-value" id="kpiDailyRevenue" style="color: var(--success);">--</div>
+                <div class="report-kpi-sub" id="kpiDailyAvgOrder">İptaller hariç</div>
+              </div>
+              <div class="report-kpi">
+                <div class="report-kpi-label">Kart / Nakit</div>
+                <div class="report-kpi-value" id="kpiDailyPaymentSplit" style="font-size: 1.05rem; line-height: 1.3;">--</div>
+                <div class="report-kpi-sub">Ödeme yöntemi kırılımı</div>
+              </div>
+              <div class="report-kpi">
+                <div class="report-kpi-label">İptal Edilen</div>
+                <div class="report-kpi-value" id="kpiDailyCancelled" style="color: var(--danger);">--</div>
+                <div class="report-kpi-sub" id="kpiDailyDiscountSum">Online indirim</div>
+              </div>
+            </div>
+
+            <div class="table-container" style="box-shadow:none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Sipariş / Saat</th>
+                    <th>Müşteri</th>
+                    <th>Teslimat &amp; Adres</th>
+                    <th>Ödeme</th>
+                    <th>Tutar</th>
+                    <th>Durum</th>
+                    <th style="text-align:right;">Detay</th>
+                  </tr>
+                </thead>
+                <tbody id="reportDailyTableBody">
+                  <tr><td colspan="7" class="report-empty-cell">Rapor görüntülemek için tarih seçin.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 2. MÜŞTERİLER -->
+          <div id="reportPanelCustomers" style="display: none;">
+            <div class="reports-filter-bar">
+              <div class="reports-filter-group" style="flex:1;">
+                <input type="text" id="reportCustomerSearch" class="report-input" placeholder="Ad, telefon veya adres ile ara..." style="min-width: 240px; flex: 1; max-width: 360px;">
+                <select id="reportCustomerSort" class="report-input" onchange="loadCustomersReport()">
+                  <option value="total_spent">Sırala: En Çok Harcayan</option>
+                  <option value="order_count">Sırala: En Çok Sipariş</option>
+                  <option value="last_order_at">Sırala: Son Sipariş Tarihi</option>
+                </select>
+                <button type="button" class="btn-header btn-header-primary" onclick="loadCustomersReport()">🔄 Yenile</button>
+              </div>
+              <div class="reports-filter-group">
+                <button type="button" class="btn-header" onclick="exportCustomersCSV()">📥 CSV İndir</button>
+              </div>
+            </div>
+
+            <div id="reportCustomersSummary" class="report-summary-strip">
+              <span>Müşteri kayıtları yükleniyor...</span>
+            </div>
+
+            <div class="table-container" style="box-shadow:none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Müşteri</th>
+                    <th>Telefon</th>
+                    <th>Son Adres</th>
+                    <th style="text-align:center;">Sipariş</th>
+                    <th>Toplam Harcama</th>
+                    <th>Son Sipariş</th>
+                    <th>Not</th>
+                  </tr>
+                </thead>
+                <tbody id="reportCustomersTableBody">
+                  <tr><td colspan="7" class="report-empty-cell">Yükleniyor...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 3. ÜRÜN RAPORU -->
+          <div id="reportPanelProducts" style="display: none;">
+            <div class="reports-filter-bar">
+              <div class="reports-filter-group">
+                <label class="form-label" for="reportRangeStart" style="margin:0;">Başlangıç:</label>
+                <input type="date" id="reportRangeStart" class="report-input">
+                <label class="form-label" for="reportRangeEnd" style="margin:0;">Bitiş:</label>
+                <input type="date" id="reportRangeEnd" class="report-input">
+                <button type="button" class="report-quick-btn" onclick="setProductReportPreset('today')">Bugün</button>
+                <button type="button" class="report-quick-btn" onclick="setProductReportPreset('7d')">Son 7 Gün</button>
+                <button type="button" class="report-quick-btn" onclick="setProductReportPreset('month')">Bu Ay</button>
+                <button type="button" class="btn-header btn-header-primary" onclick="loadProductRangeReport()">🔍 Hesapla</button>
+              </div>
+              <div class="reports-filter-group">
+                <button type="button" class="btn-header" onclick="exportProductReportCSV()">📥 CSV İndir</button>
+              </div>
+            </div>
+
+            <div id="reportProductsSummary" class="report-summary-strip">
+              <span>Tarih aralığı seçip Hesapla'ya basın.</span>
+            </div>
+
+            <div class="table-container" style="box-shadow:none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Ürün Adı</th>
+                    <th style="text-align:center;">Toplam Adet</th>
+                    <th style="text-align:center;">Small (S)</th>
+                    <th style="text-align:center;">Medium (M)</th>
+                    <th style="text-align:center;">Mega / XL</th>
+                    <th style="text-align:center;">Tek / Yan Ürün</th>
+                    <th style="text-align:right;">Toplam Tutar</th>
+                  </tr>
+                </thead>
+                <tbody id="reportProductsTableBody">
+                  <tr><td colspan="7" class="report-empty-cell">Hesaplanıyor...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -1429,13 +1800,30 @@
     </div>
   </div>
 
+  <!-- ========================================================================
+       7. MODAL: RAPOR SİPARİŞ DETAYI
+       ======================================================================== -->
+  <div id="reportOrderDetailModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 560px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px;">
+        <div>
+          <h2 class="modal-title" id="reportOrderDetailTitle" style="margin-bottom:4px;">Sipariş Detayı</h2>
+          <div id="reportOrderDetailMeta" style="font-size:0.82rem; color:var(--ink-500);"></div>
+        </div>
+        <button type="button" class="btn-header" onclick="closeReportOrderDetail()">✕ Kapat</button>
+      </div>
+      <div id="reportOrderDetailBody"></div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast" class="toast-msg">Değişiklikler kaydedildi</div>
 
-  <!-- Menu API & Dükkan Durum Bağlantısı -->
+  <!-- Menu API, Dükkan Durumu & Sipariş/Rapor API -->
   <script src="js/config.js"></script>
   <script src="js/menu-api.js"></script>
   <script src="js/store-status.js"></script>
+  <script src="js/order-api.js"></script>
 
   <script>
     // ========================================================================
@@ -1619,10 +2007,16 @@
 
         // Veritabanı ve Sıfırlama Kısıtlaması (Admin dışındakilere tamamen gizli)
         const btnUsers = document.getElementById("btnOpenUsersModal");
+        const tabReports = document.getElementById("tabBtnReports");
+        const canViewReports = user.role !== "staff";
         if (btnUsers) btnUsers.style.display = user.canEditDb ? "inline-flex" : "none";
         if (btnDb) btnDb.style.display = user.canEditDb ? "inline-flex" : "none";
         if (btnReset) btnReset.style.display = user.canReset ? "inline-flex" : "none";
         if (dbBadge) dbBadge.style.display = user.canEditDb ? "inline-flex" : "none";
+        if (tabReports) tabReports.style.display = canViewReports ? "inline-flex" : "none";
+        if (!canViewReports && typeof window.switchAdminMainTab === "function") {
+          window.switchAdminMainTab("menu");
+        }
 
         loadDashboard();
       } else {
@@ -2575,6 +2969,481 @@
       checkAuth();
       showToast("Oturum kapatıldı.");
     });
+
+    // ========================================================================
+    // RAPORLAMA, MÜŞTERİLER & ÜRÜN ANALİZİ YÖNETİMİ
+    // ========================================================================
+    let activeAdminMainTab = "menu";
+    let activeReportSubtab = "daily";
+    let cachedDailyOrders = [];
+    let cachedCustomersList = [];
+    let cachedProductRows = [];
+    let reportsInitialized = false;
+
+    function escapeReportHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function formatTry(val) {
+      const num = Number(val) || 0;
+      return num.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + " ₺";
+    }
+
+    function formatIstanbulDateTime(iso) {
+      if (!iso) return "—";
+      try {
+        return new Date(iso).toLocaleString("tr-TR", {
+          timeZone: "Europe/Istanbul",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      } catch (e) {
+        return String(iso).slice(0, 16);
+      }
+    }
+
+    function formatIstanbulTime(iso) {
+      if (!iso) return "--:--";
+      try {
+        return new Date(iso).toLocaleTimeString("tr-TR", {
+          timeZone: "Europe/Istanbul",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      } catch (e) {
+        return "--:--";
+      }
+    }
+
+    function shiftYmdDate(ymd, deltaDays) {
+      const [y, m, d] = ymd.split("-").map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, d + deltaDays));
+      return dt.toISOString().slice(0, 10);
+    }
+
+    function initReportDefaultsIfNeeded() {
+      if (reportsInitialized || !window.OrderAPI) return;
+      reportsInitialized = true;
+      const today = OrderAPI.getIstanbulTodayStr();
+      const dailyInp = document.getElementById("reportDailyDate");
+      const startInp = document.getElementById("reportRangeStart");
+      const endInp = document.getElementById("reportRangeEnd");
+      if (dailyInp && !dailyInp.value) dailyInp.value = today;
+      if (startInp && !startInp.value) startInp.value = shiftYmdDate(today, -6);
+      if (endInp && !endInp.value) endInp.value = today;
+
+      const searchInp = document.getElementById("reportCustomerSearch");
+      if (searchInp && !searchInp.dataset.bound) {
+        searchInp.dataset.bound = "1";
+        let timer = null;
+        searchInp.addEventListener("input", () => {
+          clearTimeout(timer);
+          timer = setTimeout(() => loadCustomersReport(), 220);
+        });
+      }
+    }
+
+    window.switchAdminMainTab = function(tabName) {
+      const user = getCurrentUser();
+      if (tabName === "reports" && user.role === "staff") {
+        showToast("Mutfak hesabı finansal raporları görüntüleyemez.");
+        tabName = "menu";
+      }
+
+      activeAdminMainTab = tabName;
+      const menuSec = document.getElementById("adminMenuSection");
+      const repSec = document.getElementById("adminReportsSection");
+      const btnMenu = document.getElementById("tabBtnMenu");
+      const btnRep = document.getElementById("tabBtnReports");
+
+      if (menuSec) menuSec.style.display = tabName === "menu" ? "block" : "none";
+      if (repSec) repSec.style.display = tabName === "reports" ? "block" : "none";
+      if (btnMenu) btnMenu.classList.toggle("active", tabName === "menu");
+      if (btnRep) btnRep.classList.toggle("active", tabName === "reports");
+
+      if (tabName === "reports") {
+        initReportDefaultsIfNeeded();
+        if (activeReportSubtab === "daily") loadDailyOrdersReport();
+        else if (activeReportSubtab === "customers") loadCustomersReport();
+        else if (activeReportSubtab === "products") loadProductRangeReport();
+      }
+    };
+
+    window.switchReportSubtab = function(subtab) {
+      activeReportSubtab = subtab;
+      const map = {
+        daily: ["reportPanelDaily", "subtabBtnDaily"],
+        customers: ["reportPanelCustomers", "subtabBtnCustomers"],
+        products: ["reportPanelProducts", "subtabBtnProducts"]
+      };
+      Object.entries(map).forEach(([k, [panelId, btnId]]) => {
+        const panel = document.getElementById(panelId);
+        const btn = document.getElementById(btnId);
+        if (panel) panel.style.display = k === subtab ? "block" : "none";
+        if (btn) btn.classList.toggle("active", k === subtab);
+      });
+
+      initReportDefaultsIfNeeded();
+      if (subtab === "daily") loadDailyOrdersReport();
+      else if (subtab === "customers") loadCustomersReport();
+      else if (subtab === "products") loadProductRangeReport();
+    };
+
+    window.setDailyReportOffset = function(deltaDays) {
+      if (!window.OrderAPI) return;
+      const today = OrderAPI.getIstanbulTodayStr();
+      const target = shiftYmdDate(today, deltaDays);
+      const inp = document.getElementById("reportDailyDate");
+      if (inp) inp.value = target;
+      loadDailyOrdersReport();
+    };
+
+    const STATUS_TR = {
+      new: "Yeni",
+      preparing: "Hazırlanıyor",
+      on_way: "Yolda",
+      delivered: "Teslim Edildi",
+      cancelled: "İptal"
+    };
+
+    const PAYMENT_TR = {
+      door_card: "Kapıda Kart",
+      door_cash: "Kapıda Nakit",
+      online: "Online"
+    };
+
+    window.loadDailyOrdersReport = async function() {
+      if (!window.OrderAPI) return;
+      const dateStr = document.getElementById("reportDailyDate")?.value || OrderAPI.getIstanbulTodayStr();
+      const tbody = document.getElementById("reportDailyTableBody");
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="report-empty-cell">Siparişler getiriliyor...</td></tr>`;
+
+      const orders = await OrderAPI.getOrdersByDate(dateStr);
+      cachedDailyOrders = orders;
+
+      const valid = orders.filter(o => o.status !== "cancelled");
+      const cancelled = orders.filter(o => o.status === "cancelled");
+      const netRevenue = valid.reduce((s, o) => s + (Number(o.total_amount) || 0), 0);
+      const totalDiscount = valid.reduce((s, o) => s + (Number(o.discount_amount) || 0), 0);
+      const deliveryCount = valid.filter(o => o.delivery_type !== "takeaway").length;
+      const takeawayCount = valid.filter(o => o.delivery_type === "takeaway").length;
+      const cardSum = valid.filter(o => o.payment_method !== "door_cash").reduce((s, o) => s + (Number(o.total_amount) || 0), 0);
+      const cashSum = valid.filter(o => o.payment_method === "door_cash").reduce((s, o) => s + (Number(o.total_amount) || 0), 0);
+
+      document.getElementById("kpiDailyOrders").textContent = String(valid.length);
+      document.getElementById("kpiDailyDeliverySplit").textContent = `${deliveryCount} Kurye • ${takeawayCount} Gel-Al`;
+      document.getElementById("kpiDailyRevenue").textContent = formatTry(netRevenue);
+      document.getElementById("kpiDailyAvgOrder").textContent = valid.length > 0
+        ? `Ort. ${formatTry(netRevenue / valid.length)}`
+        : "İptaller hariç";
+      document.getElementById("kpiDailyPaymentSplit").textContent = `💳 ${formatTry(cardSum)} / 💵 ${formatTry(cashSum)}`;
+      document.getElementById("kpiDailyCancelled").textContent = String(cancelled.length);
+      document.getElementById("kpiDailyDiscountSum").textContent = totalDiscount > 0
+        ? `Online indirim: -${formatTry(totalDiscount)}`
+        : "Online indirim: 0 ₺";
+
+      if (!tbody) return;
+      if (orders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="report-empty-cell">${escapeReportHtml(dateStr)} tarihinde kayıtlı sipariş bulunamadı.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = orders.map((o, idx) => {
+        const ordNo = o.order_number ? `#${o.order_number}` : `#${String(o.id || "").slice(0, 6)}`;
+        const timeText = formatIstanbulTime(o.created_at);
+        const typeLabel = o.delivery_type === "takeaway" ? "🏃 Gel-Al" : "🛵 Kurye";
+        const addr = escapeReportHtml(o.delivery_address || "Gel-Al Siparişi");
+        const payLabel = PAYMENT_TR[o.payment_method] || o.payment_method || "—";
+        const stKey = STATUS_TR[o.status] ? o.status : "new";
+        const stText = STATUS_TR[stKey];
+        const discText = Number(o.discount_amount) > 0
+          ? `<div style="font-size:0.74rem; color:var(--success); font-weight:700;">(-${formatTry(o.discount_amount)})</div>`
+          : "";
+        return `
+          <tr>
+            <td>
+              <div style="font-weight:700; color:var(--ink-900);">${escapeReportHtml(ordNo)}</div>
+              <div style="font-size:0.78rem; color:var(--ink-500);">${escapeReportHtml(timeText)} ${o.is_archived ? "• Arşiv" : ""}</div>
+            </td>
+            <td>
+              <div style="font-weight:700; color:var(--ink-900);">${escapeReportHtml(o.customer_name || "Müşteri")}</div>
+              <div style="font-size:0.78rem; color:var(--ink-500);">${escapeReportHtml(o.customer_phone || "")}</div>
+            </td>
+            <td style="max-width:250px;">
+              <div style="font-size:0.78rem; font-weight:700; color:var(--ink-700);">${typeLabel}</div>
+              <div style="font-size:0.78rem; color:var(--ink-500); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${addr}">${addr}</div>
+            </td>
+            <td style="font-size:0.84rem; font-weight:600;">${escapeReportHtml(payLabel)}</td>
+            <td>
+              <div style="font-weight:700; color:var(--ink-900);">${formatTry(o.total_amount)}</div>
+              ${discText}
+            </td>
+            <td><span class="report-status-pill report-status-${stKey}">${escapeReportHtml(stText)}</span></td>
+            <td style="text-align:right;">
+              <button type="button" class="btn-header" style="padding:5px 10px; font-size:0.78rem;" onclick="openReportOrderDetail(${idx})">Detay</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    };
+
+    window.openReportOrderDetail = function(idx) {
+      const order = cachedDailyOrders[idx];
+      if (!order) return;
+      const modal = document.getElementById("reportOrderDetailModal");
+      const titleEl = document.getElementById("reportOrderDetailTitle");
+      const metaEl = document.getElementById("reportOrderDetailMeta");
+      const bodyEl = document.getElementById("reportOrderDetailBody");
+      const ordNo = order.order_number ? `#${order.order_number}` : `#${String(order.id || "").slice(0, 8)}`;
+
+      if (titleEl) titleEl.textContent = `Sipariş ${ordNo}`;
+      if (metaEl) metaEl.textContent = `${formatIstanbulDateTime(order.created_at)} • ${STATUS_TR[order.status] || order.status}`;
+
+      const items = Array.isArray(order.items) ? order.items : [];
+      const itemsHtml = items.length > 0
+        ? items.map(it => {
+            const sz = it.size_label ? ` (${it.size_label})` : "";
+            const notes = it.item_notes ? `<div style="font-size:0.78rem; color:var(--ginger-600); margin-top:2px;">Not: ${escapeReportHtml(it.item_notes)}</div>` : "";
+            return `
+              <div style="display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--sand-100);">
+                <div>
+                  <div style="font-weight:700; color:var(--ink-900); font-size:0.88rem;">${Number(it.quantity) || 1}x ${escapeReportHtml(it.item_name || "Ürün")}${escapeReportHtml(sz)}</div>
+                  ${notes}
+                </div>
+                <div style="font-weight:700; color:var(--ink-900); white-space:nowrap;">${formatTry(it.total_price ?? ((Number(it.unit_price) || 0) * (Number(it.quantity) || 1)))}</div>
+              </div>
+            `;
+          }).join("")
+        : `<div style="color:var(--ink-500); font-size:0.85rem; padding:10px 0;">Sipariş kalemi bulunamadı.</div>`;
+
+      const discLine = Number(order.discount_amount) > 0
+        ? `<div style="display:flex; justify-content:space-between; font-size:0.84rem; color:var(--success); margin-top:4px;"><span>Online İndirim (%${Number(order.discount_percent) || 0})</span><strong>-${formatTry(order.discount_amount)}</strong></div>`
+        : "";
+      const subLine = Number(order.subtotal_amount) > 0 && Number(order.discount_amount) > 0
+        ? `<div style="display:flex; justify-content:space-between; font-size:0.84rem; color:var(--ink-500);"><span>Ara Toplam</span><span>${formatTry(order.subtotal_amount)}</span></div>`
+        : "";
+
+      if (bodyEl) {
+        bodyEl.innerHTML = `
+          <div style="background:var(--bg); border:1px solid var(--sand-200); border-radius:10px; padding:12px 14px; margin-bottom:12px; font-size:0.84rem; line-height:1.5;">
+            <div><strong>Müşteri:</strong> ${escapeReportHtml(order.customer_name || "—")} • ${escapeReportHtml(order.customer_phone || "—")}</div>
+            <div><strong>Teslimat:</strong> ${order.delivery_type === "takeaway" ? "Gel-Al" : "Kurye"} — ${escapeReportHtml(order.delivery_address || "—")}</div>
+            <div><strong>Ödeme:</strong> ${escapeReportHtml(PAYMENT_TR[order.payment_method] || order.payment_method || "—")}</div>
+            ${order.order_notes ? `<div><strong>Sipariş Notu:</strong> ${escapeReportHtml(order.order_notes)}</div>` : ""}
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="font-size:0.78rem; font-weight:700; text-transform:uppercase; color:var(--ink-500); margin-bottom:6px;">Sipariş Kalemleri</div>
+            ${itemsHtml}
+          </div>
+          <div style="background:var(--bg); border:1px solid var(--sand-200); border-radius:10px; padding:10px 14px;">
+            ${subLine}
+            ${discLine}
+            <div style="display:flex; justify-content:space-between; font-size:0.98rem; color:var(--ink-900); margin-top:4px;">
+              <strong>Toplam Tutar</strong>
+              <strong>${formatTry(order.total_amount)}</strong>
+            </div>
+          </div>
+        `;
+      }
+      if (modal) modal.classList.add("open");
+    };
+
+    window.closeReportOrderDetail = function() {
+      const modal = document.getElementById("reportOrderDetailModal");
+      if (modal) modal.classList.remove("open");
+    };
+
+    window.loadCustomersReport = async function() {
+      if (!window.OrderAPI) return;
+      const search = document.getElementById("reportCustomerSearch")?.value || "";
+      const sortBy = document.getElementById("reportCustomerSort")?.value || "total_spent";
+      const tbody = document.getElementById("reportCustomersTableBody");
+      const summary = document.getElementById("reportCustomersSummary");
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="report-empty-cell">Müşteri listesi yükleniyor...</td></tr>`;
+
+      const list = await OrderAPI.getCustomers(search, sortBy);
+      cachedCustomersList = list;
+
+      const totalOrders = list.reduce((s, c) => s + (Number(c.order_count) || 0), 0);
+      const totalRev = list.reduce((s, c) => s + (Number(c.total_spent) || 0), 0);
+      if (summary) {
+        summary.innerHTML = `<span>Toplam <strong>${list.length}</strong> tekil müşteri</span><span>Toplam Geçerli Sipariş: <strong>${totalOrders}</strong> • Toplam Harcama: <strong>${formatTry(totalRev)}</strong></span>`;
+      }
+
+      if (!tbody) return;
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="report-empty-cell">Eşleşen müşteri kaydı bulunamadı.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map((c, idx) => {
+        const waDigits = c.phone_normalized && c.phone_normalized.startsWith("0")
+          ? "9" + c.phone_normalized
+          : (c.phone_normalized || "");
+        const waLink = waDigits.length >= 10
+          ? `<a href="https://wa.me/${escapeReportHtml(waDigits)}" target="_blank" rel="noopener" style="font-size:0.74rem; color:#1b6b3a; font-weight:700; text-decoration:none; margin-left:6px;" title="WhatsApp ile mesaj aç">💬</a>`
+          : "";
+        const noteText = (c.notes || "").trim();
+        return `
+          <tr>
+            <td style="font-weight:700; color:var(--ink-900);">${escapeReportHtml(c.customer_name || "Müşteri")}</td>
+            <td style="white-space:nowrap;">${escapeReportHtml(c.phone_display || c.phone_normalized || "—")}${waLink}</td>
+            <td style="max-width:240px; font-size:0.82rem; color:var(--ink-500);">${escapeReportHtml(c.last_address || "—")}</td>
+            <td style="text-align:center; font-weight:700;">${Number(c.order_count) || 0}</td>
+            <td style="font-weight:700; color:var(--ginger-600);">${formatTry(c.total_spent)}</td>
+            <td style="font-size:0.8rem; color:var(--ink-500); white-space:nowrap;">${escapeReportHtml(formatIstanbulDateTime(c.last_order_at))}</td>
+            <td>
+              <button type="button" class="btn-header" style="padding:4px 9px; font-size:0.75rem;" onclick="editCustomerNote(${idx})" title="${escapeReportHtml(noteText || 'Müşteri notu ekle')}">
+                ${noteText ? "📝 " + escapeReportHtml(noteText.slice(0, 18) + (noteText.length > 18 ? "…" : "")) : "+ Not"}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    };
+
+    window.editCustomerNote = async function(idx) {
+      const cust = cachedCustomersList[idx];
+      if (!cust || !window.OrderAPI) return;
+      const next = prompt(`"${cust.customer_name}" (${cust.phone_display}) için kısa müşteri notu:`, cust.notes || "");
+      if (next === null) return;
+      const res = await OrderAPI.updateCustomerNote(cust.phone_normalized, next);
+      if (res.success) {
+        showToast("Müşteri notu kaydedildi.");
+        loadCustomersReport();
+      }
+    };
+
+    window.setProductReportPreset = function(preset) {
+      if (!window.OrderAPI) return;
+      const today = OrderAPI.getIstanbulTodayStr();
+      const startInp = document.getElementById("reportRangeStart");
+      const endInp = document.getElementById("reportRangeEnd");
+      let start = today;
+      if (preset === "7d") start = shiftYmdDate(today, -6);
+      else if (preset === "month") start = today.slice(0, 7) + "-01";
+      if (startInp) startInp.value = start;
+      if (endInp) endInp.value = today;
+      loadProductRangeReport();
+    };
+
+    window.loadProductRangeReport = async function() {
+      if (!window.OrderAPI) return;
+      const today = OrderAPI.getIstanbulTodayStr();
+      const start = document.getElementById("reportRangeStart")?.value || today;
+      const end = document.getElementById("reportRangeEnd")?.value || today;
+      const tbody = document.getElementById("reportProductsTableBody");
+      const summary = document.getElementById("reportProductsSummary");
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="report-empty-cell">Ürün satışları hesaplanıyor...</td></tr>`;
+
+      const orders = await OrderAPI.getOrdersByDateRange(start, end);
+      const validOrders = orders.filter(o => o.status !== "cancelled");
+      const rows = OrderAPI.aggregateProductReport(orders);
+      cachedProductRows = rows;
+
+      const totalUnits = rows.reduce((s, r) => s + r.totalQty, 0);
+      const totalItemRev = rows.reduce((s, r) => s + r.revenue, 0);
+      if (summary) {
+        summary.innerHTML = `<span><strong>${escapeReportHtml(start)}</strong> – <strong>${escapeReportHtml(end)}</strong> (${validOrders.length} geçerli sipariş)</span><span>Toplam <strong>${totalUnits}</strong> adet ürün • Kalem Cirosu: <strong>${formatTry(totalItemRev)}</strong></span>`;
+      }
+
+      if (!tbody) return;
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="report-empty-cell">Seçilen tarih aralığında ürün satışı bulunamadı.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td style="font-weight:700; color:var(--ink-900);">${escapeReportHtml(r.name)}</td>
+          <td style="text-align:center; font-weight:700; color:var(--ginger-600);">${r.totalQty}</td>
+          <td style="text-align:center;">${r.smallQty || "—"}</td>
+          <td style="text-align:center;">${r.mediumQty || "—"}</td>
+          <td style="text-align:center;">${r.xlargeQty || "—"}</td>
+          <td style="text-align:center;">${r.singleQty || "—"}</td>
+          <td style="text-align:right; font-weight:700;">${formatTry(r.revenue)}</td>
+        </tr>
+      `).join("");
+    };
+
+    function downloadCsvRows(filename, headers, rows) {
+      const csvEscape = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const lines = [headers.map(csvEscape).join(";"), ...rows.map(r => r.map(csvEscape).join(";"))];
+      const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    window.exportDailyReportCSV = function() {
+      if (!cachedDailyOrders.length) {
+        showToast("Dışa aktarılacak sipariş bulunamadı.");
+        return;
+      }
+      const dateStr = document.getElementById("reportDailyDate")?.value || "gunluk";
+      const rows = cachedDailyOrders.map(o => [
+        o.order_number || o.id,
+        formatIstanbulDateTime(o.created_at),
+        o.customer_name || "",
+        o.customer_phone || "",
+        o.delivery_type === "takeaway" ? "Gel-Al" : "Kurye",
+        o.delivery_address || "",
+        PAYMENT_TR[o.payment_method] || o.payment_method || "",
+        Number(o.discount_amount) || 0,
+        Number(o.total_amount) || 0,
+        STATUS_TR[o.status] || o.status || ""
+      ]);
+      downloadCsvRows(`siparisler-${dateStr}.csv`, ["Sipariş No", "Tarih", "Müşteri", "Telefon", "Tür", "Adres", "Ödeme", "İndirim (TL)", "Tutar (TL)", "Durum"], rows);
+    };
+
+    window.exportCustomersCSV = function() {
+      if (!cachedCustomersList.length) {
+        showToast("Dışa aktarılacak müşteri bulunamadı.");
+        return;
+      }
+      const rows = cachedCustomersList.map(c => [
+        c.customer_name || "",
+        c.phone_display || c.phone_normalized || "",
+        c.last_address || "",
+        Number(c.order_count) || 0,
+        Number(c.total_spent) || 0,
+        formatIstanbulDateTime(c.last_order_at),
+        c.notes || ""
+      ]);
+      downloadCsvRows("musteriler.csv", ["Müşteri Adı", "Telefon", "Son Adres", "Sipariş Sayısı", "Toplam Harcama (TL)", "Son Sipariş", "Not"], rows);
+    };
+
+    window.exportProductReportCSV = function() {
+      if (!cachedProductRows.length) {
+        showToast("Dışa aktarılacak ürün verisi bulunamadı.");
+        return;
+      }
+      const start = document.getElementById("reportRangeStart")?.value || "";
+      const end = document.getElementById("reportRangeEnd")?.value || "";
+      const rows = cachedProductRows.map(r => [
+        r.name,
+        r.totalQty,
+        r.smallQty,
+        r.mediumQty,
+        r.xlargeQty,
+        r.singleQty,
+        r.revenue
+      ]);
+      downloadCsvRows(`urun-raporu-${start}_${end}.csv`, ["Ürün Adı", "Toplam Adet", "Small", "Medium", "Mega / XL", "Tek / Yan Ürün", "Toplam Tutar (TL)"], rows);
+    };
 
     // Başlat
     checkAuth();

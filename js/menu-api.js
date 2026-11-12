@@ -896,7 +896,10 @@ const MenuAPI = {
     if (sb) {
       try {
         const isPizza = !!normalizedItem.prices;
-        const { data: rest } = await sb.from("restaurants").select("id").eq("slug", "ginger-pizza").maybeSingle();
+        const activeSlug = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.restaurantSlug)
+          ? String(window.SUPABASE_CONFIG.restaurantSlug).trim() || "ginger-pizza"
+          : "ginger-pizza";
+        const { data: rest } = await sb.from("restaurants").select("id").eq("slug", activeSlug).maybeSingle();
         const { data: cat } = await sb.from("categories").select("id").eq("slug", normalizedItem.category).maybeSingle();
 
         let targetId = UUID_RE.test(String(normalizedItem.id || "")) ? normalizedItem.id : null;
