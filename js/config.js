@@ -1,5 +1,17 @@
 // Ginger Pizza & Multi-Tenant Platform Supabase Bağlantı Konfigürasyonu
 (function () {
+
+  // Görsel değişiminde eski (Ginger) görselin yeni görsel yüklenene kadar ekranda kalmasını engeller
+  function swapImg(img, src) {
+    if (!img || img.getAttribute("src") === src) return;
+    img.style.visibility = "hidden";
+    img.removeAttribute("srcset");
+    const show = () => { img.style.visibility = ""; };
+    img.addEventListener("load", show, { once: true });
+    img.addEventListener("error", show, { once: true });
+    img.setAttribute("src", src);
+    if (img.complete && img.naturalWidth > 0) show();
+  }
   const SUPABASE_URL = "https://nidhfqjotaurxlqpfwqp.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pZGhmcWpvdGF1cnhscXBmd3FwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzOTUzOTYsImV4cCI6MjEwOTk3MTM5Nn0.NbZ7MotgVuisLUBwuUe0BAdvIBCLUFjWupvqmbYkZUM";
 
@@ -208,7 +220,7 @@
         link.setAttribute("href", logoSrc);
       });
       document.querySelectorAll('img[src*="images/logo.jpg"], .brand-logo img, .pin-gate-logo img').forEach(img => {
-        img.setAttribute("src", logoSrc);
+        swapImg(img, logoSrc);
         img.setAttribute("alt", `${info.name || "We Smash The Burger"} Logo`);
         img.style.objectFit = "contain";
         img.style.background = "#ffffff";
@@ -234,7 +246,7 @@
       }
       const featuredImg = document.querySelector(".featured-image-wrapper img");
       if (featuredImg) {
-        featuredImg.setAttribute("src", "https://yemeksepeti.dhmedia.io/image/global-menu-service/YS_TR/vendor/rcqj/product/76850501-950a-4301-bc42-c2ebca4ddaa0.jpg?width=600&height=600");
+        swapImg(featuredImg, "https://yemeksepeti.dhmedia.io/image/global-menu-service/YS_TR/vendor/rcqj/product/76850501-950a-4301-bc42-c2ebca4ddaa0.jpg?width=600&height=600");
         featuredImg.setAttribute("alt", "We Smash The Burger — Houston Burger");
       }
       const featuredName = document.querySelector(".featured-name");
