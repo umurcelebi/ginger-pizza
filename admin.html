@@ -1307,6 +1307,52 @@
     </div>
   </div>
 
+  <!-- ========================================================================
+       6. MODAL: MENÜYÜ SIFIRLA (2 ADIMLI ONAY + SÜPER ADMİN ŞİFRESİ)
+       ======================================================================== -->
+  <div id="resetConfirmModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 460px;">
+      <h2 class="modal-title" style="color: var(--danger); margin-bottom: 6px;">⚠️ Menüyü Varsayılanlara Sıfırla</h2>
+      <p style="font-size: 0.86rem; color: var(--ink-500); margin-bottom: 16px;">
+        Yerel depolamadaki tüm ürün, fiyat ve ekle/çıkar değişiklikleri orijinal Ginger Pizza varsayılanlarına döndürülecektir.
+      </p>
+
+      <!-- Adım 1 / 2 -->
+      <div id="resetStep1View">
+        <div style="background: #fdf0f1; border: 1px solid #f3b8bc; color: #8f1d24; border-radius: 10px; padding: 12px 14px; font-size: 0.84rem; font-weight: 600; line-height: 1.45;">
+          Adım 1 / 2: Menü sıfırlama işlemini başlatmak istediğinize emin misiniz?
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-header" onclick="closeResetConfirmModal()">İptal</button>
+          <button type="button" class="btn-header" id="btnResetStep1Confirm" style="background: var(--danger); border-color: var(--danger); color: var(--white);">
+            Onayla ve Devam Et (1/2) →
+          </button>
+        </div>
+      </div>
+
+      <!-- Adım 2 / 2 (İkinci Onay + Admin Şifresi) -->
+      <form id="resetStep2Form" style="display: none;">
+        <div style="background: #fff4e5; border: 1px solid #f4c88c; color: #8a4308; border-radius: 10px; padding: 12px 14px; font-size: 0.84rem; font-weight: 600; margin-bottom: 14px; line-height: 1.45;">
+          Adım 2 / 2 (Son Onay): İşlemi tamamlamak için Süper Admin şifresini girip onaylayın.
+        </div>
+
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label class="form-label" for="resetAdminPassword">Süper Admin Şifresi *</label>
+          <input type="password" id="resetAdminPassword" class="form-input" placeholder="Admin şifrenizi girin" autocomplete="current-password" required>
+        </div>
+
+        <div id="resetPasswordError" style="display: none; color: var(--danger); font-size: 0.82rem; font-weight: 700; margin-bottom: 10px;"></div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-header" onclick="closeResetConfirmModal()">Vazgeç</button>
+          <button type="submit" class="btn-header" id="btnResetStep2Confirm" style="background: var(--danger); border-color: var(--danger); color: var(--white);">
+            ⚠️ Kesin Olarak Sıfırla (2/2)
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast" class="toast-msg">Değişiklikler kaydedildi</div>
 
@@ -2213,13 +2259,63 @@
     document.getElementById("filterCategory").addEventListener("change", renderTable);
     document.getElementById("searchAdmin").addEventListener("input", renderTable);
 
-    // Sıfırla Butonu
-    document.getElementById("btnResetDefaults").addEventListener("click", () => {
-      if (confirm("Tüm menü ve fiyatlar orijinal Ginger Pizza varsayılanlarına sıfırlansın mı?")) {
-        MenuAPI.resetDefaults();
-        showToast("Menü varsayılanlarına sıfırlandı.");
-        loadDashboard();
+    // Sıfırla Butonu (2 Adımlı Onay + Süper Admin Şifre Doğrulaması)
+    window.closeResetConfirmModal = function() {
+      const modal = document.getElementById("resetConfirmModal");
+      const passInput = document.getElementById("resetAdminPassword");
+      const errBox = document.getElementById("resetPasswordError");
+      if (modal) modal.classList.remove("open");
+      if (passInput) passInput.value = "";
+      if (errBox) {
+        errBox.style.display = "none";
+        errBox.textContent = "";
       }
+    };
+
+    document.getElementById("btnResetDefaults").addEventListener("click", () => {
+      const user = getCurrentUser();
+      if (!user || !user.canReset) {
+        alert("Yetkisiz Erişim: Menüyü yalnızca Süper Admin sıfırlayabilir.");
+        return;
+      }
+      document.getElementById("resetStep1View").style.display = "block";
+      document.getElementById("resetStep2Form").style.display = "none";
+      document.getElementById("resetAdminPassword").value = "";
+      document.getElementById("resetPasswordError").style.display = "none";
+      document.getElementById("resetConfirmModal").classList.add("open");
+    });
+
+    document.getElementById("btnResetStep1Confirm").addEventListener("click", () => {
+      document.getElementById("resetStep1View").style.display = "none";
+      document.getElementById("resetStep2Form").style.display = "block";
+      document.getElementById("resetPasswordError").style.display = "none";
+      document.getElementById("resetAdminPassword").focus();
+    });
+
+    document.getElementById("resetStep2Form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const user = getCurrentUser();
+      if (!user || !user.canReset) {
+        closeResetConfirmModal();
+        alert("Yetkisiz Erişim!");
+        return;
+      }
+
+      const entered = document.getElementById("resetAdminPassword").value;
+      const errBox = document.getElementById("resetPasswordError");
+      const adminAccount = getStoredUsers().find(u => u.role === "admin") || DEFAULT_USERS[0];
+
+      if (!entered || entered !== adminAccount.password) {
+        errBox.textContent = "Hatalı Süper Admin şifresi! Sıfırlama işlemi iptal edildi.";
+        errBox.style.display = "block";
+        document.getElementById("resetAdminPassword").select();
+        return;
+      }
+
+      MenuAPI.resetDefaults();
+      closeResetConfirmModal();
+      showToast("Menü varsayılanlarına sıfırlandı.");
+      loadDashboard();
     });
 
     // Kullanıcı Yönetim Modalı Açma/Kapatma (Sadece Süper Admin)
