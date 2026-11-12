@@ -753,16 +753,16 @@
 
   <!-- KDS Yetkilendirme Kapısı -->
   <div id="kdsAuthOverlay" style="position:fixed; inset:0; z-index:9999; background:rgba(15,12,10,0.97); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:20px;">
-    <form id="kdsLoginForm" style="width:100%; max-width:380px; background:#1c1714; border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:28px; color:#fff; box-shadow:0 24px 48px rgba(0,0,0,0.45);">
+    <form id="kdsLoginForm" autocomplete="off" style="width:100%; max-width:380px; background:#1c1714; border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:28px; color:#fff; box-shadow:0 24px 48px rgba(0,0,0,0.45);">
       <div style="font-size:1.25rem; font-weight:800; margin-bottom:6px;">🧑‍🍳 Mutfak / KDS Girişi</div>
       <div style="font-size:0.84rem; color:#a89b91; margin-bottom:18px;">Canlı siparişleri görüntülemek için yetkili personel hesabıyla giriş yapın.</div>
       <div style="margin-bottom:12px;">
         <label for="kdsLoginEmail" style="display:block; font-size:0.78rem; font-weight:700; color:#d3c8be; margin-bottom:5px;">E-Posta</label>
-        <input type="email" id="kdsLoginEmail" required autocomplete="username" placeholder="mutfak@..." style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background:#120e0c; color:#fff; font-size:0.9rem;">
+        <input type="email" id="kdsLoginEmail" required autocomplete="off" placeholder="" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background:#120e0c; color:#fff; font-size:0.9rem;">
       </div>
       <div style="margin-bottom:14px;">
         <label for="kdsLoginPass" style="display:block; font-size:0.78rem; font-weight:700; color:#d3c8be; margin-bottom:5px;">Şifre</label>
-        <input type="password" id="kdsLoginPass" required autocomplete="current-password" placeholder="••••••••" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background:#120e0c; color:#fff; font-size:0.9rem;">
+        <input type="password" id="kdsLoginPass" required autocomplete="new-password" placeholder="" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background:#120e0c; color:#fff; font-size:0.9rem;">
       </div>
       <div id="kdsLoginError" style="display:none; background:rgba(220,38,38,0.18); border:1px solid rgba(220,38,38,0.5); color:#fca5a5; font-size:0.8rem; padding:8px 10px; border-radius:8px; margin-bottom:12px;"></div>
       <button type="submit" style="width:100%; padding:11px; border:none; border-radius:10px; background:var(--ginger-500, #d86a1a); color:#fff; font-weight:700; font-size:0.92rem; cursor:pointer;">Giriş Yap</button>
@@ -1479,11 +1479,6 @@
 
       const authOverlay = document.getElementById("kdsAuthOverlay");
       const kdsLoginForm = document.getElementById("kdsLoginForm");
-      const kdsEmailInput = document.getElementById("kdsLoginEmail");
-      if (kdsEmailInput) {
-        const cleanSlug = String(getKdsActiveSlug()).toLowerCase().replace(/[^a-z0-9]/g, "") || "restoran";
-        kdsEmailInput.placeholder = getKdsActiveSlug() === "ginger-pizza" ? "mutfak@gingerpizza.com" : ("mutfak@" + cleanSlug + ".com");
-      }
 
       const authUser = await checkKdsSupabaseSession();
       if (authUser) {
