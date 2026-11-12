@@ -34,7 +34,7 @@ function createDefaultWeeklyHours() {
 function createDefaultStoreSettings() {
   return {
     id: STORE_SETTINGS_ROW_ID,
-    order_mode: "auto", // 'auto' | 'busy' | 'manual_closed'
+    order_mode: "auto", // 'auto' | 'busy' | 'manual_open' | 'manual_closed'
     busy_until: null,
     status_message: "",
     weekly_hours: createDefaultWeeklyHours(),
@@ -45,7 +45,7 @@ function createDefaultStoreSettings() {
 function normalizeStoreSettings(raw) {
   const defaults = createDefaultStoreSettings();
   const src = raw && typeof raw === "object" ? raw : {};
-  const mode = ["auto", "busy", "manual_closed"].includes(src.order_mode) ? src.order_mode : "auto";
+  const mode = ["auto", "busy", "manual_open", "manual_closed"].includes(src.order_mode) ? src.order_mode : "auto";
   const hours = createDefaultWeeklyHours();
 
   if (src.weekly_hours && typeof src.weekly_hours === "object") {
@@ -216,6 +216,21 @@ const StoreStatus = {
       };
     }
 
+    // 1b. Manuel Açık (Çalışma saatinden bağımsız siparişe açık)
+    if (settings.order_mode === "manual_open") {
+      return {
+        isOpen: true,
+        reason: "manual_open",
+        effectiveMode: "manual_open",
+        title: "Siparişe Açık",
+        detail: customMsg || "Dükkanımız şu anda online siparişe açıktır.",
+        nextOpenText: "",
+        todaySchedule,
+        busyRemainingMinutes: null,
+        settings
+      };
+    }
+
     // 2. Yoğun Modu (Süresiz veya süresi dolmamış)
     if (settings.order_mode === "busy") {
       const busyUntilMs = settings.busy_until ? new Date(settings.busy_until).getTime() : null;
@@ -368,7 +383,7 @@ const StoreStatus = {
       ...current,
       order_mode: mode,
       busy_until: busyUntil,
-      status_message: options.statusMessage !== undefined ? options.statusMessage : (mode === "auto" ? "" : current.status_message)
+      status_message: options.statusMessage !== undefined ? options.statusMessage : ((mode === "auto" || mode === "manual_open") ? "" : current.status_message)
     };
 
     return await this.saveSettings(updated);

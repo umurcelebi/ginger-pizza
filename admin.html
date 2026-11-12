@@ -875,6 +875,9 @@
           <button type="button" class="btn-mode" id="btnModeAuto" onclick="handleQuickStoreMode('auto')">
             🟢 Otomatik (Saatlere Göre)
           </button>
+          <button type="button" class="btn-mode" id="btnModeManualOpen" onclick="handleQuickStoreMode('manual_open')">
+            ✅ Dükkanı Aç (Manuel)
+          </button>
           <button type="button" class="btn-mode" id="btnModeBusy30" onclick="handleQuickStoreMode('busy', 30)">
             🔥 Yoğun Mod (30 dk)
           </button>
@@ -1355,7 +1358,7 @@
         pill.classList.remove("is-open", "is-busy", "is-closed");
         if (st.isOpen) {
           pill.classList.add("is-open");
-          pill.textContent = "🟢 Siparişe Açık";
+          pill.textContent = st.reason === "manual_open" ? "🟢 Manuel Açık" : "🟢 Siparişe Açık";
         } else if (st.reason === "busy") {
           pill.classList.add("is-busy");
           pill.textContent = st.busyRemainingMinutes !== null
@@ -1379,16 +1382,18 @@
       const remainingMins = busyUntil ? Math.round((busyUntil - now) / 60000) : null;
 
       const btnAuto = document.getElementById("btnModeAuto");
+      const btnManualOpen = document.getElementById("btnModeManualOpen");
       const btnB30 = document.getElementById("btnModeBusy30");
       const btnB60 = document.getElementById("btnModeBusy60");
       const btnBInf = document.getElementById("btnModeBusyInf");
       const btnMan = document.getElementById("btnModeManualClose");
 
-      [btnAuto, btnB30, btnB60, btnBInf, btnMan].forEach(b => {
+      [btnAuto, btnManualOpen, btnB30, btnB60, btnBInf, btnMan].forEach(b => {
         if (b) b.classList.remove("active-auto", "active-busy", "active-closed");
       });
 
       if (mode === "auto" && btnAuto) btnAuto.classList.add("active-auto");
+      else if (mode === "manual_open" && btnManualOpen) btnManualOpen.classList.add("active-auto");
       else if (mode === "manual_closed" && btnMan) btnMan.classList.add("active-closed");
       else if (mode === "busy") {
         if (remainingMins === null && btnBInf) btnBInf.classList.add("active-busy");

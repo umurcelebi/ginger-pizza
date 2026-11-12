@@ -2967,9 +2967,11 @@
           banner.classList.add("is-closed");
         }
 
-        const scheduleMeta = st.todaySchedule && st.todaySchedule.enabled
-          ? `Bugün ${st.todaySchedule.open} – ${st.todaySchedule.close}`
-          : (st.nextOpenText || "Saatler kapalı");
+        const scheduleMeta = st.reason === "manual_open"
+          ? "Şu An Siparişe Açık"
+          : (st.todaySchedule && st.todaySchedule.enabled
+            ? `Bugün ${st.todaySchedule.open} – ${st.todaySchedule.close}`
+            : (st.nextOpenText || "Saatler kapalı"));
 
         banner.innerHTML = `
           <div class="store-banner-left">

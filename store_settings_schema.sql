@@ -6,7 +6,7 @@
 -- 1. Dükkan Durum & Haftalık Saatler Tablosu
 CREATE TABLE IF NOT EXISTS public.store_settings (
     id TEXT PRIMARY KEY DEFAULT 'ginger-pizza',
-    order_mode TEXT NOT NULL DEFAULT 'auto' CHECK (order_mode IN ('auto', 'busy', 'manual_closed')),
+    order_mode TEXT NOT NULL DEFAULT 'auto' CHECK (order_mode IN ('auto', 'busy', 'manual_open', 'manual_closed')),
     busy_until TIMESTAMPTZ,
     status_message TEXT DEFAULT '',
     weekly_hours JSONB NOT NULL DEFAULT '{
@@ -20,6 +20,12 @@ CREATE TABLE IF NOT EXISTS public.store_settings (
     }'::jsonb,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Önceden oluşturulmuş tablolar için order_mode kısıtını güncelle (manual_open desteği)
+ALTER TABLE public.store_settings DROP CONSTRAINT IF EXISTS store_settings_order_mode_check;
+ALTER TABLE public.store_settings
+    ADD CONSTRAINT store_settings_order_mode_check
+    CHECK (order_mode IN ('auto', 'busy', 'manual_open', 'manual_closed'));
 
 -- Başlangıç satırı (varsa dokunma)
 INSERT INTO public.store_settings (id)
@@ -71,9 +77,13 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    -- 1. Manuel Kapalı
+    -- 1. Manuel Kapalı / Manuel Açık
     IF v_settings.order_mode = 'manual_closed' THEN
         RAISE EXCEPTION 'STORE_CLOSED: Dükkanımız şu anda online siparişe kapalıdır.';
+    END IF;
+
+    IF v_settings.order_mode = 'manual_open' THEN
+        RETURN NEW;
     END IF;
 
     -- 2. Yoğun Modu (Süresiz veya süresi henüz dolmamışsa)

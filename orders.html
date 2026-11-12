@@ -824,8 +824,11 @@
       </p>
 
       <div class="kds-mode-grid">
-        <button type="button" class="btn-kds-mode span-2" id="btnKdsModeAuto" onclick="applyKdsStoreMode('auto')">
-          🟢 Otomatik (Çalışma Saatlerine Göre Açık)
+        <button type="button" class="btn-kds-mode" id="btnKdsModeAuto" onclick="applyKdsStoreMode('auto')">
+          🟢 Otomatik (Saatlere Göre)
+        </button>
+        <button type="button" class="btn-kds-mode" id="btnKdsModeManualOpen" onclick="applyKdsStoreMode('manual_open')">
+          ✅ Dükkanı Aç (Manuel)
         </button>
         <button type="button" class="btn-kds-mode" id="btnKdsModeBusy30" onclick="applyKdsStoreMode('busy', 30)">
           🔥 Yoğun Mod · 30 dk
@@ -1231,7 +1234,7 @@
           btn.classList.remove("is-open", "is-busy", "is-closed");
           if (st.isOpen) {
             btn.classList.add("is-open");
-            btn.textContent = "🟢 Siparişe Açık";
+            btn.textContent = st.reason === "manual_open" ? "🟢 Manuel Açık" : "🟢 Siparişe Açık";
           } else if (st.reason === "busy") {
             btn.classList.add("is-busy");
             btn.textContent = st.busyRemainingMinutes !== null
@@ -1255,15 +1258,17 @@
         const remainingMins = busyUntil ? Math.round((busyUntil - Date.now()) / 60000) : null;
 
         const btnAuto = document.getElementById("btnKdsModeAuto");
+        const btnManualOpen = document.getElementById("btnKdsModeManualOpen");
         const btnB30 = document.getElementById("btnKdsModeBusy30");
         const btnB60 = document.getElementById("btnKdsModeBusy60");
         const btnBInf = document.getElementById("btnKdsModeBusyInf");
         const btnMan = document.getElementById("btnKdsModeManualClosed");
-        [btnAuto, btnB30, btnB60, btnBInf, btnMan].forEach(el => {
+        [btnAuto, btnManualOpen, btnB30, btnB60, btnBInf, btnMan].forEach(el => {
           if (el) el.classList.remove("active", "active-busy", "active-closed");
         });
 
         if (mode === "auto" && btnAuto) btnAuto.classList.add("active");
+        else if (mode === "manual_open" && btnManualOpen) btnManualOpen.classList.add("active");
         else if (mode === "manual_closed" && btnMan) btnMan.classList.add("active-closed");
         else if (mode === "busy") {
           if (remainingMins === null && btnBInf) btnBInf.classList.add("active-busy");
