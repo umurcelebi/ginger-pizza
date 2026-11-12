@@ -49,7 +49,7 @@
 
         // 3. Subdomain tespiti: örn. restoran-2.xubo.app
         const parts = hostname.split(".");
-        if (parts.length >= 3 && !hostname.endsWith(".github.io")) {
+        if (parts.length >= 3 && !hostname.endsWith(".github.io") && !/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
           const sub = parts[0];
           const reserved = ["www", "api", "admin", "panel", "yonetim", "master", "mail", "app", "siparis"];
           if (sub && !reserved.includes(sub)) {

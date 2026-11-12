@@ -14,6 +14,8 @@
 
   <!-- Supabase CDN (İsteğe bağlı bulut bağlantısı için) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- QR Kod Üretici (Paket Servis QR Kodu için) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 
   <style>
     :root {
@@ -1416,6 +1418,9 @@
           <button type="button" class="btn-header" id="btnOpenDbModal" title="Sadece Süper Admin görebilir">
             ⚙️ Veritabanı Ayarı
           </button>
+          <button type="button" class="btn-header" id="btnOpenQrModal" onclick="openQrCodeModal()" title="Paket Servis QR Kodu oluştur ve indir">
+            📱 QR Kod
+          </button>
           <a href="onizleme.html" target="_blank" class="btn-header" title="Önizleme sitesini yeni sekmede açar">
             🌐 Önizlemeyi Gör
           </a>
@@ -2090,6 +2095,46 @@
         <button type="button" class="btn-header" onclick="closeReportOrderDetail()">✕ Kapat</button>
       </div>
       <div id="reportOrderDetailBody"></div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       8. MODAL: PAKET SERVİS QR KODU
+       ======================================================================== -->
+  <div id="qrCodeModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 440px; text-align: center;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; text-align:left;">
+        <div>
+          <h2 class="modal-title" style="margin-bottom:2px;">📱 Paket Servis QR Kodu</h2>
+          <p style="font-size:0.82rem; color:var(--ink-500); margin:0;">
+            Okutulduğunda doğrudan Menü ve Online Sipariş ekranı açılır (PIN sormaz).
+          </p>
+        </div>
+        <button type="button" class="btn-header" onclick="closeQrCodeModal()">✕</button>
+      </div>
+
+      <div style="background:#fff; border:1px solid var(--sand-200); border-radius:14px; padding:18px; margin:14px 0; display:flex; flex-direction:column; align-items:center; gap:10px;">
+        <div id="qrBrandLabel" style="font-weight:800; font-size:1rem; color:var(--ink-900);">Ginger Pizza</div>
+        <canvas id="qrPreviewCanvas" width="240" height="240" style="width:220px; height:220px; border-radius:8px;"></canvas>
+        <div style="font-size:0.78rem; font-weight:700; color:var(--ginger-600);">Online Sipariş İçin Okutun</div>
+      </div>
+
+      <div style="background:var(--sand-50); border:1px solid var(--sand-200); border-radius:8px; padding:8px 10px; font-family:monospace; font-size:0.75rem; color:var(--ink-700); word-break:break-all; margin-bottom:14px;" id="qrTargetUrlText"></div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <button type="button" class="btn-header btn-header-primary" onclick="downloadQrPng()" style="justify-content:center;">
+          ⬇️ PNG İndir
+        </button>
+        <button type="button" class="btn-header" onclick="printQrPoster()" style="justify-content:center;">
+          🖨️ Yazdır
+        </button>
+        <button type="button" class="btn-header" onclick="copyQrLink()" style="justify-content:center;">
+          📋 Linki Kopyala
+        </button>
+        <a id="qrTestLink" href="#" target="_blank" class="btn-header" style="justify-content:center; text-decoration:none;">
+          🔗 Test Et ↗
+        </a>
+      </div>
     </div>
   </div>
 
@@ -3970,6 +4015,126 @@
         r.revenue
       ]);
       downloadCsvRows(`urun-raporu-${start}_${end}.csv`, ["Ürün Adı", "Toplam Adet", "Small", "Medium", "Mega / XL", "Tek / Yan Ürün", "Toplam Tutar (TL)"], rows);
+    };
+
+    // ========================================================================
+    // PAKET SERVİS QR KODU ÜRETİCİ (TARAYICI İÇİ CANVAS)
+    // ========================================================================
+    function getQrTargetUrl() {
+      const slug = typeof window.getActiveRestaurantSlug === "function"
+        ? window.getActiveRestaurantSlug()
+        : ((window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.restaurantSlug) || "ginger-pizza");
+      const url = new URL("onizleme.html", window.location.href);
+      url.search = "";
+      if (slug && slug !== "ginger-pizza") {
+        url.searchParams.set("r", slug);
+      }
+      url.searchParams.set("qr", "1");
+      return url.toString();
+    }
+
+    function drawQrToCanvas(canvas, text, sizePx) {
+      if (!canvas || typeof window.qrcode !== "function") return false;
+      const qr = window.qrcode(0, "M");
+      qr.addData(text);
+      qr.make();
+
+      const count = qr.getModuleCount();
+      const padModules = 2;
+      const totalModules = count + padModules * 2;
+      const scale = Math.max(2, Math.floor(sizePx / totalModules));
+      const actualSize = totalModules * scale;
+
+      canvas.width = actualSize;
+      canvas.height = actualSize;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, actualSize, actualSize);
+      ctx.fillStyle = "#1b1411";
+
+      for (let r = 0; r < count; r++) {
+        for (let c = 0; c < count; c++) {
+          if (qr.isDark(r, c)) {
+            ctx.fillRect((c + padModules) * scale, (r + padModules) * scale, scale, scale);
+          }
+        }
+      }
+      return true;
+    }
+
+    window.openQrCodeModal = async function() {
+      if (typeof window.ensureRestaurantConfigReady === "function") {
+        await window.ensureRestaurantConfigReady();
+      }
+      const targetUrl = getQrTargetUrl();
+      const info = window.__ACTIVE_RESTAURANT_INFO__;
+      const brandName = (info && info.name) ? info.name : "Ginger Pizza";
+
+      const brandEl = document.getElementById("qrBrandLabel");
+      const urlEl = document.getElementById("qrTargetUrlText");
+      const testLink = document.getElementById("qrTestLink");
+      const canvas = document.getElementById("qrPreviewCanvas");
+
+      if (brandEl) brandEl.textContent = brandName;
+      if (urlEl) urlEl.textContent = targetUrl;
+      if (testLink) testLink.href = targetUrl;
+
+      drawQrToCanvas(canvas, targetUrl, 480);
+      document.getElementById("qrCodeModal").classList.add("open");
+    };
+
+    window.closeQrCodeModal = function() {
+      const modal = document.getElementById("qrCodeModal");
+      if (modal) modal.classList.remove("open");
+    };
+
+    window.copyQrLink = async function() {
+      const targetUrl = getQrTargetUrl();
+      try {
+        await navigator.clipboard.writeText(targetUrl);
+        showToast("QR sipariş linki kopyalandı.");
+      } catch (e) {
+        prompt("Linki kopyalayın:", targetUrl);
+      }
+    };
+
+    window.downloadQrPng = function() {
+      const targetUrl = getQrTargetUrl();
+      const slug = typeof window.getActiveRestaurantSlug === "function"
+        ? window.getActiveRestaurantSlug()
+        : "ginger-pizza";
+      const hiRes = document.createElement("canvas");
+      if (!drawQrToCanvas(hiRes, targetUrl, 900)) {
+        showToast("QR kütüphanesi henüz yüklenemedi.");
+        return;
+      }
+      const link = document.createElement("a");
+      link.download = `paket-servis-qr-${slug}.png`;
+      link.href = hiRes.toDataURL("image/png");
+      link.click();
+      showToast("QR kod PNG olarak indirildi.");
+    };
+
+    window.printQrPoster = function() {
+      const targetUrl = getQrTargetUrl();
+      const info = window.__ACTIVE_RESTAURANT_INFO__;
+      const brandName = (info && info.name) ? info.name : "Ginger Pizza";
+      const hiRes = document.createElement("canvas");
+      if (!drawQrToCanvas(hiRes, targetUrl, 700)) {
+        showToast("QR kütüphanesi henüz yüklenemedi.");
+        return;
+      }
+      const dataUrl = hiRes.toDataURL("image/png");
+      const win = window.open("", "_blank", "width=520,height=680");
+      if (!win) {
+        showToast("Lütfen açılır pencere (popup) izni verin.");
+        return;
+      }
+      win.document.write(`<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>${brandName} — Paket Servis QR</title>
+        <style>body{font-family:system-ui,sans-serif;text-align:center;padding:40px 24px;color:#1b1411;} .card{border:2px solid #d86a1a;border-radius:20px;padding:32px 24px;max-width:380px;margin:0 auto;} h1{font-size:24px;margin:0 0 8px;} p{font-size:15px;color:#554740;margin:0 0 20px;} img{width:260px;height:260px;display:block;margin:0 auto 18px;} .foot{font-size:13px;font-weight:700;color:#b8500c;}</style>
+        </head><body><div class="card"><h1>${brandName}</h1><p>Online Paket Servis Siparişi İçin Okutun</p><img src="${dataUrl}" alt="QR Kod"><div class="foot">Hızlı Menü &amp; Online Sipariş</div></div>
+        <script>window.onload=function(){setTimeout(function(){window.print();},200);};<\/script></body></html>`);
+      win.document.close();
     };
 
     // Başlat

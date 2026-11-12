@@ -2446,6 +2446,18 @@
       color: var(--ink-500);
       text-decoration: underline;
     }
+
+    /* QR Menü Modu (?qr=1): Sadece Menü ve Sipariş Ekranı */
+    body.qr-menu-mode #hero,
+    body.qr-menu-mode #hikaye,
+    body.qr-menu-mode #siparis,
+    body.qr-menu-mode #iletisim,
+    body.qr-menu-mode .nav-links {
+      display: none !important;
+    }
+    body.qr-menu-mode #menu {
+      padding-top: 28px;
+    }
   </style>
 </head>
 <body>
@@ -2485,6 +2497,14 @@
       const form = document.getElementById("previewPinForm");
       const input = document.getElementById("previewPinInput");
       const errorEl = document.getElementById("previewPinError");
+
+      const isQrMode = new URLSearchParams(window.location.search).get("qr") === "1";
+      if (isQrMode) {
+        document.body.classList.add("qr-menu-mode");
+        document.body.classList.remove("pin-locked");
+        if (gate) gate.classList.add("is-hidden");
+        return;
+      }
 
       function unlockPreview() {
         localStorage.setItem(STORAGE_KEY, "1");
