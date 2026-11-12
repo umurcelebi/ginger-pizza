@@ -13,9 +13,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=20261112g"></script>
+  <script src="js/config.js?v=20261112h"></script>
   <script src="js/store-status.js?v=20261112d"></script>
-  <script src="js/order-api.js?v=20261112"></script>
+  <script src="js/order-api.js?v=20261112h"></script>
 
   <style>
     :root {
@@ -751,6 +751,24 @@
 </head>
 <body>
 
+  <!-- KDS Yetkilendirme Kapısı -->
+  <div id="kdsAuthOverlay" style="position:fixed; inset:0; z-index:9999; background:rgba(15,12,10,0.97); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:20px;">
+    <form id="kdsLoginForm" style="width:100%; max-width:380px; background:#1c1714; border:1px solid rgba(255,255,255,0.12); border-radius:20px; padding:28px; color:#fff; box-shadow:0 24px 48px rgba(0,0,0,0.45);">
+      <div style="font-size:1.25rem; font-weight:800; margin-bottom:6px;">🧑‍🍳 Mutfak / KDS Girişi</div>
+      <div style="font-size:0.84rem; color:#a89b91; margin-bottom:18px;">Canlı siparişleri görüntülemek için yetkili personel hesabıyla giriş yapın.</div>
+      <div style="margin-bottom:12px;">
+        <label for="kdsLoginEmail" style="display:block; font-size:0.78rem; font-weight:700; color:#d3c8be; margin-bottom:5px;">E-Posta</label>
+        <input type="email" id="kdsLoginEmail" required autocomplete="username" placeholder="mutfak@..." style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background:#120e0c; color:#fff; font-size:0.9rem;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <label for="kdsLoginPass" style="display:block; font-size:0.78rem; font-weight:700; color:#d3c8be; margin-bottom:5px;">Şifre</label>
+        <input type="password" id="kdsLoginPass" required autocomplete="current-password" placeholder="••••••••" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.16); background:#120e0c; color:#fff; font-size:0.9rem;">
+      </div>
+      <div id="kdsLoginError" style="display:none; background:rgba(220,38,38,0.18); border:1px solid rgba(220,38,38,0.5); color:#fca5a5; font-size:0.8rem; padding:8px 10px; border-radius:8px; margin-bottom:12px;"></div>
+      <button type="submit" style="width:100%; padding:11px; border:none; border-radius:10px; background:var(--ginger-500, #d86a1a); color:#fff; font-weight:700; font-size:0.92rem; cursor:pointer;">Giriş Yap</button>
+    </form>
+  </div>
+
   <!-- Üst Bar -->
   <header class="kds-header">
     <div class="kds-brand">
@@ -911,6 +929,63 @@
     let kdsStoreSettings = null;
     let soundEnabled = true;
     let knownNewOrderIds = new Set();
+    let kdsRuntimeStarted = false;
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function getKdsActiveSlug() {
+      return (typeof window.getActiveRestaurantSlug === "function"
+        ? window.getActiveRestaurantSlug()
+        : "") || "ginger-pizza";
+    }
+
+    function getKdsSessionKey(suffix) {
+      const slug = getKdsActiveSlug();
+      return slug === "ginger-pizza" ? ("ginger_" + suffix) : ("xubo_" + slug + "_" + suffix);
+    }
+
+    function getKdsUsersStorageKey() {
+      const slug = getKdsActiveSlug();
+      return slug === "ginger-pizza" ? "ginger_users_list_v1" : ("xubo_users_list_v1_" + slug);
+    }
+
+    function getKdsAllowedUsers() {
+      const slug = getKdsActiveSlug();
+      const defaults = slug === "ginger-pizza"
+        ? [
+            { email: "admin@gingerpizza.com", password: "ginger123", role: "admin" },
+            { email: "mudur@gingerpizza.com", password: "pizza2026", role: "manager" },
+            { email: "mutfak@gingerpizza.com", password: "mutfak2026", role: "staff" }
+          ]
+        : (() => {
+            const info = window.__ACTIVE_RESTAURANT_INFO__ || {};
+            const clean = String(slug).toLowerCase().replace(/[^a-z0-9]/g, "") || "restoran";
+            return [
+              { email: (info.admin_email && String(info.admin_email).trim()) || ("admin@" + clean + ".com"), password: (info.admin_password && String(info.admin_password).trim()) || (clean + "123"), role: "admin" },
+              { email: "mudur@" + clean + ".com", password: clean + "2026", role: "manager" },
+              { email: "mutfak@" + clean + ".com", password: "mutfak2026", role: "staff" }
+            ];
+          })();
+      try {
+        const raw = localStorage.getItem(getKdsUsersStorageKey());
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
+      return defaults;
+    }
+
+    function isKdsAuthenticated() {
+      return sessionStorage.getItem(getKdsSessionKey("admin_logged_in")) === "true";
+    }
 
     // Zaman formatlama (Örn: "5 dk önce")
     function formatTimeAgo(isoString) {
@@ -942,26 +1017,26 @@
 
       printArea.innerHTML = `
         <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
-          <div style="font-size: 15px; font-weight: bold; letter-spacing: 0.5px;">${receiptTitle}</div>
-          ${receiptAddress ? `<div style="font-size: 10px; margin-top: 2px;">${receiptAddress}</div>` : ''}
-          ${receiptPhone ? `<div style="font-size: 10px;">Tel: ${receiptPhone}</div>` : ''}
-          <div style="font-size: 14px; font-weight: bold; margin-top: 5px;">SİPARİŞ #${order.order_number || order.id.slice(-4)}</div>
-          <div style="font-size: 10px; margin-top: 2px;">${new Date(order.created_at || Date.now()).toLocaleString("tr-TR")}</div>
+          <div style="font-size: 15px; font-weight: bold; letter-spacing: 0.5px;">${escapeHtml(receiptTitle)}</div>
+          ${receiptAddress ? `<div style="font-size: 10px; margin-top: 2px;">${escapeHtml(receiptAddress)}</div>` : ''}
+          ${receiptPhone ? `<div style="font-size: 10px;">Tel: ${escapeHtml(receiptPhone)}</div>` : ''}
+          <div style="font-size: 14px; font-weight: bold; margin-top: 5px;">SİPARİŞ #${escapeHtml(order.order_number || String(order.id).slice(-4))}</div>
+          <div style="font-size: 10px; margin-top: 2px;">${escapeHtml(new Date(order.created_at || Date.now()).toLocaleString("tr-TR"))}</div>
         </div>
 
         <div style="margin-bottom: 6px; font-size: 11px; line-height: 1.35;">
-          <div><strong>MÜŞTERİ:</strong> ${order.customer_name}</div>
-          <div><strong>TEL:</strong> ${order.customer_phone}</div>
-          <div><strong>TİP:</strong> ${deliveryLabel}</div>
-          ${order.delivery_type !== 'takeaway' ? `<div><strong>ADRES:</strong> ${order.delivery_address || '-'}</div>` : ''}
-          ${order.order_notes ? `<div style="margin-top: 3px; border: 1px solid #000; padding: 2px 4px;"><strong>NOT:</strong> ${order.order_notes}</div>` : ''}
+          <div><strong>MÜŞTERİ:</strong> ${escapeHtml(order.customer_name)}</div>
+          <div><strong>TEL:</strong> ${escapeHtml(order.customer_phone)}</div>
+          <div><strong>TİP:</strong> ${escapeHtml(deliveryLabel)}</div>
+          ${order.delivery_type !== 'takeaway' ? `<div><strong>ADRES:</strong> ${escapeHtml(order.delivery_address || '-')}</div>` : ''}
+          ${order.order_notes ? `<div style="margin-top: 3px; border: 1px solid #000; padding: 2px 4px;"><strong>NOT:</strong> ${escapeHtml(order.order_notes)}</div>` : ''}
         </div>
 
         <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 5px 0; margin-bottom: 6px; font-size: 11px;">
           ${(order.items || []).map(i => `
             <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; margin-bottom: 4px;">
-              <span style="flex: 1;">${i.quantity}x ${i.item_name}${i.size_label ? ' (' + i.size_label + ')' : ''}${i.item_notes ? ' [' + i.item_notes + ']' : ''}</span>
-              <strong style="white-space: nowrap;">${i.total_price} TL</strong>
+              <span style="flex: 1;">${escapeHtml(i.quantity)}x ${escapeHtml(i.item_name)}${i.size_label ? ' (' + escapeHtml(i.size_label) + ')' : ''}${i.item_notes ? ' [' + escapeHtml(i.item_notes) + ']' : ''}</span>
+              <strong style="white-space: nowrap;">${escapeHtml(i.total_price)} TL</strong>
             </div>
           `).join("")}
         </div>
@@ -969,19 +1044,19 @@
         ${Number(order.discount_amount) > 0 ? `
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
             <span>ARA TOPLAM:</span>
-            <span>${order.subtotal_amount || (Number(order.total_amount) + Number(order.discount_amount))} TL</span>
+            <span>${escapeHtml(order.subtotal_amount || (Number(order.total_amount) + Number(order.discount_amount)))} TL</span>
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
-            <span>ONLINE İNDİRİM (%${order.discount_percent || 0}):</span>
-            <span>-${order.discount_amount} TL</span>
+            <span>ONLINE İNDİRİM (%${escapeHtml(order.discount_percent || 0)}):</span>
+            <span>-${escapeHtml(order.discount_amount)} TL</span>
           </div>
         ` : ''}
         <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-bottom: 4px;">
           <span>TOPLAM:</span>
-          <span>${order.total_amount} TL</span>
+          <span>${escapeHtml(order.total_amount)} TL</span>
         </div>
         <div style="font-size: 11px; text-align: center; margin-top: 6px; border-top: 1px dashed #000; padding-top: 5px;">
-          ÖDEME: <strong>${payLabel}</strong>
+          ÖDEME: <strong>${escapeHtml(payLabel)}</strong>
         </div>
       `;
 
@@ -1045,32 +1120,35 @@
 
       const items = order.items || [];
 
+      const safeOrderId = escapeHtml(order.id);
+      const safeTelHref = "tel:" + String(order.customer_phone || "").replace(/[^\d+]/g, "");
+
       return `
-        <article class="order-card ${isNew ? 'highlight-new' : ''}" id="card-${order.id}">
+        <article class="order-card ${isNew ? 'highlight-new' : ''}" id="card-${safeOrderId}">
           <div class="order-card-header">
             <div>
-              <span class="order-num">#${order.order_number || order.id.slice(-4)}</span>
-              <span class="delivery-pill">${deliveryLabel}</span>
+              <span class="order-num">#${escapeHtml(order.order_number || String(order.id).slice(-4))}</span>
+              <span class="delivery-pill">${escapeHtml(deliveryLabel)}</span>
             </div>
             <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
-              <span class="order-time">${formatTimeAgo(order.created_at)}</span>
-              <button type="button" class="btn-print" onclick="printOrderReceipt('${order.id}')" title="Adisyon Fişi Yazdır">
+              <span class="order-time">${escapeHtml(formatTimeAgo(order.created_at))}</span>
+              <button type="button" class="btn-print" onclick="printOrderReceipt('${safeOrderId}')" title="Adisyon Fişi Yazdır">
                 🖨️ Fiş Yazdır
               </button>
             </div>
           </div>
 
           <div class="order-customer">
-            <div class="customer-name">${order.customer_name}</div>
+            <div class="customer-name">${escapeHtml(order.customer_name)}</div>
             <div class="customer-phone-row">
-              <a href="tel:${order.customer_phone}">📞 ${order.customer_phone}</a>
+              <a href="${safeTelHref}">📞 ${escapeHtml(order.customer_phone)}</a>
               <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn-wa-mini">
                 💬 WhatsApp
               </a>
             </div>
             ${order.delivery_address && order.delivery_type !== 'takeaway' ? `
               <div class="order-address">
-                📍 ${order.delivery_address}
+                📍 ${escapeHtml(order.delivery_address)}
                 <a href="https://maps.google.com/?q=${encodeURIComponent(order.delivery_address)}" target="_blank" rel="noopener" style="color:var(--ginger-500); text-decoration:underline; font-size:0.75rem; display:block; margin-top:2px;">Haritada Aç</a>
               </div>
             ` : ''}
@@ -1078,7 +1156,7 @@
 
           ${order.order_notes ? `
             <div class="order-notes-box">
-              <strong>Sipariş Notu:</strong> ${order.order_notes}
+              <strong>Sipariş Notu:</strong> ${escapeHtml(order.order_notes)}
             </div>
           ` : ''}
 
@@ -1086,30 +1164,30 @@
             ${items.map(item => `
               <div class="item-row">
                 <div>
-                  <span class="item-qty">${item.quantity}x</span>
-                  <span class="item-name">${item.item_name}</span>
-                  ${item.size_label ? `<span class="item-size">(${item.size_label})</span>` : ''}
-                  ${item.item_notes ? `<div style="font-size:0.74rem; color:#ffb37a; margin-top:2px; line-height:1.35;">${item.item_notes}</div>` : ''}
+                  <span class="item-qty">${escapeHtml(item.quantity)}x</span>
+                  <span class="item-name">${escapeHtml(item.item_name)}</span>
+                  ${item.size_label ? `<span class="item-size">(${escapeHtml(item.size_label)})</span>` : ''}
+                  ${item.item_notes ? `<div style="font-size:0.74rem; color:#ffb37a; margin-top:2px; line-height:1.35;">${escapeHtml(item.item_notes)}</div>` : ''}
                 </div>
-                <span class="item-price">${item.total_price || (item.unit_price * item.quantity)} ₺</span>
+                <span class="item-price">${escapeHtml(item.total_price || (item.unit_price * item.quantity))} ₺</span>
               </div>
             `).join("")}
           </div>
 
           <div class="order-total-row">
             <div>
-              <div class="payment-tag">${paymentLabel}</div>
+              <div class="payment-tag">${escapeHtml(paymentLabel)}</div>
               ${Number(order.discount_amount) > 0 ? `
                 <div style="font-size:0.72rem; color:#6ee7a0; font-weight:700; margin-top:2px;">
-                  🎁 %${order.discount_percent || 0} İndirim (-${order.discount_amount} ₺)
+                  🎁 %${escapeHtml(order.discount_percent || 0)} İndirim (-${escapeHtml(order.discount_amount)} ₺)
                 </div>
               ` : `
                 <div style="font-size:0.74rem; color:var(--ink-muted);">Toplam Tutar</div>
               `}
             </div>
             <div style="text-align:right;">
-              ${Number(order.discount_amount) > 0 ? `<div style="font-size:0.74rem; color:var(--ink-muted); text-decoration:line-through;">${order.subtotal_amount || (Number(order.total_amount) + Number(order.discount_amount))} ₺</div>` : ''}
-              <div class="order-total-val">${order.total_amount} ₺</div>
+              ${Number(order.discount_amount) > 0 ? `<div style="font-size:0.74rem; color:var(--ink-muted); text-decoration:line-through;">${escapeHtml(order.subtotal_amount || (Number(order.total_amount) + Number(order.discount_amount)))} ₺</div>` : ''}
+              <div class="order-total-val">${escapeHtml(order.total_amount)} ₺</div>
             </div>
           </div>
 
@@ -1384,30 +1462,68 @@
         renderKdsStoreStatus();
       };
 
-      // İlk Yükleme
-      loadOrders();
-      refreshKdsStoreStatus();
-
-      // Realtime Dinleyiciyi Başlat (Milisaniyelik Güncelleme)
-      OrderAPI.subscribe((payload) => {
-        console.log("Realtime order event received:", payload);
+      function startKdsRuntime() {
+        if (kdsRuntimeStarted) return;
+        kdsRuntimeStarted = true;
         loadOrders();
-      });
+        refreshKdsStoreStatus();
 
-      if (window.StoreStatus) {
-        StoreStatus.subscribe((nextSettings) => {
-          kdsStoreSettings = nextSettings;
-          const noteInput = document.getElementById("kdsStoreMessageInput");
-          if (noteInput && document.activeElement !== noteInput) {
-            noteInput.value = kdsStoreSettings.status_message || "";
-          }
-          renderKdsStoreStatus();
+        // Realtime Dinleyiciyi Başlat (Milisaniyelik Güncelleme)
+        OrderAPI.subscribe((payload) => {
+          console.log("Realtime order event received:", payload);
+          loadOrders();
         });
-        setInterval(renderKdsStoreStatus, 30000);
+
+        if (window.StoreStatus) {
+          StoreStatus.subscribe((nextSettings) => {
+            kdsStoreSettings = nextSettings;
+            const noteInput = document.getElementById("kdsStoreMessageInput");
+            if (noteInput && document.activeElement !== noteInput) {
+              noteInput.value = kdsStoreSettings.status_message || "";
+            }
+            renderKdsStoreStatus();
+          });
+          setInterval(renderKdsStoreStatus, 30000);
+        }
+
+        // Periyodik Polling (Her 10 saniyede bir garanti kontrol)
+        setInterval(loadOrders, 10000);
       }
 
-      // Periyodik Polling (Her 10 saniyede bir garanti kontrol)
-      setInterval(loadOrders, 10000);
+      const authOverlay = document.getElementById("kdsAuthOverlay");
+      const kdsLoginForm = document.getElementById("kdsLoginForm");
+      const kdsEmailInput = document.getElementById("kdsLoginEmail");
+      if (kdsEmailInput) {
+        const cleanSlug = String(getKdsActiveSlug()).toLowerCase().replace(/[^a-z0-9]/g, "") || "restoran";
+        kdsEmailInput.placeholder = getKdsActiveSlug() === "ginger-pizza" ? "mutfak@gingerpizza.com" : ("mutfak@" + cleanSlug + ".com");
+      }
+
+      if (isKdsAuthenticated()) {
+        if (authOverlay) authOverlay.style.display = "none";
+        startKdsRuntime();
+      } else if (kdsLoginForm) {
+        kdsLoginForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          if (typeof window.ensureRestaurantConfigReady === "function") {
+            await window.ensureRestaurantConfigReady();
+          }
+          const email = document.getElementById("kdsLoginEmail").value.trim().toLowerCase();
+          const pass = document.getElementById("kdsLoginPass").value;
+          const errBox = document.getElementById("kdsLoginError");
+          const matched = getKdsAllowedUsers().find(u => String(u.email || "").toLowerCase() === email && u.password === pass);
+          if (matched) {
+            sessionStorage.setItem(getKdsSessionKey("admin_logged_in"), "true");
+            sessionStorage.setItem(getKdsSessionKey("user_email"), matched.email);
+            sessionStorage.setItem(getKdsSessionKey("user_role"), matched.role || "staff");
+            if (errBox) errBox.style.display = "none";
+            if (authOverlay) authOverlay.style.display = "none";
+            startKdsRuntime();
+          } else if (errBox) {
+            errBox.textContent = "Hatalı e-posta veya şifre!";
+            errBox.style.display = "block";
+          }
+        });
+      }
     });
   </script>
 </body>

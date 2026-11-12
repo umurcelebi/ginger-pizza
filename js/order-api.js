@@ -281,9 +281,19 @@ function getSupabaseClient() {
   return null;
 }
 
+function getOrdersStorageKey() {
+  const slug = getRestaurantSlug();
+  return slug === "ginger-pizza" ? ORDERS_STORAGE_KEY : `${ORDERS_STORAGE_KEY}_${slug}`;
+}
+
+function getCustomersStorageKey() {
+  const slug = getRestaurantSlug();
+  return slug === "ginger-pizza" ? CUSTOMERS_STORAGE_KEY : `${CUSTOMERS_STORAGE_KEY}_${slug}`;
+}
+
 function getLocalOrders() {
   try {
-    const raw = localStorage.getItem(ORDERS_STORAGE_KEY);
+    const raw = localStorage.getItem(getOrdersStorageKey());
     return raw ? JSON.parse(raw) : [];
   } catch (e) {
     return [];
@@ -291,13 +301,13 @@ function getLocalOrders() {
 }
 
 function saveLocalOrders(orders) {
-  localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
+  localStorage.setItem(getOrdersStorageKey(), JSON.stringify(orders));
   window.dispatchEvent(new CustomEvent("ginger-orders-updated", { detail: orders }));
 }
 
 function getLocalCustomers() {
   try {
-    const raw = localStorage.getItem(CUSTOMERS_STORAGE_KEY);
+    const raw = localStorage.getItem(getCustomersStorageKey());
     return raw ? JSON.parse(raw) : [];
   } catch (e) {
     return [];
@@ -305,7 +315,7 @@ function getLocalCustomers() {
 }
 
 function saveLocalCustomers(customers) {
-  localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(customers));
+  localStorage.setItem(getCustomersStorageKey(), JSON.stringify(customers));
 }
 
 function aggregateCustomersFromOrders(orders, targetSlug = getRestaurantSlug()) {

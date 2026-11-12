@@ -96,7 +96,12 @@
   async function fetchRestaurantByQuery(filterQuery) {
     if (typeof fetch !== "function") return null;
     try {
-      const url = `${SUPABASE_URL}/rest/v1/restaurants?select=id,name,slug,custom_domain,phone,address,instagram,primary_color,is_active,admin_email,admin_password&${filterQuery}&limit=1`;
+      const path = (typeof location !== "undefined" && location.pathname ? location.pathname : "").toLowerCase();
+      const isStaffPage = path.includes("admin") || path.includes("orders");
+      const cols = isStaffPage
+        ? "id,name,slug,custom_domain,phone,address,instagram,primary_color,is_active,admin_email,admin_password"
+        : "id,name,slug,custom_domain,phone,address,instagram,primary_color,is_active";
+      const url = `${SUPABASE_URL}/rest/v1/restaurants?select=${cols}&${filterQuery}&limit=1`;
       const res = await fetch(url, {
         headers: {
           apikey: SUPABASE_ANON_KEY,
@@ -145,7 +150,10 @@
       if (info) {
         window.__ACTIVE_RESTAURANT_INFO__ = info;
         try {
-          if (info.slug) localStorage.setItem("xubo_rest_info_" + info.slug, JSON.stringify(info));
+          if (info.slug) {
+            const { admin_password: _ignored, ...safeCacheInfo } = info;
+            localStorage.setItem("xubo_rest_info_" + info.slug, JSON.stringify(safeCacheInfo));
+          }
         } catch (e) {}
       }
       return info;
