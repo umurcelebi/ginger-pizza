@@ -424,7 +424,7 @@
             if (cachedInfo && cachedInfo.slug === slug) {
               window.__ACTIVE_RESTAURANT_INFO__ = cachedInfo;
               renderBrandingFromInfo(cachedInfo, slug);
-              document.documentElement.style.visibility = "";
+              if (typeof window.__tenantReveal === "function") window.__tenantReveal(); else document.documentElement.style.visibility = "";
             }
           }
         } catch (e) {}
@@ -433,7 +433,7 @@
       const finalSlug = (info && info.slug) || window.getActiveRestaurantSlug();
       renderBrandingFromInfo(info, finalSlug);
     } finally {
-      document.documentElement.style.visibility = "";
+      if (typeof window.__tenantReveal === "function") window.__tenantReveal(); else document.documentElement.style.visibility = "";
     }
   };
 

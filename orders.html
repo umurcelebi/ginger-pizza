@@ -13,7 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=20261112"></script>
+  <script src="js/config.js?v=20261112f"></script>
   <script src="js/store-status.js?v=20261112d"></script>
   <script src="js/order-api.js?v=20261112"></script>
 
@@ -746,7 +746,7 @@
     }
   </style>
   <script>
-    (function(){try{var p=new URLSearchParams(location.search),q=p.get("r")||p.get("restaurant"),h=(location.hostname||"").toLowerCase(),s=(q||sessionStorage.getItem("ginger_active_restaurant_slug")||"").trim().toLowerCase(),c=(h&&h!=="www.gingerpizza.com"&&h!=="gingerpizza.com"&&h!=="xubo.app"&&h!=="www.xubo.app"&&h!=="localhost"&&h!=="127.0.0.1");if((s&&s!=="ginger-pizza")||(!s&&c)){document.documentElement.style.visibility="hidden";setTimeout(function(){document.documentElement.style.visibility="";},1500);}}catch(e){}})();
+    (function(){try{var p=new URLSearchParams(location.search),q=p.get("r")||p.get("restaurant"),h=(location.hostname||"").toLowerCase(),s=(q||sessionStorage.getItem("ginger_active_restaurant_slug")||"").trim().toLowerCase(),c=(h&&h!=="www.gingerpizza.com"&&h!=="gingerpizza.com"&&h!=="xubo.app"&&h!=="www.xubo.app"&&h!=="localhost"&&h!=="127.0.0.1");if((s&&s!=="ginger-pizza")||(!s&&c)){var d=document.documentElement;d.classList.add("tenant-pending");var st=document.createElement("style");st.textContent="html.tenant-pending body{visibility:hidden!important}";document.head.appendChild(st);window.__tenantReveal=function(){d.classList.remove("tenant-pending");d.style.visibility="";};setTimeout(window.__tenantReveal,8000);}}catch(e){}})();
   </script>
 </head>
 <body>
