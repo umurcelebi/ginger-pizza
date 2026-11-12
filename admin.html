@@ -556,6 +556,218 @@
       z-index: 200;
     }
 
+    /* Dükkan Durumu & Çalışma Saatleri Kartı */
+    .store-control-card {
+      background: var(--surface);
+      border: 1px solid var(--sand-200);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 10px rgba(28, 21, 18, 0.03);
+    }
+
+    .store-control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      margin-bottom: 16px;
+    }
+
+    .store-control-title {
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--ink-900);
+      margin-bottom: 4px;
+    }
+
+    .store-control-sub {
+      font-size: 0.85rem;
+      color: var(--ink-500);
+    }
+
+    .store-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .store-status-pill.is-open {
+      background: var(--success-bg);
+      color: var(--success);
+      border-color: #bfe6ca;
+    }
+
+    .store-status-pill.is-busy {
+      background: #fff4e5;
+      color: #a14d09;
+      border-color: #f4c88c;
+    }
+
+    .store-status-pill.is-closed {
+      background: #fdf0f1;
+      color: var(--danger);
+      border-color: #f3b8bc;
+    }
+
+    .store-mode-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .btn-mode {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--sand-200);
+      background: var(--bg);
+      color: var(--ink-700);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-mode:hover {
+      background: var(--sand-100);
+      border-color: var(--ink-400);
+    }
+
+    .btn-mode.active-auto {
+      background: var(--success);
+      color: var(--white);
+      border-color: var(--success);
+    }
+
+    .btn-mode.active-busy {
+      background: var(--ginger-500);
+      color: var(--white);
+      border-color: var(--ginger-500);
+    }
+
+    .btn-mode.active-closed {
+      background: var(--danger);
+      color: var(--white);
+      border-color: var(--danger);
+    }
+
+    .store-message-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--sand-100);
+    }
+
+    .store-message-input {
+      flex: 1;
+      min-width: 240px;
+      padding: 9px 13px;
+      border: 1px solid var(--sand-200);
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 0.88rem;
+      background: var(--white);
+    }
+
+    .store-hours-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .store-hours-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .day-schedule-card {
+      background: var(--bg);
+      border: 1px solid var(--sand-200);
+      border-radius: var(--radius-md);
+      padding: 11px 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      transition: opacity 0.15s ease;
+    }
+
+    .day-schedule-card.is-day-closed {
+      opacity: 0.68;
+      background: #f4f1ec;
+    }
+
+    .day-schedule-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--ink-900);
+    }
+
+    .day-toggle-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--ink-500);
+      cursor: pointer;
+    }
+
+    .day-time-inputs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .day-time-input {
+      flex: 1;
+      min-width: 0;
+      padding: 6px 8px;
+      border: 1px solid var(--sand-200);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.84rem;
+      background: var(--white);
+      color: var(--ink-900);
+    }
+
+    .day-time-input:disabled {
+      background: var(--sand-100);
+      color: var(--ink-400);
+      cursor: not-allowed;
+    }
+
+    .store-hours-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
     @media (max-width: 900px) {
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .price-inputs-row { flex-wrap: wrap; }
@@ -648,6 +860,62 @@
           <div class="stat-sub">Taş fırın seçenekleri</div>
         </div>
       </div>
+
+      <!-- Dükkan Sipariş Aç/Kapat & Haftalık Çalışma Saatleri -->
+      <section class="store-control-card" aria-labelledby="storeControlHeading">
+        <div class="store-control-header">
+          <div>
+            <h2 id="storeControlHeading" class="store-control-title">🕒 Sipariş Kontrolü &amp; Çalışma Saatleri</h2>
+            <p id="adminStoreStatusSub" class="store-control-sub">Durum yükleniyor...</p>
+          </div>
+          <div id="adminStoreStatusPill" class="store-status-pill is-open">⏳ Kontrol ediliyor...</div>
+        </div>
+
+        <div class="store-mode-buttons" role="group" aria-label="Hızlı sipariş modu">
+          <button type="button" class="btn-mode" id="btnModeAuto" onclick="handleQuickStoreMode('auto')">
+            🟢 Otomatik (Saatlere Göre)
+          </button>
+          <button type="button" class="btn-mode" id="btnModeBusy30" onclick="handleQuickStoreMode('busy', 30)">
+            🔥 Yoğun Mod (30 dk)
+          </button>
+          <button type="button" class="btn-mode" id="btnModeBusy60" onclick="handleQuickStoreMode('busy', 60)">
+            🔥 Yoğun Mod (60 dk)
+          </button>
+          <button type="button" class="btn-mode" id="btnModeBusyInf" onclick="handleQuickStoreMode('busy', null)">
+            🔥 Yoğun Mod (Süresiz)
+          </button>
+          <button type="button" class="btn-mode" id="btnModeManualClose" onclick="handleQuickStoreMode('manual_closed')">
+            ⛔ Dükkanı Kapat (Manuel)
+          </button>
+        </div>
+
+        <div class="store-message-row">
+          <label for="adminStoreMessage" style="font-size: 0.84rem; font-weight: 700; color: var(--ink-700);">
+            Müşteri Mesajı (Opsiyonel):
+          </label>
+          <input type="text" id="adminStoreMessage" class="store-message-input" placeholder="Örn: Fırın yoğunluğu nedeniyle 30 dk siparişe ara verdik.">
+          <button type="button" class="btn-header" onclick="handleSaveStoreMessage()">💬 Mesajı Güncelle</button>
+        </div>
+
+        <div class="store-hours-topbar">
+          <div>
+            <strong style="font-size: 0.92rem; color: var(--ink-900);">Haftalık Açılış – Kapanış Saatleri</strong>
+            <span style="font-size: 0.8rem; color: var(--ink-500); margin-left: 8px;">(Türkiye Saati · 24 saat)</span>
+          </div>
+          <button type="button" class="btn-header" onclick="applyMondayToAllDays()">📋 Pazartesi'yi Tüm Günlere Uygula</button>
+        </div>
+
+        <div id="weeklyHoursGrid" class="store-hours-grid"></div>
+
+        <div class="store-hours-footer">
+          <span style="font-size: 0.8rem; color: var(--ink-500);">
+            İpucu: Gece yarısını aşan kapanışlar (örn. 11:30 – 01:00) otomatik olarak ertesi güne kadar açık kalır.
+          </span>
+          <button type="button" class="btn-header btn-header-primary" id="btnSaveStoreHours" onclick="saveStoreScheduleSettings()">
+            💾 Çalışma Saatlerini Kaydet
+          </button>
+        </div>
+      </section>
 
       <!-- Araç Çubuğu -->
       <div class="toolbar-card">
@@ -875,9 +1143,10 @@
   <!-- Toast -->
   <div id="toast" class="toast-msg">Değişiklikler kaydedildi</div>
 
-  <!-- Menu API Bağlantısı -->
+  <!-- Menu API & Dükkan Durum Bağlantısı -->
   <script src="js/config.js"></script>
   <script src="js/menu-api.js"></script>
+  <script src="js/store-status.js"></script>
 
   <script>
     // ========================================================================
@@ -1073,12 +1342,219 @@
       }
     }
 
+    // Dükkan Sipariş & Saat Kontrolü
+    let adminStoreSettings = null;
+    let storeSubscriptionActive = false;
+
+    function renderAdminStoreStatusOnly() {
+      if (!window.StoreStatus) return;
+      const st = StoreStatus.evaluate(adminStoreSettings);
+      const pill = document.getElementById("adminStoreStatusPill");
+      const sub = document.getElementById("adminStoreStatusSub");
+      if (pill) {
+        pill.classList.remove("is-open", "is-busy", "is-closed");
+        if (st.isOpen) {
+          pill.classList.add("is-open");
+          pill.textContent = "🟢 Siparişe Açık";
+        } else if (st.reason === "busy") {
+          pill.classList.add("is-busy");
+          pill.textContent = st.busyRemainingMinutes !== null
+            ? `🔥 Yoğun Mod (${st.busyRemainingMinutes} dk kaldı)`
+            : "🔥 Yoğun Mod (Süresiz)";
+        } else if (st.reason === "manual_closed") {
+          pill.classList.add("is-closed");
+          pill.textContent = "⛔ Manuel Kapalı";
+        } else {
+          pill.classList.add("is-closed");
+          pill.textContent = "🌙 Çalışma Saati Dışı";
+        }
+      }
+      if (sub) {
+        sub.textContent = `${st.title} — ${st.detail}`;
+      }
+
+      const mode = st.effectiveMode;
+      const busyUntil = st.settings.busy_until ? new Date(st.settings.busy_until).getTime() : null;
+      const now = Date.now();
+      const remainingMins = busyUntil ? Math.round((busyUntil - now) / 60000) : null;
+
+      const btnAuto = document.getElementById("btnModeAuto");
+      const btnB30 = document.getElementById("btnModeBusy30");
+      const btnB60 = document.getElementById("btnModeBusy60");
+      const btnBInf = document.getElementById("btnModeBusyInf");
+      const btnMan = document.getElementById("btnModeManualClose");
+
+      [btnAuto, btnB30, btnB60, btnBInf, btnMan].forEach(b => {
+        if (b) b.classList.remove("active-auto", "active-busy", "active-closed");
+      });
+
+      if (mode === "auto" && btnAuto) btnAuto.classList.add("active-auto");
+      else if (mode === "manual_closed" && btnMan) btnMan.classList.add("active-closed");
+      else if (mode === "busy") {
+        if (remainingMins === null && btnBInf) btnBInf.classList.add("active-busy");
+        else if (remainingMins <= 35 && btnB30) btnB30.classList.add("active-busy");
+        else if (btnB60) btnB60.classList.add("active-busy");
+      }
+    }
+
+    function renderWeeklyHoursEditor() {
+      const grid = document.getElementById("weeklyHoursGrid");
+      if (!grid || !window.StoreStatus || !adminStoreSettings) return;
+      const hours = adminStoreSettings.weekly_hours || {};
+      grid.innerHTML = StoreStatus.WEEK_ORDER.map(dayKey => {
+        const dayName = StoreStatus.DAY_NAMES[dayKey];
+        const cfg = hours[dayKey] || { enabled: true, open: "11:30", close: "23:00" };
+        const isClosed = cfg.enabled === false;
+        return `
+          <div class="day-schedule-card ${isClosed ? 'is-day-closed' : ''}" data-day="${dayKey}">
+            <div class="day-schedule-head">
+              <span>${dayName}</span>
+              <label class="day-toggle-label">
+                <input type="checkbox" class="day-enabled-checkbox" data-day="${dayKey}" ${!isClosed ? 'checked' : ''} onchange="toggleDayEnabled('${dayKey}', this.checked)">
+                <span>${!isClosed ? 'Açık' : 'Kapalı'}</span>
+              </label>
+            </div>
+            <div class="day-time-inputs">
+              <input type="time" class="day-time-input day-open-input" data-day="${dayKey}" value="${cfg.open || '11:30'}" ${isClosed ? 'disabled' : ''}>
+              <span style="color:var(--ink-400); font-weight:700;">–</span>
+              <input type="time" class="day-time-input day-close-input" data-day="${dayKey}" value="${cfg.close || '23:00'}" ${isClosed ? 'disabled' : ''}>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.toggleDayEnabled = function(dayKey, enabled) {
+      const card = document.querySelector(`.day-schedule-card[data-day="${dayKey}"]`);
+      if (!card) return;
+      card.classList.toggle("is-day-closed", !enabled);
+      const labelSpan = card.querySelector(".day-toggle-label span");
+      if (labelSpan) labelSpan.textContent = enabled ? "Açık" : "Kapalı";
+      card.querySelectorAll(".day-time-input").forEach(inp => {
+        inp.disabled = !enabled;
+      });
+    };
+
+    window.applyMondayToAllDays = function() {
+      const monCard = document.querySelector(`.day-schedule-card[data-day="1"]`);
+      if (!monCard || !window.StoreStatus) return;
+      const monEnabled = monCard.querySelector(".day-enabled-checkbox")?.checked !== false;
+      const monOpen = monCard.querySelector(".day-open-input")?.value || "11:30";
+      const monClose = monCard.querySelector(".day-close-input")?.value || "23:00";
+
+      StoreStatus.WEEK_ORDER.forEach(dayKey => {
+        if (dayKey === "1") return;
+        const card = document.querySelector(`.day-schedule-card[data-day="${dayKey}"]`);
+        if (!card) return;
+        const chk = card.querySelector(".day-enabled-checkbox");
+        const openInp = card.querySelector(".day-open-input");
+        const closeInp = card.querySelector(".day-close-input");
+        if (chk) chk.checked = monEnabled;
+        if (openInp) openInp.value = monOpen;
+        if (closeInp) closeInp.value = monClose;
+        toggleDayEnabled(dayKey, monEnabled);
+      });
+      showToast("Pazartesi saatleri tüm günlere uygulandı. Kaydetmeyi unutmayın.");
+    };
+
+    function readWeeklyHoursFromDOM() {
+      const result = {};
+      StoreStatus.WEEK_ORDER.forEach(dayKey => {
+        const card = document.querySelector(`.day-schedule-card[data-day="${dayKey}"]`);
+        const enabled = card?.querySelector(".day-enabled-checkbox")?.checked !== false;
+        const open = card?.querySelector(".day-open-input")?.value || "11:30";
+        const close = card?.querySelector(".day-close-input")?.value || "23:00";
+        result[dayKey] = { enabled, open, close };
+      });
+      return result;
+    }
+
+    async function loadStoreControlPanel() {
+      if (!window.StoreStatus) return;
+      adminStoreSettings = await StoreStatus.getSettings();
+      const msgInput = document.getElementById("adminStoreMessage");
+      if (msgInput) msgInput.value = adminStoreSettings.status_message || "";
+      renderAdminStoreStatusOnly();
+      renderWeeklyHoursEditor();
+
+      if (!storeSubscriptionActive) {
+        storeSubscriptionActive = true;
+        StoreStatus.subscribe((nextSettings) => {
+          adminStoreSettings = nextSettings;
+          const msgInput = document.getElementById("adminStoreMessage");
+          if (msgInput && document.activeElement !== msgInput) {
+            msgInput.value = adminStoreSettings.status_message || "";
+          }
+          renderAdminStoreStatusOnly();
+          renderWeeklyHoursEditor();
+        });
+        setInterval(renderAdminStoreStatusOnly, 30000);
+      }
+    }
+
+    window.handleQuickStoreMode = async function(mode, durationMinutes = null) {
+      if (!window.StoreStatus) return;
+      const msgInput = document.getElementById("adminStoreMessage");
+      const statusMessage = msgInput ? msgInput.value.trim() : "";
+      const res = await StoreStatus.setOrderMode(mode, { durationMinutes, statusMessage });
+      adminStoreSettings = res.settings;
+      renderAdminStoreStatusOnly();
+      if (res.synced) {
+        showToast("Sipariş durumu canlı olarak güncellendi!");
+      } else {
+        showToast("Yerel olarak güncellendi (Supabase tablosu henüz kurulmadıysa store_settings_schema.sql çalıştırın).");
+      }
+    };
+
+    window.handleSaveStoreMessage = async function() {
+      if (!window.StoreStatus) return;
+      const current = adminStoreSettings || await StoreStatus.getSettings();
+      const msgInput = document.getElementById("adminStoreMessage");
+      const next = {
+        ...current,
+        status_message: msgInput ? msgInput.value.trim() : ""
+      };
+      const res = await StoreStatus.saveSettings(next);
+      adminStoreSettings = res.settings;
+      renderAdminStoreStatusOnly();
+      showToast(res.synced ? "Müşteri mesajı kaydedildi!" : "Mesaj yerel olarak kaydedildi.");
+    };
+
+    window.saveStoreScheduleSettings = async function() {
+      if (!window.StoreStatus) return;
+      const btn = document.getElementById("btnSaveStoreHours");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Kaydediliyor...";
+      }
+      try {
+        const current = adminStoreSettings || await StoreStatus.getSettings();
+        const msgInput = document.getElementById("adminStoreMessage");
+        const next = {
+          ...current,
+          weekly_hours: readWeeklyHoursFromDOM(),
+          status_message: msgInput ? msgInput.value.trim() : ""
+        };
+        const res = await StoreStatus.saveSettings(next);
+        adminStoreSettings = res.settings;
+        renderAdminStoreStatusOnly();
+        renderWeeklyHoursEditor();
+        showToast(res.synced ? "Çalışma saatleri kaydedildi!" : "Çalışma saatleri yerel olarak kaydedildi.");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "💾 Çalışma Saatlerini Kaydet";
+        }
+      }
+    };
+
     // Verileri Yükle ve Render Et
     async function loadDashboard() {
       currentMenuItems = await MenuAPI.getMenu();
       updateStats();
       renderTable();
       updateDbStatus();
+      loadStoreControlPanel();
     }
 
     // İstatistikleri Güncelle

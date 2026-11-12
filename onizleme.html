@@ -664,6 +664,120 @@
       color: var(--ink-900);
     }
 
+    /* Dükkan Açık / Kapalı / Yoğun Durum Bandı */
+    .store-status-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px 18px;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      margin-bottom: 24px;
+      border: 1px solid var(--sand-200);
+      background: var(--white);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .store-status-banner.is-open {
+      background: #f1fbf4;
+      border-color: #bfe6ca;
+      color: #165e2d;
+    }
+
+    .store-status-banner.is-busy {
+      background: #fff7eb;
+      border-color: #f4c88c;
+      color: #8a4308;
+    }
+
+    .store-status-banner.is-closed {
+      background: #fff2f2;
+      border-color: #f3b8bc;
+      color: #8f1d24;
+    }
+
+    .store-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .store-banner-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: currentColor;
+    }
+
+    .store-status-banner.is-open .store-banner-dot {
+      box-shadow: 0 0 0 4px rgba(22, 136, 59, 0.18);
+    }
+
+    .store-status-banner.is-busy .store-banner-dot {
+      box-shadow: 0 0 0 4px rgba(216, 106, 26, 0.2);
+    }
+
+    .store-status-banner.is-closed .store-banner-dot {
+      box-shadow: 0 0 0 4px rgba(207, 34, 46, 0.16);
+    }
+
+    .store-banner-title {
+      font-weight: 800;
+      font-size: 0.96rem;
+      line-height: 1.3;
+    }
+
+    .store-banner-detail {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .store-banner-meta {
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      white-space: nowrap;
+    }
+
+    .cart-drawer-store-notice {
+      background: #fff2f2;
+      border: 1px solid #f3b8bc;
+      color: #8f1d24;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+
+    .cart-drawer-store-notice.is-busy {
+      background: #fff7eb;
+      border-color: #f4c88c;
+      color: #8a4308;
+    }
+
+    .btn-checkout-action:disabled {
+      background: var(--ink-400);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    body.store-closed-mode .btn-card-order {
+      background: var(--sand-200);
+      color: var(--ink-500);
+      cursor: not-allowed;
+      box-shadow: none;
+      opacity: 0.72;
+    }
+
     /* Pizza cards grid */
     .menu-grid {
       display: grid;
@@ -2404,6 +2518,9 @@
         </div>
       </div>
 
+      <!-- Canlı Dükkan Sipariş Durumu Bandı -->
+      <div id="storeStatusBanner" class="store-status-banner" aria-live="polite" style="display:none;"></div>
+
       <!-- Menü Listesi (JavaScript ile doldurulacak) -->
       <div id="menuGrid" class="menu-grid">
         <!-- Dinamik Pizza ve Yan Ürün Kartları -->
@@ -2703,6 +2820,7 @@
         <span>Genel Toplam</span>
         <span id="cartDrawerTotal">0 ₺</span>
       </div>
+      <div id="cartDrawerStoreNotice" class="cart-drawer-store-notice" style="display:none;"></div>
       <button type="button" class="btn-checkout-action" id="btnOpenCheckout" onclick="openCheckoutModal()">
         <span>Siparişi Tamamla</span>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -2814,12 +2932,89 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/menu-api.js"></script>
+  <script src="js/store-status.js"></script>
   <script src="js/order-api.js"></script>
   <script>
     let menuData = [];
     const cardSelectedSizes = {};
     let currentFilter = "all";
     let currentSearchTerm = "";
+    let currentStoreStatus = window.StoreStatus
+      ? window.StoreStatus.evaluate(null)
+      : { isOpen: true, reason: "open", title: "", detail: "", nextOpenText: "", todaySchedule: null, settings: null };
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function renderStoreStatusUI() {
+      const st = currentStoreStatus;
+      document.body.classList.toggle("store-closed-mode", !st.isOpen);
+
+      const banner = document.getElementById("storeStatusBanner");
+      if (banner) {
+        banner.style.display = "flex";
+        banner.classList.remove("is-open", "is-busy", "is-closed");
+        if (st.isOpen) {
+          banner.classList.add("is-open");
+        } else if (st.reason === "busy") {
+          banner.classList.add("is-busy");
+        } else {
+          banner.classList.add("is-closed");
+        }
+
+        const scheduleMeta = st.todaySchedule && st.todaySchedule.enabled
+          ? `Bugün ${st.todaySchedule.open} – ${st.todaySchedule.close}`
+          : (st.nextOpenText || "Saatler kapalı");
+
+        banner.innerHTML = `
+          <div class="store-banner-left">
+            <span class="store-banner-dot" aria-hidden="true"></span>
+            <div>
+              <div class="store-banner-title">${escapeHtml(st.title)}</div>
+              <div class="store-banner-detail">${escapeHtml(st.detail)}</div>
+            </div>
+          </div>
+          <div class="store-banner-meta">${escapeHtml(scheduleMeta)}</div>
+        `;
+      }
+
+      const drawerNotice = document.getElementById("cartDrawerStoreNotice");
+      const checkoutBtn = document.getElementById("btnOpenCheckout");
+      if (drawerNotice) {
+        if (st.isOpen) {
+          drawerNotice.style.display = "none";
+          drawerNotice.classList.remove("is-busy");
+          drawerNotice.innerHTML = "";
+        } else {
+          drawerNotice.style.display = "block";
+          drawerNotice.classList.toggle("is-busy", st.reason === "busy");
+          drawerNotice.innerHTML = `<strong>${escapeHtml(st.title)}</strong><br>${escapeHtml(st.detail)}`;
+        }
+      }
+      if (checkoutBtn) {
+        checkoutBtn.disabled = !st.isOpen;
+        const labelSpan = checkoutBtn.querySelector("span");
+        if (labelSpan) {
+          labelSpan.textContent = st.isOpen ? "Siparişi Tamamla" : "Siparişler Geçici Olarak Kapalı";
+        }
+      }
+    }
+
+    async function refreshStoreStatus() {
+      if (!window.StoreStatus) return;
+      const prevOpen = currentStoreStatus.isOpen;
+      const settings = await StoreStatus.getSettings();
+      currentStoreStatus = StoreStatus.evaluate(settings);
+      renderStoreStatusUI();
+      if (prevOpen !== currentStoreStatus.isOpen && menuData.length > 0) {
+        renderMenu();
+      }
+    }
 
     // ========================================================================
     // SEPET & SİPARİŞ DURUM YÖNETİMİ
@@ -2844,6 +3039,15 @@
 
     // Ürünü Sepete Ekle
     window.handleAddToCart = function(itemId) {
+      if (window.StoreStatus) {
+        currentStoreStatus = StoreStatus.evaluate(currentStoreStatus.settings);
+        if (!currentStoreStatus.isOpen) {
+          renderStoreStatusUI();
+          showToast(`${currentStoreStatus.title} — ${currentStoreStatus.detail}`);
+          return;
+        }
+      }
+
       const item = menuData.find(i => i.id === itemId);
       if (!item || item.isAvailable === false) return;
 
@@ -2902,6 +3106,7 @@
       if (footer) footer.style.display = "block";
       if (subtotalElem) subtotalElem.textContent = `${total} ₺`;
       if (totalElem) totalElem.textContent = `${total} ₺`;
+      renderStoreStatusUI();
 
       body.innerHTML = `
         <div class="cart-items-list">
@@ -2963,12 +3168,21 @@
     // ========================================================================
     // CHECKOUT (SİPARİŞİ TAMAMLA)
     // ========================================================================
-    window.openCheckoutModal = function() {
+    window.openCheckoutModal = async function() {
       const items = Cart.getItems();
       if (items.length === 0) {
         alert("Sepetiniz boş. Lütfen menüden ürün ekleyin.");
         return;
       }
+
+      if (window.StoreStatus) {
+        await refreshStoreStatus();
+        if (!currentStoreStatus.isOpen) {
+          alert(`${currentStoreStatus.title}\n${currentStoreStatus.detail}`);
+          return;
+        }
+      }
+
       closeCartDrawer();
 
       const modal = document.getElementById("checkoutModalBackdrop");
@@ -3058,6 +3272,11 @@
         updateActiveOrderHeaderButton();
       } catch (err) {
         console.error("Order creation error:", err);
+        if (err && (err.code === "STORE_CLOSED" || err.isStoreClosed)) {
+          await refreshStoreStatus();
+          alert(err.message);
+          return;
+        }
         alert("Sipariş oluşturulurken bir hata oluştu. Lütfen tekrar deneyin veya telefonla arayın: 0216 337 02 01");
       } finally {
         if (submitBtn) {
@@ -3345,8 +3564,8 @@
                     <span class="price-label" id="size-label-${item.id}">${sizeLabels[currentSize] || ''}</span>
                   </div>
                   ${isAvailable ? `
-                    <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="Sepete Ekle" style="border:none; cursor:pointer;">
-                      <span>+ Sepete Ekle</span>
+                    <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="${currentStoreStatus.isOpen ? 'Sepete Ekle' : 'Siparişe Kapalı'}" style="border:none; cursor:pointer;">
+                      <span>${currentStoreStatus.isOpen ? '+ Sepete Ekle' : 'Siparişe Kapalı'}</span>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M5 12h14M12 5l7 7-7 7"/>
                       </svg>
@@ -3385,8 +3604,8 @@
                 <span class="price-label">Porsiyon Fiyatı</span>
               </div>
               ${isAvailable ? `
-                <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="Sepete Ekle" style="border:none; cursor:pointer;">
-                  <span>+ Sepete Ekle</span>
+                <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="${currentStoreStatus.isOpen ? 'Sepete Ekle' : 'Siparişe Kapalı'}" style="border:none; cursor:pointer;">
+                  <span>${currentStoreStatus.isOpen ? '+ Sepete Ekle' : 'Siparişe Kapalı'}</span>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
@@ -3466,9 +3685,31 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+      renderStoreStatusUI();
+      refreshStoreStatus();
       loadMenuFromAPI();
       syncCartBadges();
       updateActiveOrderHeaderButton();
+
+      if (window.StoreStatus) {
+        StoreStatus.subscribe((newSettings) => {
+          const prevOpen = currentStoreStatus.isOpen;
+          currentStoreStatus = StoreStatus.evaluate(newSettings);
+          renderStoreStatusUI();
+          if (prevOpen !== currentStoreStatus.isOpen && menuData.length > 0) {
+            renderMenu();
+          }
+        });
+
+        setInterval(() => {
+          const prevOpen = currentStoreStatus.isOpen;
+          currentStoreStatus = StoreStatus.evaluate(currentStoreStatus.settings);
+          renderStoreStatusUI();
+          if (prevOpen !== currentStoreStatus.isOpen && menuData.length > 0) {
+            renderMenu();
+          }
+        }, 30000);
+      }
 
       // Sepet değiştiğinde UI senkronizasyonu
       window.addEventListener("ginger-cart-updated", () => {

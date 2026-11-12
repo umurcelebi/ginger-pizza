@@ -14,6 +14,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
+  <script src="js/store-status.js"></script>
   <script src="js/order-api.js"></script>
 
   <style>
@@ -618,6 +619,84 @@
       }
     }
 
+    .btn-kds-store.is-open {
+      background: rgba(46, 204, 113, 0.14);
+      border-color: rgba(46, 204, 113, 0.45);
+      color: #6ee7a0;
+    }
+
+    .btn-kds-store.is-busy {
+      background: rgba(230, 126, 34, 0.22);
+      border-color: rgba(230, 126, 34, 0.65);
+      color: #ffbe7b;
+    }
+
+    .btn-kds-store.is-closed {
+      background: rgba(231, 76, 60, 0.22);
+      border-color: rgba(231, 76, 60, 0.65);
+      color: #ff9c94;
+    }
+
+    .kds-mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    .btn-kds-mode {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-card);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+
+    .btn-kds-mode:hover {
+      border-color: var(--ginger-500);
+      background: #3a302b;
+    }
+
+    .btn-kds-mode.span-2 {
+      grid-column: span 2;
+    }
+
+    .btn-kds-mode.active {
+      border-color: #2ecc71;
+      background: rgba(46, 204, 113, 0.16);
+      color: #8df5b8;
+    }
+
+    .btn-kds-mode.active-busy {
+      border-color: var(--ginger-500);
+      background: rgba(216, 106, 26, 0.22);
+      color: #ffc58f;
+    }
+
+    .btn-kds-mode.active-closed {
+      border-color: #e74c3c;
+      background: rgba(231, 76, 60, 0.22);
+      color: #ffaaa2;
+    }
+
+    .kds-mode-note-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 0.86rem;
+      margin-bottom: 16px;
+    }
+
     @media (max-width: 700px) {
       .kanban-board { grid-template-columns: 1fr; }
     }
@@ -637,6 +716,9 @@
     </div>
 
     <div class="kds-actions">
+      <button type="button" class="btn-kds btn-kds-store is-open" id="btnKdsStoreStatus" onclick="openKdsStoreModal()" title="Dükkan sipariş durumu ve yoğun mod kontrolü">
+        🟢 Siparişe Açık
+      </button>
       <button type="button" class="btn-kds btn-kds-sound active" id="btnToggleSound" title="Yeni sipariş geldiğinde ses çal">
         🔔 Ses Açık (Test Et)
       </button>
@@ -729,6 +811,44 @@
       <div class="archive-modal-actions">
         <button type="button" class="btn-modal-cancel" onclick="closeArchiveModal()">Vazgeç</button>
         <button type="button" id="btnConfirmArchive" class="btn-modal-confirm" onclick="confirmArchiveCompleted()">✓ Onayla ve Temizle</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mutfak Hızlı Dükkan Durumu & Yoğun Modu Modalı -->
+  <div id="kdsStoreModalBackdrop" class="archive-modal-backdrop" onclick="if(event.target===this) closeKdsStoreModal()">
+    <div class="archive-modal-box" role="dialog" aria-modal="true" aria-labelledby="kdsStoreModalTitle">
+      <h2 id="kdsStoreModalTitle" class="archive-modal-title">🔥 Dükkan Durumu &amp; Yoğun Mod</h2>
+      <p id="kdsStoreModalSubtitle" style="font-size: 0.85rem; color: var(--ink-muted);">
+        Mutfak yoğunlaştığında sipariş alımını tek tıkla geçici olarak durdurabilirsiniz.
+      </p>
+
+      <div class="kds-mode-grid">
+        <button type="button" class="btn-kds-mode span-2" id="btnKdsModeAuto" onclick="applyKdsStoreMode('auto')">
+          🟢 Otomatik (Çalışma Saatlerine Göre Açık)
+        </button>
+        <button type="button" class="btn-kds-mode" id="btnKdsModeBusy30" onclick="applyKdsStoreMode('busy', 30)">
+          🔥 Yoğun Mod · 30 dk
+        </button>
+        <button type="button" class="btn-kds-mode" id="btnKdsModeBusy60" onclick="applyKdsStoreMode('busy', 60)">
+          🔥 Yoğun Mod · 60 dk
+        </button>
+        <button type="button" class="btn-kds-mode" id="btnKdsModeBusyInf" onclick="applyKdsStoreMode('busy', null)">
+          🔥 Yoğun Mod · Süresiz
+        </button>
+        <button type="button" class="btn-kds-mode" id="btnKdsModeManualClosed" onclick="applyKdsStoreMode('manual_closed')">
+          ⛔ Dükkanı Kapat
+        </button>
+      </div>
+
+      <label for="kdsStoreMessageInput" style="display:block; font-size:0.78rem; color:var(--ink-muted); margin-bottom:6px;">
+        Müşteriye Gösterilecek Mesaj (Opsiyonel):
+      </label>
+      <input type="text" id="kdsStoreMessageInput" class="kds-mode-note-input" placeholder="Örn: Fırın yoğunluğu nedeniyle kısa bir ara verdik.">
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <span style="font-size:0.76rem; color:var(--ink-muted);">Haftalık saatleri Admin panelinden düzenleyebilirsiniz.</span>
+        <button type="button" class="btn-modal-cancel" onclick="closeKdsStoreModal()">Kapat</button>
       </div>
     </div>
   </div>
@@ -1098,14 +1218,111 @@
         loadOrders();
       });
 
+      // Mutfak Hızlı Dükkan Durumu & Yoğun Mod Kontrolü
+      let kdsStoreSettings = null;
+
+      function renderKdsStoreStatus() {
+        if (!window.StoreStatus) return;
+        const st = StoreStatus.evaluate(kdsStoreSettings);
+        const btn = document.getElementById("btnKdsStoreStatus");
+        const sub = document.getElementById("kdsStoreModalSubtitle");
+
+        if (btn) {
+          btn.classList.remove("is-open", "is-busy", "is-closed");
+          if (st.isOpen) {
+            btn.classList.add("is-open");
+            btn.textContent = "🟢 Siparişe Açık";
+          } else if (st.reason === "busy") {
+            btn.classList.add("is-busy");
+            btn.textContent = st.busyRemainingMinutes !== null
+              ? `🔥 Yoğun (${st.busyRemainingMinutes} dk)`
+              : "🔥 Yoğun Mod";
+          } else if (st.reason === "manual_closed") {
+            btn.classList.add("is-closed");
+            btn.textContent = "⛔ Manuel Kapalı";
+          } else {
+            btn.classList.add("is-closed");
+            btn.textContent = "🌙 Saat Dışı Kapalı";
+          }
+        }
+
+        if (sub) {
+          sub.textContent = `${st.title} — ${st.detail}`;
+        }
+
+        const mode = st.effectiveMode;
+        const busyUntil = st.settings.busy_until ? new Date(st.settings.busy_until).getTime() : null;
+        const remainingMins = busyUntil ? Math.round((busyUntil - Date.now()) / 60000) : null;
+
+        const btnAuto = document.getElementById("btnKdsModeAuto");
+        const btnB30 = document.getElementById("btnKdsModeBusy30");
+        const btnB60 = document.getElementById("btnKdsModeBusy60");
+        const btnBInf = document.getElementById("btnKdsModeBusyInf");
+        const btnMan = document.getElementById("btnKdsModeManualClosed");
+        [btnAuto, btnB30, btnB60, btnBInf, btnMan].forEach(el => {
+          if (el) el.classList.remove("active", "active-busy", "active-closed");
+        });
+
+        if (mode === "auto" && btnAuto) btnAuto.classList.add("active");
+        else if (mode === "manual_closed" && btnMan) btnMan.classList.add("active-closed");
+        else if (mode === "busy") {
+          if (remainingMins === null && btnBInf) btnBInf.classList.add("active-busy");
+          else if (remainingMins <= 35 && btnB30) btnB30.classList.add("active-busy");
+          else if (btnB60) btnB60.classList.add("active-busy");
+        }
+      }
+
+      async function refreshKdsStoreStatus() {
+        if (!window.StoreStatus) return;
+        kdsStoreSettings = await StoreStatus.getSettings();
+        const noteInput = document.getElementById("kdsStoreMessageInput");
+        if (noteInput && document.activeElement !== noteInput) {
+          noteInput.value = kdsStoreSettings.status_message || "";
+        }
+        renderKdsStoreStatus();
+      }
+
+      window.openKdsStoreModal = function() {
+        refreshKdsStoreStatus();
+        const backdrop = document.getElementById("kdsStoreModalBackdrop");
+        if (backdrop) backdrop.classList.add("open");
+      };
+
+      window.closeKdsStoreModal = function() {
+        const backdrop = document.getElementById("kdsStoreModalBackdrop");
+        if (backdrop) backdrop.classList.remove("open");
+      };
+
+      window.applyKdsStoreMode = async function(mode, durationMinutes = null) {
+        if (!window.StoreStatus) return;
+        const noteInput = document.getElementById("kdsStoreMessageInput");
+        const statusMessage = noteInput ? noteInput.value.trim() : "";
+        const res = await StoreStatus.setOrderMode(mode, { durationMinutes, statusMessage });
+        kdsStoreSettings = res.settings;
+        renderKdsStoreStatus();
+      };
+
       // İlk Yükleme
       loadOrders();
+      refreshKdsStoreStatus();
 
       // Realtime Dinleyiciyi Başlat (Milisaniyelik Güncelleme)
       OrderAPI.subscribe((payload) => {
         console.log("Realtime order event received:", payload);
         loadOrders();
       });
+
+      if (window.StoreStatus) {
+        StoreStatus.subscribe((nextSettings) => {
+          kdsStoreSettings = nextSettings;
+          const noteInput = document.getElementById("kdsStoreMessageInput");
+          if (noteInput && document.activeElement !== noteInput) {
+            noteInput.value = kdsStoreSettings.status_message || "";
+          }
+          renderKdsStoreStatus();
+        });
+        setInterval(renderKdsStoreStatus, 30000);
+      }
 
       // Periyodik Polling (Her 10 saniyede bir garanti kontrol)
       setInterval(loadOrders, 10000);

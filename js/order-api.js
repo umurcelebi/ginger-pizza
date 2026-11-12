@@ -174,6 +174,18 @@ function saveLocalOrders(orders) {
 const OrderAPI = {
   // Yeni Sipariş Oluştur
   async createOrder(customerData, cartItems) {
+    // 0. Dükkan Açık/Kapalı & Yoğun Modu Ön Kontrolü (Türkiye Saati)
+    if (window.StoreStatus) {
+      const settings = await window.StoreStatus.getSettings();
+      const status = window.StoreStatus.evaluate(settings);
+      if (!status.isOpen) {
+        const closedErr = new Error(status.detail || status.title || "Dükkanımız şu anda siparişe kapalıdır.");
+        closedErr.code = "STORE_CLOSED";
+        closedErr.storeStatus = status;
+        throw closedErr;
+      }
+    }
+
     const totalAmount = cartItems.reduce((sum, i) => sum + (i.unitPrice * i.quantity), 0);
     const orderPayload = {
       customer_name: customerData.name,
@@ -197,7 +209,17 @@ const OrderAPI = {
           .select()
           .single();
 
-        if (!orderErr && orderRes) {
+        if (orderErr) {
+          const msg = String(orderErr.message || "");
+          if (msg.includes("STORE_CLOSED") || msg.includes("STORE_BUSY") || msg.includes("STORE_OUTSIDE_HOURS")) {
+            const dbClosedErr = new Error(msg.replace(/^STORE_[A-Z_]+:\s*/, ""));
+            dbClosedErr.code = "STORE_CLOSED";
+            throw dbClosedErr;
+          }
+          throw orderErr;
+        }
+
+        if (orderRes) {
           createdOrder = orderRes;
 
           // Sipariş kalemlerini ekle
@@ -215,6 +237,9 @@ const OrderAPI = {
           createdOrder.items = itemsPayload;
         }
       } catch (err) {
+        if (err && err.code === "STORE_CLOSED") {
+          throw err;
+        }
         console.warn("Supabase order insert failed, using fallback:", err);
       }
     }
