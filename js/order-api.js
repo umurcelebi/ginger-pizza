@@ -23,6 +23,11 @@ function getActiveOrderStorageKey() {
   return slug === "ginger-pizza" ? "ginger_active_order_id_v1" : `ginger_active_order_id_v1_${slug}`;
 }
 
+function getActiveOrderTokenStorageKey() {
+  const slug = getRestaurantSlug();
+  return slug === "ginger-pizza" ? "ginger_active_order_token_v1" : `ginger_active_order_token_v1_${slug}`;
+}
+
 const ORDERS_STORAGE_KEY = "ginger_pizza_orders_v1";
 const CUSTOMERS_STORAGE_KEY = "ginger_pizza_customers_v1";
 
@@ -461,11 +466,58 @@ const OrderAPI = {
 
     if (sb) {
       try {
-        let { data: orderRes, error: orderErr } = await sb
-          .from("orders")
-          .insert([orderPayload])
-          .select()
-          .single();
+        // Faz 2: Önce sunucu taraflı fiyat & indirim doğrulamalı RPC'yi dene
+        const rpcRes = await sb.rpc("create_validated_order", {
+          p_restaurant_slug: restaurantSlug,
+          p_customer: {
+            name: customerData.name,
+            phone: customerData.phone,
+            deliveryType: customerData.deliveryType || "delivery",
+            address: customerData.address || "Gel-Al Siparişi",
+            notes: customerData.notes || "",
+            paymentMethod: customerData.paymentMethod || "door_card"
+          },
+          p_items: cartItems.map(item => ({
+            id: item.id,
+            sizeKey: item.sizeKey || null,
+            sizeLabel: item.sizeLabel || "",
+            quantity: item.quantity,
+            additions: Array.isArray(item.additions) ? item.additions.map(a => ({ name: a.name })) : [],
+            notes: item.notes || ""
+          }))
+        });
+
+        if (!rpcRes.error && rpcRes.data) {
+          createdOrder = rpcRes.data;
+        } else if (rpcRes.error) {
+          const rpcMsg = String(rpcRes.error.message || "");
+          const rpcCode = String(rpcRes.error.code || "");
+          const isMissingRpc =
+            rpcCode === "PGRST202" ||
+            rpcCode === "42883" ||
+            /could not find the function|function .* does not exist/i.test(rpcMsg);
+
+          if (!isMissingRpc) {
+            if (rpcMsg.includes("STORE_CLOSED") || rpcMsg.includes("STORE_BUSY") || rpcMsg.includes("STORE_OUTSIDE_HOURS")) {
+              const dbClosedErr = new Error(rpcMsg.replace(/^STORE_[A-Z_]+:\s*/, ""));
+              dbClosedErr.code = "STORE_CLOSED";
+              throw dbClosedErr;
+            }
+            if (/^(ITEM_UNAVAILABLE|INVALID_MENU_ITEM|EMPTY_CART|INVALID_CUSTOMER|RESTAURANT_NOT_FOUND):/i.test(rpcMsg)) {
+              const valErr = new Error(rpcMsg.replace(/^[A-Z_]+:\s*/, ""));
+              valErr.code = "ORDER_VALIDATION_ERROR";
+              throw valErr;
+            }
+            throw rpcRes.error;
+          }
+        }
+
+        if (!createdOrder) {
+          let { data: orderRes, error: orderErr } = await sb
+            .from("orders")
+            .insert([orderPayload])
+            .select()
+            .single();
 
         // Çoklu restoran veya indirim sütunları veritabanına henüz eklenmediyse kademeli yedek payload ile dene
         if (orderErr && /(restaurant_slug|subtotal_amount|discount_percent|discount_amount)/i.test(String(orderErr.message || ""))) {
@@ -526,8 +578,9 @@ const OrderAPI = {
           await sb.from("order_items").insert(itemsPayload);
           createdOrder.items = itemsPayload;
         }
+        }
       } catch (err) {
-        if (err && err.code === "STORE_CLOSED") {
+        if (err && (err.code === "STORE_CLOSED" || err.code === "ORDER_VALIDATION_ERROR")) {
           throw err;
         }
         console.warn("Supabase order insert failed, using fallback:", err);
@@ -557,8 +610,11 @@ const OrderAPI = {
       syncLocalCustomerFromOrder(createdOrder);
     }
 
-    // Aktif sipariş ID'sini sakla (müşteri takip edebilsin)
+    // Aktif sipariş ID'sini ve takip token'ını sakla (müşteri takip edebilsin)
     localStorage.setItem(getActiveOrderStorageKey(), createdOrder.id);
+    if (createdOrder.tracking_token) {
+      localStorage.setItem(getActiveOrderTokenStorageKey(), String(createdOrder.tracking_token));
+    }
     Cart.clear();
 
     return createdOrder;
@@ -569,6 +625,21 @@ const OrderAPI = {
     const sb = getSupabaseClient();
     if (sb) {
       try {
+        const activeOrderId = localStorage.getItem(getActiveOrderStorageKey());
+        const trackingToken = localStorage.getItem(getActiveOrderTokenStorageKey());
+        if (trackingToken && activeOrderId && String(activeOrderId) === String(orderId)) {
+          const trackRes = await sb.rpc("get_order_tracking", {
+            p_order_id: orderId,
+            p_tracking_token: trackingToken
+          });
+          if (!trackRes.error && trackRes.data) {
+            return {
+              ...trackRes.data,
+              items: Array.isArray(trackRes.data.items) ? trackRes.data.items : []
+            };
+          }
+        }
+
         const { data: order, error } = await sb
           .from("orders")
           .select("*, order_items(*)")
@@ -931,6 +1002,7 @@ const OrderAPI = {
     const activeOrderId = localStorage.getItem(activeOrderKey);
     if (activeOrderId && (removedOrderIds.has(String(activeOrderId)) || remainingOrders.length === 0)) {
       localStorage.removeItem(activeOrderKey);
+      localStorage.removeItem(getActiveOrderTokenStorageKey());
     }
 
     const sb = getSupabaseClient();
@@ -1052,6 +1124,7 @@ const OrderAPI = {
 
   clearActiveOrderId() {
     localStorage.removeItem(getActiveOrderStorageKey());
+    localStorage.removeItem(getActiveOrderTokenStorageKey());
   },
 
   // Gerçek Zamanlı Dinleyici (Realtime WebSockets & Polling)
