@@ -2179,21 +2179,74 @@
       }
     ];
 
+    function getActiveAdminSlug() {
+      return (typeof window.getActiveRestaurantSlug === "function"
+        ? window.getActiveRestaurantSlug()
+        : "") || "ginger-pizza";
+    }
+
+    function getDefaultUsersForSlug() {
+      const slug = getActiveAdminSlug();
+      if (slug === "ginger-pizza") return DEFAULT_USERS;
+      const info = window.__ACTIVE_RESTAURANT_INFO__ || {};
+      const clean = String(slug).toLowerCase().replace(/[^a-z0-9]/g, "") || "restoran";
+      const adminEmail = (info.admin_email && String(info.admin_email).trim()) || ("admin@" + clean + ".com");
+      const adminPass = (info.admin_password && String(info.admin_password).trim()) || (clean + "123");
+      return [
+        {
+          email: adminEmail,
+          password: adminPass,
+          role: "admin",
+          roleLabel: "👑 Süper Yönetici",
+          canEditDb: true,
+          canReset: true
+        },
+        {
+          email: "mudur@" + clean + ".com",
+          password: clean + "2026",
+          role: "manager",
+          roleLabel: "💼 Restoran Müdürü",
+          canEditDb: false,
+          canReset: false
+        },
+        {
+          email: "mutfak@" + clean + ".com",
+          password: "mutfak2026",
+          role: "staff",
+          roleLabel: "🍕 Mutfak / Kasa",
+          canEditDb: false,
+          canReset: false
+        }
+      ];
+    }
+
+    function getUsersStorageKey() {
+      const slug = getActiveAdminSlug();
+      return slug === "ginger-pizza" ? USERS_STORAGE_KEY : ("xubo_users_list_v1_" + slug);
+    }
+
+    function getSessionKey(suffix) {
+      const slug = getActiveAdminSlug();
+      return slug === "ginger-pizza" ? ("ginger_" + suffix) : ("xubo_" + slug + "_" + suffix);
+    }
+
     function getStoredUsers() {
+      const defaults = getDefaultUsersForSlug();
+      const key = getUsersStorageKey();
       try {
-        const raw = localStorage.getItem(USERS_STORAGE_KEY);
+        const raw = localStorage.getItem(key);
         if (!raw) {
-          localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
-          return DEFAULT_USERS;
+          localStorage.setItem(key, JSON.stringify(defaults));
+          return defaults;
         }
         return JSON.parse(raw);
       } catch (e) {
-        return DEFAULT_USERS;
+        return defaults;
       }
     }
 
     function saveStoredUsers(list) {
-      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(list));
+      localStorage.setItem(getUsersStorageKey(), JSON.stringify(list));
     }
 
     window.selectLoginUser = function(userType) {
@@ -2202,19 +2255,20 @@
       const buttons = document.querySelectorAll(".login-card .size-option-btn");
       buttons.forEach(b => b.classList.remove("active"));
       const users = getStoredUsers();
+      const defaults = getDefaultUsersForSlug();
 
       if (userType === 'admin') {
-        const u = users.find(x => x.role === 'admin') || DEFAULT_USERS[0];
+        const u = users.find(x => x.role === 'admin') || defaults[0];
         emailField.value = u.email;
         passField.value = u.password;
         if (buttons[0]) buttons[0].classList.add("active");
       } else if (userType === 'mudur') {
-        const u = users.find(x => x.role === 'manager') || DEFAULT_USERS[1];
+        const u = users.find(x => x.role === 'manager') || defaults[1];
         emailField.value = u.email;
         passField.value = u.password;
         if (buttons[1]) buttons[1].classList.add("active");
       } else if (userType === 'mutfak') {
-        const u = users.find(x => x.role === 'staff') || DEFAULT_USERS[2];
+        const u = users.find(x => x.role === 'staff') || defaults[2];
         emailField.value = u.email;
         passField.value = u.password;
         if (buttons[2]) buttons[2].classList.add("active");
@@ -2222,8 +2276,9 @@
     };
 
     function getCurrentUser() {
-      const email = sessionStorage.getItem("ginger_user_email") || "admin@gingerpizza.com";
       const users = getStoredUsers();
+      const defaults = getDefaultUsersForSlug();
+      const email = sessionStorage.getItem(getSessionKey("user_email")) || defaults[0].email;
       return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || users[0];
     }
 
@@ -2311,7 +2366,7 @@
 
     // Oturum ve Yetki Kontrolü
     function checkAuth() {
-      const isAuth = sessionStorage.getItem("ginger_admin_logged_in") === "true";
+      const isAuth = sessionStorage.getItem(getSessionKey("admin_logged_in")) === "true";
       if (isAuth) {
         document.getElementById("loginView").style.display = "none";
         document.getElementById("adminApp").style.display = "block";
@@ -3296,7 +3351,7 @@
 
       const entered = document.getElementById("resetAdminPassword").value;
       const errBox = document.getElementById("resetPasswordError");
-      const adminAccount = getStoredUsers().find(u => u.role === "admin") || DEFAULT_USERS[0];
+      const adminAccount = getStoredUsers().find(u => u.role === "admin") || getDefaultUsersForSlug()[0];
 
       if (!entered || entered !== adminAccount.password) {
         errBox.textContent = "Hatalı Süper Admin şifresi! Sıfırlama işlemi iptal edildi.";
@@ -3364,7 +3419,7 @@
 
       const entered = document.getElementById("resetSalesAdminPassword").value;
       const errBox = document.getElementById("resetSalesPasswordError");
-      const adminAccount = getStoredUsers().find(u => u.role === "admin") || DEFAULT_USERS[0];
+      const adminAccount = getStoredUsers().find(u => u.role === "admin") || getDefaultUsersForSlug()[0];
 
       if (!entered || entered !== adminAccount.password) {
         errBox.textContent = "Hatalı Süper Admin şifresi! Sıfırlama işlemi iptal edildi.";
@@ -3508,8 +3563,11 @@
     });
 
     // Giriş / Çıkış (Çoklu Kullanıcı Desteği)
-    document.getElementById("loginForm").addEventListener("submit", (e) => {
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      if (typeof window.ensureRestaurantConfigReady === "function") {
+        await window.ensureRestaurantConfigReady();
+      }
       const email = document.getElementById("loginEmail").value.trim().toLowerCase();
       const pass = document.getElementById("loginPass").value;
       const errBox = document.getElementById("loginError");
@@ -3518,9 +3576,9 @@
       const matched = users.find(u => u.email.toLowerCase() === email && u.password === pass);
       if (matched) {
         errBox.style.display = "none";
-        sessionStorage.setItem("ginger_admin_logged_in", "true");
-        sessionStorage.setItem("ginger_user_email", matched.email);
-        sessionStorage.setItem("ginger_user_role", matched.role);
+        sessionStorage.setItem(getSessionKey("admin_logged_in"), "true");
+        sessionStorage.setItem(getSessionKey("user_email"), matched.email);
+        sessionStorage.setItem(getSessionKey("user_role"), matched.role);
         checkAuth();
         showToast(matched.roleLabel + " olarak giriş yapıldı!");
       } else {
@@ -3530,9 +3588,9 @@
     });
 
     document.getElementById("btnLogout").addEventListener("click", () => {
-      sessionStorage.removeItem("ginger_admin_logged_in");
-      sessionStorage.removeItem("ginger_user_email");
-      sessionStorage.removeItem("ginger_user_role");
+      sessionStorage.removeItem(getSessionKey("admin_logged_in"));
+      sessionStorage.removeItem(getSessionKey("user_email"));
+      sessionStorage.removeItem(getSessionKey("user_role"));
       checkAuth();
       showToast("Oturum kapatıldı.");
     });
@@ -4138,7 +4196,14 @@
     };
 
     // Başlat
-    checkAuth();
+    (async () => {
+      if (typeof window.applyDynamicBranding === "function") {
+        await window.applyDynamicBranding();
+      } else if (typeof window.ensureRestaurantConfigReady === "function") {
+        await window.ensureRestaurantConfigReady();
+      }
+      checkAuth();
+    })();
   </script>
 </body>
 </html>

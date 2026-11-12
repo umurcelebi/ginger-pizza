@@ -3,6 +3,23 @@
 -- Supabase SQL Editor üzerinden çalıştırın.
 -- ============================================================================
 
+-- 0. Restoranlara otomatik admin kullanıcı adı / şifre sütunları ekle & mevcutları doldur
+ALTER TABLE public.restaurants ADD COLUMN IF NOT EXISTS admin_email TEXT;
+ALTER TABLE public.restaurants ADD COLUMN IF NOT EXISTS admin_password TEXT;
+
+UPDATE public.restaurants
+SET
+  admin_email = CASE
+    WHEN slug = 'ginger-pizza' THEN 'admin@gingerpizza.com'
+    ELSE 'admin@' || REGEXP_REPLACE(LOWER(slug), '[^a-z0-9]', '', 'g') || '.com'
+  END,
+  admin_password = CASE
+    WHEN slug = 'ginger-pizza' THEN 'ginger123'
+    ELSE REGEXP_REPLACE(LOWER(slug), '[^a-z0-9]', '', 'g') || '123'
+  END
+WHERE NULLIF(TRIM(admin_email), '') IS NULL
+   OR NULLIF(TRIM(admin_password), '') IS NULL;
+
 -- 1. Slug Temizleme / Normalizasyon Fonksiyonu
 CREATE OR REPLACE FUNCTION public.slugify_restaurant_name(p_name TEXT)
 RETURNS TEXT
@@ -52,6 +69,9 @@ DECLARE
   v_restaurant_id UUID;
   v_count INT := 0;
   v_base_slug TEXT;
+  v_cred_slug TEXT;
+  v_admin_email TEXT;
+  v_admin_password TEXT;
 BEGIN
   IF v_clean_name = '' THEN
     RAISE EXCEPTION 'Restoran adı boş olamaz.';
@@ -71,6 +91,14 @@ BEGIN
     v_slug := v_base_slug || '-' || v_count;
   END LOOP;
 
+  -- Otomatik yönetici kullanıcı adı & şifre üret (admin@<restoranadi>.com / <restoranadi>123)
+  v_cred_slug := REGEXP_REPLACE(LOWER(v_slug), '[^a-z0-9]', '', 'g');
+  IF v_cred_slug = '' THEN
+    v_cred_slug := 'restoran';
+  END IF;
+  v_admin_email := 'admin@' || v_cred_slug || '.com';
+  v_admin_password := v_cred_slug || '123';
+
   -- 1. Restoran Kaydını Aç
   INSERT INTO public.restaurants (
     name,
@@ -80,6 +108,8 @@ BEGIN
     address,
     instagram,
     primary_color,
+    admin_email,
+    admin_password,
     is_active
   ) VALUES (
     v_clean_name,
@@ -89,6 +119,8 @@ BEGIN
     TRIM(COALESCE(p_address, '')),
     TRIM(COALESCE(p_instagram, '')),
     COALESCE(NULLIF(TRIM(p_primary_color), ''), '#d86a1a'),
+    v_admin_email,
+    v_admin_password,
     TRUE
   )
   RETURNING id INTO v_restaurant_id;
@@ -131,6 +163,8 @@ BEGIN
     'id', v_restaurant_id,
     'name', v_clean_name,
     'slug', v_slug,
+    'admin_email', v_admin_email,
+    'admin_password', v_admin_password,
     'is_active', TRUE
   );
 END;
@@ -238,6 +272,16 @@ BEGIN
       r.phone,
       r.address,
       r.primary_color,
+      COALESCE(
+        NULLIF(TRIM(r.admin_email), ''),
+        CASE WHEN r.slug = 'ginger-pizza' THEN 'admin@gingerpizza.com'
+             ELSE 'admin@' || REGEXP_REPLACE(LOWER(r.slug), '[^a-z0-9]', '', 'g') || '.com' END
+      ) AS admin_email,
+      COALESCE(
+        NULLIF(TRIM(r.admin_password), ''),
+        CASE WHEN r.slug = 'ginger-pizza' THEN 'ginger123'
+             ELSE REGEXP_REPLACE(LOWER(r.slug), '[^a-z0-9]', '', 'g') || '123' END
+      ) AS admin_password,
       r.is_active,
       r.created_at,
       (SELECT COUNT(*)::INT FROM public.menu_items mi WHERE mi.restaurant_id = r.id) AS menu_items_count,

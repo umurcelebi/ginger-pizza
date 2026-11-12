@@ -84,7 +84,7 @@
   async function fetchRestaurantByQuery(filterQuery) {
     if (typeof fetch !== "function") return null;
     try {
-      const url = `${SUPABASE_URL}/rest/v1/restaurants?select=id,name,slug,custom_domain,phone,address,instagram,primary_color,is_active&${filterQuery}&limit=1`;
+      const url = `${SUPABASE_URL}/rest/v1/restaurants?select=id,name,slug,custom_domain,phone,address,instagram,primary_color,is_active,admin_email,admin_password&${filterQuery}&limit=1`;
       const res = await fetch(url, {
         headers: {
           apikey: SUPABASE_ANON_KEY,
@@ -170,6 +170,16 @@
       const footerCopy = document.querySelector(".footer-bottom div, .site-footer div");
       if (footerCopy && footerCopy.textContent.includes("Ginger Pizza")) {
         footerCopy.textContent = `© 2026 ${info.name}. Tüm hakları saklıdır.`;
+      }
+
+      const loginTitle = document.querySelector(".login-title");
+      if (loginTitle && loginTitle.textContent.includes("Ginger Pizza")) {
+        loginTitle.textContent = `${info.name} Yönetim`;
+      }
+
+      const loginEmailInput = document.getElementById("loginEmail");
+      if (loginEmailInput && info.admin_email) {
+        loginEmailInput.setAttribute("placeholder", info.admin_email);
       }
     }
 
