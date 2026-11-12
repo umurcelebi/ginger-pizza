@@ -80,6 +80,7 @@ END $$;
 CREATE OR REPLACE FUNCTION public.enforce_store_open_on_order()
 RETURNS TRIGGER AS $$
 DECLARE
+    v_target_slug TEXT := COALESCE(NULLIF(TRIM(NEW.restaurant_slug), ''), 'ginger-pizza');
     v_settings public.store_settings%ROWTYPE;
     v_now TIMESTAMPTZ := NOW();
     v_tr TIMESTAMP := NOW() AT TIME ZONE 'Europe/Istanbul';
@@ -94,7 +95,7 @@ DECLARE
     v_prev_close TIME;
     v_is_open BOOLEAN := FALSE;
 BEGIN
-    SELECT * INTO v_settings FROM public.store_settings WHERE id = 'ginger-pizza' LIMIT 1;
+    SELECT * INTO v_settings FROM public.store_settings WHERE id = v_target_slug LIMIT 1;
 
     -- Henüz ayar satırı yoksa geriye dönük uyumluluk için izin ver
     IF NOT FOUND THEN

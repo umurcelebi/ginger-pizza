@@ -3,17 +3,28 @@
  * Destekler: Supabase Realtime (Canlı Bulut Modu) & LocalStorage (Çevrimdışı/Hızlı Test)
  */
 
-const CART_STORAGE_KEY = "ginger_pizza_cart_v1";
-const ORDERS_STORAGE_KEY = "ginger_pizza_orders_v1";
-const CUSTOMERS_STORAGE_KEY = "ginger_pizza_customers_v1";
-const ACTIVE_ORDER_KEY = "ginger_active_order_id_v1";
-
 function getRestaurantSlug() {
+  if (typeof window !== "undefined" && typeof window.getActiveRestaurantSlug === "function") {
+    return window.getActiveRestaurantSlug();
+  }
   const raw = window.SUPABASE_CONFIG && typeof window.SUPABASE_CONFIG.restaurantSlug === "string"
     ? window.SUPABASE_CONFIG.restaurantSlug.trim()
     : "";
   return raw || "ginger-pizza";
 }
+
+function getCartStorageKey() {
+  const slug = getRestaurantSlug();
+  return slug === "ginger-pizza" ? "ginger_pizza_cart_v1" : `ginger_pizza_cart_v1_${slug}`;
+}
+
+function getActiveOrderStorageKey() {
+  const slug = getRestaurantSlug();
+  return slug === "ginger-pizza" ? "ginger_active_order_id_v1" : `ginger_active_order_id_v1_${slug}`;
+}
+
+const ORDERS_STORAGE_KEY = "ginger_pizza_orders_v1";
+const CUSTOMERS_STORAGE_KEY = "ginger_pizza_customers_v1";
 
 function normalizePhone(rawPhone) {
   let digits = String(rawPhone || "").replace(/[^0-9]/g, "");
@@ -81,7 +92,7 @@ function getIstanbulDateRangeBounds(startDateStr, endDateStr) {
 const Cart = {
   getItems() {
     try {
-      const raw = localStorage.getItem(CART_STORAGE_KEY);
+      const raw = localStorage.getItem(getCartStorageKey());
       return raw ? JSON.parse(raw) : [];
     } catch (e) {
       return [];
@@ -89,7 +100,7 @@ const Cart = {
   },
 
   save(items) {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    localStorage.setItem(getCartStorageKey(), JSON.stringify(items));
     window.dispatchEvent(new CustomEvent("ginger-cart-updated", { detail: items }));
   },
 
@@ -537,7 +548,7 @@ const OrderAPI = {
     }
 
     // Aktif sipariş ID'sini sakla (müşteri takip edebilsin)
-    localStorage.setItem(ACTIVE_ORDER_KEY, createdOrder.id);
+    localStorage.setItem(getActiveOrderStorageKey(), createdOrder.id);
     Cart.clear();
 
     return createdOrder;
@@ -906,9 +917,10 @@ const OrderAPI = {
     const localDeletedCustomers = localCustomers.length - remainingCustomers.length;
     saveLocalCustomers(remainingCustomers);
 
-    const activeOrderId = localStorage.getItem(ACTIVE_ORDER_KEY);
+    const activeOrderKey = getActiveOrderStorageKey();
+    const activeOrderId = localStorage.getItem(activeOrderKey);
     if (activeOrderId && (removedOrderIds.has(String(activeOrderId)) || remainingOrders.length === 0)) {
-      localStorage.removeItem(ACTIVE_ORDER_KEY);
+      localStorage.removeItem(activeOrderKey);
     }
 
     const sb = getSupabaseClient();
@@ -925,7 +937,7 @@ const OrderAPI = {
     try {
       const rpcRes = await sb.rpc("reset_restaurant_history", { p_restaurant_slug: slug });
       if (!rpcRes.error) {
-        localStorage.removeItem(ACTIVE_ORDER_KEY);
+        localStorage.removeItem(activeOrderKey);
         const rpcData = rpcRes.data && typeof rpcRes.data === "object" ? rpcRes.data : {};
         return {
           success: true,
@@ -1002,7 +1014,7 @@ const OrderAPI = {
         };
       }
 
-      localStorage.removeItem(ACTIVE_ORDER_KEY);
+      localStorage.removeItem(activeOrderKey);
       const cloudDeletedOrders = Array.isArray(ordRes.data) ? ordRes.data.length : localDeletedOrders;
       return {
         success: true,
@@ -1025,11 +1037,11 @@ const OrderAPI = {
 
   // Müşterinin Son Aktif Sipariş ID'sini Al
   getActiveOrderId() {
-    return localStorage.getItem(ACTIVE_ORDER_KEY);
+    return localStorage.getItem(getActiveOrderStorageKey());
   },
 
   clearActiveOrderId() {
-    localStorage.removeItem(ACTIVE_ORDER_KEY);
+    localStorage.removeItem(getActiveOrderStorageKey());
   },
 
   // Gerçek Zamanlı Dinleyici (Realtime WebSockets & Polling)

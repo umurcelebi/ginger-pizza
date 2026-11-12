@@ -3,14 +3,18 @@
  * Ortak hesaplama motoru: onizleme.html, admin.html, orders.html ve order-api.js tarafından kullanılır.
  */
 
-const STORE_SETTINGS_STORAGE_KEY = "ginger_pizza_store_settings_v1";
-const STORE_SETTINGS_CONFIG_KEY = "ginger_pizza_supabase_config_v1";
-
 function getStoreSettingsRowId() {
   const rawSlug = window.SUPABASE_CONFIG && typeof window.SUPABASE_CONFIG.restaurantSlug === "string"
     ? window.SUPABASE_CONFIG.restaurantSlug.trim()
     : "";
   return rawSlug || "ginger-pizza";
+}
+
+function getStoreSettingsStorageKey() {
+  const slug = getStoreSettingsRowId();
+  return slug === "ginger-pizza"
+    ? "ginger_pizza_store_settings_v1"
+    : `ginger_pizza_store_settings_v1_${slug}`;
 }
 
 const STORE_SETTINGS_ROW_ID = getStoreSettingsRowId();
@@ -139,10 +143,11 @@ function getStoreSupabaseClient() {
 
 function getLocalStoreSettings() {
   try {
-    const raw = localStorage.getItem(STORE_SETTINGS_STORAGE_KEY);
+    const key = getStoreSettingsStorageKey();
+    const raw = localStorage.getItem(key);
     if (!raw) {
       const def = createDefaultStoreSettings();
-      localStorage.setItem(STORE_SETTINGS_STORAGE_KEY, JSON.stringify(def));
+      localStorage.setItem(key, JSON.stringify(def));
       return def;
     }
     return normalizeStoreSettings(JSON.parse(raw));
@@ -154,7 +159,8 @@ function getLocalStoreSettings() {
 function saveLocalStoreSettings(settings) {
   const normalized = normalizeStoreSettings(settings);
   normalized.updated_at = new Date().toISOString();
-  localStorage.setItem(STORE_SETTINGS_STORAGE_KEY, JSON.stringify(normalized));
+  const key = getStoreSettingsStorageKey();
+  localStorage.setItem(key, JSON.stringify(normalized));
   window.dispatchEvent(new CustomEvent("ginger-store-status-updated", { detail: normalized }));
   return normalized;
 }
@@ -535,7 +541,7 @@ const StoreStatus = {
     };
 
     const handleStorage = (e) => {
-      if (e.key === STORE_SETTINGS_STORAGE_KEY) {
+      if (e.key === getStoreSettingsStorageKey()) {
         callback(getLocalStoreSettings());
       }
     };

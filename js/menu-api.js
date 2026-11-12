@@ -749,23 +749,44 @@ function getAdditionPrice(addition, isPizza, sizeKey = "medium") {
   return Math.max(0, Number(fallback) || 0);
 }
 
+function getMenuRestaurantSlug() {
+  if (typeof window !== "undefined" && typeof window.getActiveRestaurantSlug === "function") {
+    return window.getActiveRestaurantSlug();
+  }
+  const raw = window.SUPABASE_CONFIG && typeof window.SUPABASE_CONFIG.restaurantSlug === "string"
+    ? window.SUPABASE_CONFIG.restaurantSlug.trim()
+    : "";
+  return raw || "ginger-pizza";
+}
+
+function getMenuStorageKey() {
+  const slug = getMenuRestaurantSlug();
+  return slug === "ginger-pizza" ? "ginger_pizza_menu_data_v2" : `ginger_pizza_menu_data_v2_${slug}`;
+}
+
 // LocalStorage Yardımcıları
 function getLocalMenu() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const list = raw ? JSON.parse(raw) : DEFAULT_MENU;
-    if (!raw) saveLocalMenu(DEFAULT_MENU);
-    return (Array.isArray(list) ? list : DEFAULT_MENU).map(item => ({
+    const key = getMenuStorageKey();
+    const raw = localStorage.getItem(key);
+    const slug = getMenuRestaurantSlug();
+    const defaultList = slug === "ginger-pizza" ? DEFAULT_MENU : [];
+    const list = raw ? JSON.parse(raw) : defaultList;
+    if (!raw && slug === "ginger-pizza") saveLocalMenu(DEFAULT_MENU);
+    return (Array.isArray(list) ? list : defaultList).map(item => ({
       ...item,
       modifiers: normalizeModifiers(item.modifiers)
     }));
   } catch (e) {
-    return DEFAULT_MENU.map(item => ({ ...item, modifiers: normalizeModifiers(item.modifiers) }));
+    const slug = getMenuRestaurantSlug();
+    const fallbackList = slug === "ginger-pizza" ? DEFAULT_MENU : [];
+    return fallbackList.map(item => ({ ...item, modifiers: normalizeModifiers(item.modifiers) }));
   }
 }
 
 function saveLocalMenu(menu) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(menu));
+  const key = getMenuStorageKey();
+  localStorage.setItem(key, JSON.stringify(menu));
   // Diğer pencerelere canlı haber ver
   window.dispatchEvent(new CustomEvent("ginger-menu-updated", { detail: menu }));
 }
@@ -776,18 +797,38 @@ function saveLocalMenu(menu) {
 const MenuAPI = {
   normalizeModifiers,
   getAdditionPrice,
+  getRestaurantSlug: getMenuRestaurantSlug,
 
-  // Tüm menüyü getir
+  // Tüm menüyü getir (Aktif restoran filtreli)
   async getMenu() {
     const sb = getSupabaseClient();
+    const activeSlug = getMenuRestaurantSlug();
+
     if (sb) {
       try {
-        const { data: items, error } = await sb
+        let restId = null;
+        const { data: rest } = await sb
+          .from("restaurants")
+          .select("id")
+          .eq("slug", activeSlug)
+          .maybeSingle();
+        if (rest && rest.id) restId = rest.id;
+
+        let query = sb
           .from("menu_items")
           .select("*, item_variants(*), categories(slug)")
           .order("sort_order", { ascending: true });
 
-        if (!error && items && items.length > 0) {
+        if (restId) {
+          query = query.eq("restaurant_id", restId);
+        } else if (activeSlug !== "ginger-pizza") {
+          // İlgili restoran henüz veritabanında yoksa boş liste dön
+          return [];
+        }
+
+        const { data: items, error } = await query;
+
+        if (!error && Array.isArray(items)) {
           // Supabase verisini standart nesne yapısına dönüştür
           return items.map(item => {
             const isPizza = item.is_pizza;
@@ -896,17 +937,18 @@ const MenuAPI = {
     if (sb) {
       try {
         const isPizza = !!normalizedItem.prices;
-        const activeSlug = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.restaurantSlug)
-          ? String(window.SUPABASE_CONFIG.restaurantSlug).trim() || "ginger-pizza"
-          : "ginger-pizza";
+        const activeSlug = getMenuRestaurantSlug();
         const { data: rest } = await sb.from("restaurants").select("id").eq("slug", activeSlug).maybeSingle();
-        const { data: cat } = await sb.from("categories").select("id").eq("slug", normalizedItem.category).maybeSingle();
+        let catQuery = sb.from("categories").select("id").eq("slug", normalizedItem.category);
+        if (rest && rest.id) catQuery = catQuery.eq("restaurant_id", rest.id);
+        const { data: cat } = await catQuery.maybeSingle();
 
         let targetId = UUID_RE.test(String(normalizedItem.id || "")) ? normalizedItem.id : null;
-        if (!targetId && normalizedItem.name) {
+        if (!targetId && normalizedItem.name && rest && rest.id) {
           const { data: byName } = await sb
             .from("menu_items")
             .select("id")
+            .eq("restaurant_id", rest.id)
             .ilike("name", normalizedItem.name)
             .maybeSingle();
           if (byName && byName.id) targetId = byName.id;
@@ -990,10 +1032,11 @@ const MenuAPI = {
           if (typeof rpcCount === "number") updatedCount = rpcCount;
         } else {
           // RPC henüz kurulmadıysa satır bazlı güncelleme dene
-          const { data: pizzas, error: fetchErr } = await sb
-            .from("menu_items")
-            .select("id, modifiers")
-            .eq("is_pizza", true);
+          let pizzaQuery = sb.from("menu_items").select("id, modifiers").eq("is_pizza", true);
+          const activeSlug = getMenuRestaurantSlug();
+          const { data: rest } = await sb.from("restaurants").select("id").eq("slug", activeSlug).maybeSingle();
+          if (rest && rest.id) pizzaQuery = pizzaQuery.eq("restaurant_id", rest.id);
+          const { data: pizzas, error: fetchErr } = await pizzaQuery;
 
           if (!fetchErr && Array.isArray(pizzas)) {
             await Promise.all(
