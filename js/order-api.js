@@ -25,7 +25,7 @@ const Cart = {
     window.dispatchEvent(new CustomEvent("ginger-cart-updated", { detail: items }));
   },
 
-  addItem(item, sizeKey = "medium", notes = "") {
+  addItem(item, sizeKey = "medium", notesOrOptions = "") {
     const items = this.getItems();
     const isPizza = !!item.prices;
     const sizeLabels = {
@@ -34,13 +34,54 @@ const Cart = {
       xlarge: "Mega / XL (40-42 cm)"
     };
 
-    const price = isPizza ? (item.prices[sizeKey] || 0) : (item.fixedPrice || 0);
+    const opts = (notesOrOptions && typeof notesOrOptions === "object")
+      ? notesOrOptions
+      : { notes: String(notesOrOptions || "") };
+
+    const removals = Array.isArray(opts.removals)
+      ? opts.removals.map(r => String(r || "").trim()).filter(Boolean)
+      : [];
+
+    const additions = Array.isArray(opts.additions)
+      ? opts.additions
+          .filter(a => a && typeof a === "object" && String(a.name || "").trim())
+          .map(a => ({
+            name: String(a.name).trim(),
+            kind: a.kind === "extra_item" ? "extra_item" : "addition",
+            unitPrice: Math.max(0, Number(a.unitPrice) || 0)
+          }))
+      : [];
+
+    const manualNote = typeof opts.notes === "string" ? opts.notes.trim() : "";
+    const qtyToAdd = Math.max(1, parseInt(opts.quantity, 10) || 1);
+
+    const basePrice = isPizza ? (item.prices[sizeKey] || 0) : (item.fixedPrice || 0);
+    const additionsTotal = additions.reduce((sum, a) => sum + a.unitPrice, 0);
+    const unitPrice = basePrice + additionsTotal;
     const sizeLabel = isPizza ? sizeLabels[sizeKey] : "Tek Porsiyon";
-    const cartItemId = `${item.id}_${sizeKey}_${notes.trim().toLowerCase()}`;
+
+    // Birleşik mutfak/adisyon notu oluştur
+    const noteParts = [];
+    if (removals.length > 0) {
+      noteParts.push(`Çıkar: ${removals.join(", ")}`);
+    }
+    if (additions.length > 0) {
+      noteParts.push(
+        `İlave: ${additions.map(a => `${a.name}${a.unitPrice > 0 ? ` (+${a.unitPrice}₺)` : ""}`).join(", ")}`
+      );
+    }
+    if (manualNote) {
+      noteParts.push(`Not: ${manualNote}`);
+    }
+    const combinedNotes = noteParts.join(" | ");
+
+    const remKey = [...removals].sort().join("|").toLowerCase();
+    const addKey = [...additions].map(a => `${a.name}:${a.unitPrice}`).sort().join("|").toLowerCase();
+    const cartItemId = `${item.id}_${isPizza ? sizeKey : "fixed"}_${remKey}_${addKey}_${manualNote.toLowerCase()}`;
 
     const existing = items.find(i => i.cartItemId === cartItemId);
     if (existing) {
-      existing.quantity += 1;
+      existing.quantity += qtyToAdd;
     } else {
       items.push({
         cartItemId,
@@ -49,9 +90,13 @@ const Cart = {
         isPizza,
         sizeKey: isPizza ? sizeKey : null,
         sizeLabel,
-        unitPrice: price,
-        quantity: 1,
-        notes: notes.trim()
+        basePrice,
+        unitPrice,
+        quantity: qtyToAdd,
+        removals,
+        additions,
+        manualNote,
+        notes: combinedNotes
       });
     }
 

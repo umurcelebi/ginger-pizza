@@ -768,6 +768,143 @@
       gap: 12px;
     }
 
+    /* Ürün Ekle / Çıkar / Ek Ürün Editörü */
+    #itemModal .modal-box {
+      max-width: 720px;
+    }
+
+    .modifiers-editor-section {
+      background: var(--bg);
+      border: 1px solid var(--sand-200);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      margin-top: 14px;
+    }
+
+    .modifiers-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .modifiers-section-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+
+    .removal-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .removal-chips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .removal-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: var(--radius-full);
+      background: var(--white);
+      border: 1px solid var(--sand-200);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--ink-700);
+    }
+
+    .removal-chip button {
+      border: none;
+      background: none;
+      color: var(--danger);
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 0.82rem;
+      padding: 0 2px;
+      line-height: 1;
+    }
+
+    .addition-row {
+      display: grid;
+      gap: 6px;
+      align-items: center;
+      background: var(--white);
+      border: 1px solid var(--sand-200);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+    }
+
+    .addition-row.is-pizza {
+      grid-template-columns: 112px 1.6fr 68px 68px 68px 34px;
+    }
+
+    .addition-row.is-fixed {
+      grid-template-columns: 112px 1.8fr 96px 34px;
+    }
+
+    .addition-mini-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--sand-200);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.82rem;
+      background: var(--white);
+      color: var(--ink-900);
+    }
+
+    .addition-price-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .addition-price-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--ink-500);
+      text-transform: uppercase;
+    }
+
+    .btn-mini-helper {
+      background: var(--white);
+      border: 1px solid var(--sand-200);
+      color: var(--ink-700);
+      padding: 5px 10px;
+      border-radius: 7px;
+      font-family: inherit;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-mini-helper:hover {
+      background: var(--sand-100);
+      border-color: var(--ink-400);
+    }
+
+    .btn-mini-helper.accent {
+      background: var(--ginger-50);
+      border-color: var(--ginger-500);
+      color: var(--ginger-600);
+    }
+
+    @media (max-width: 700px) {
+      .addition-row.is-pizza,
+      .addition-row.is-fixed {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
     @media (max-width: 900px) {
       .stats-row { grid-template-columns: repeat(2, 1fr); }
       .price-inputs-row { flex-wrap: wrap; }
@@ -1037,6 +1174,33 @@
             <label class="form-label">Porsiyon Fiyatı (₺)</label>
             <input type="number" id="editFixedPrice" class="form-input" value="250">
           </div>
+        </div>
+
+        <!-- 1) Çıkarılacak Malzemeler (Ücretsiz — Fiyat Alanı Yok) -->
+        <div class="modifiers-editor-section">
+          <div class="modifiers-section-header">
+            <span class="modifiers-section-title">🚫 Çıkarılacak Malzemeler <span style="font-weight:500; color:var(--ink-500); font-size:0.78rem;">(Ücretsiz · Fiyat alanı yoktur)</span></span>
+            <button type="button" class="btn-mini-helper" onclick="extractRemovalsFromDesc()">⚡ Açıklamadan Çek</button>
+          </div>
+          <div class="removal-input-row">
+            <input type="text" id="newRemovalInput" class="form-input" style="padding:7px 10px; font-size:0.84rem;" placeholder="Örn: Soğan, Mantar, Zeytin (Enter ile ekleyin)">
+            <button type="button" class="btn-header" style="padding:7px 14px;" onclick="addRemovalFromInput()">+ Ekle</button>
+          </div>
+          <div id="removalsChipsList" class="removal-chips-list"></div>
+        </div>
+
+        <!-- 2) İlaveler & Ek Ürünler (Fiyatlı — Pizzalarda Small/Med/XL) -->
+        <div class="modifiers-editor-section">
+          <div class="modifiers-section-header">
+            <span class="modifiers-section-title">➕ İlaveler &amp; Ek Ürünler <span style="font-weight:500; color:var(--ink-500); font-size:0.78rem;" id="additionsPricingHint">(Boyut bazlı fiyat ₺)</span></span>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="btn-mini-helper accent" id="btnCopyAdditionsToPizzas" onclick="handleCopyAdditionsToAllPizzas()" title="Bu ilave listesini tüm pizzalara kopyalar; her pizzanın kendi çıkarma listesi korunur">
+                🍕 Tüm Pizzalara Kopyala
+              </button>
+              <button type="button" class="btn-mini-helper" onclick="addAdditionRow()">+ Yeni Satır Ekle</button>
+            </div>
+          </div>
+          <div id="additionsEditorList"></div>
         </div>
 
         <div class="modal-actions">
@@ -1647,6 +1811,10 @@
           `;
         }
 
+        const mod = item.modifiers || { removals: [], additions: [] };
+        const remCount = (mod.removals || []).length;
+        const addCount = (mod.additions || []).length;
+
         return `
           <tr id="row-${item.id}">
             <td>
@@ -1655,7 +1823,11 @@
                 <div>
                   <div class="item-cell-title">${item.name}</div>
                   <div class="item-cell-desc">${item.ingredients || ""}</div>
-                  ${item.badge ? `<span style="display:inline-block; margin-top:4px; font-size:0.7rem; font-weight:700; background:var(--sand-100); padding:2px 8px; border-radius:999px;">${item.badge}</span>` : ""}
+                  <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+                    ${item.badge ? `<span style="display:inline-block; font-size:0.7rem; font-weight:700; background:var(--sand-100); padding:2px 8px; border-radius:999px;">${item.badge}</span>` : ""}
+                    ${remCount > 0 ? `<span style="display:inline-block; font-size:0.68rem; font-weight:700; background:#fdf0f1; color:var(--danger); padding:2px 7px; border-radius:999px;">🚫 ${remCount} çıkar</span>` : ""}
+                    ${addCount > 0 ? `<span style="display:inline-block; font-size:0.68rem; font-weight:700; background:var(--ginger-50); color:var(--ginger-600); padding:2px 7px; border-radius:999px;">➕ ${addCount} ilave</span>` : ""}
+                  </div>
                 </div>
               </div>
             </td>
@@ -1715,13 +1887,233 @@
       }
     };
 
+    // Ürün Modifiers (Çıkarılacaklar & Fiyatlı İlaveler) Editörü
+    let modalRemovals = [];
+    let modalAdditions = [];
+
+    function escapeModHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function renderRemovalsEditor() {
+      const container = document.getElementById("removalsChipsList");
+      if (!container) return;
+      if (modalRemovals.length === 0) {
+        container.innerHTML = `<span style="font-size:0.78rem; color:var(--ink-400);">Henüz çıkarılacak malzeme tanımlanmadı.</span>`;
+        return;
+      }
+      container.innerHTML = modalRemovals.map((label, idx) => `
+        <span class="removal-chip">
+          <span>− ${escapeModHtml(label)}</span>
+          <button type="button" title="Sil" onclick="removeRemovalChip(${idx})">✕</button>
+        </span>
+      `).join("");
+    }
+
+    window.addRemovalFromInput = function() {
+      const input = document.getElementById("newRemovalInput");
+      if (!input) return;
+      const parts = input.value.split(",").map(s => s.trim()).filter(Boolean);
+      if (parts.length === 0) return;
+
+      const existingLower = new Set(modalRemovals.map(r => r.toLocaleLowerCase("tr-TR")));
+      parts.forEach(p => {
+        const clean = p.replace(/\.$/, "").trim();
+        if (clean && !existingLower.has(clean.toLocaleLowerCase("tr-TR"))) {
+          existingLower.add(clean.toLocaleLowerCase("tr-TR"));
+          modalRemovals.push(clean);
+        }
+      });
+      input.value = "";
+      renderRemovalsEditor();
+    };
+
+    window.removeRemovalChip = function(index) {
+      modalRemovals.splice(index, 1);
+      renderRemovalsEditor();
+    };
+
+    window.extractRemovalsFromDesc = function() {
+      const desc = document.getElementById("editDesc")?.value || "";
+      if (!desc.trim()) {
+        showToast("Önce Malzemeler / Açıklama alanına malzeme yazın.");
+        return;
+      }
+      const tokens = desc
+        .split(/[,;\n]+/)
+        .map(s => s.replace(/\.$/, "").trim())
+        .filter(s => s.length >= 2 && s.length <= 45);
+
+      const existingLower = new Set(modalRemovals.map(r => r.toLocaleLowerCase("tr-TR")));
+      let added = 0;
+      tokens.forEach(tok => {
+        const formatted = tok.charAt(0).toLocaleUpperCase("tr-TR") + tok.slice(1);
+        const key = formatted.toLocaleLowerCase("tr-TR");
+        if (!existingLower.has(key)) {
+          existingLower.add(key);
+          modalRemovals.push(formatted);
+          added++;
+        }
+      });
+      renderRemovalsEditor();
+      showToast(added > 0 ? `${added} malzeme çıkarılabilir listesine eklendi.` : "Yeni malzeme bulunamadı.");
+    };
+
+    function syncAdditionsFromDOM() {
+      const rows = document.querySelectorAll("#additionsEditorList .addition-row");
+      if (rows.length === 0) return;
+      const isPizza = document.getElementById("typePizza")?.checked;
+      const next = [];
+      rows.forEach((row, idx) => {
+        const kind = row.querySelector(".add-kind-select")?.value === "extra_item" ? "extra_item" : "addition";
+        const name = (row.querySelector(".add-name-input")?.value || "").trim();
+        const existing = modalAdditions[idx] || {};
+        if (isPizza) {
+          const small = Math.max(0, Number(row.querySelector(".add-price-small")?.value) || 0);
+          const medium = Math.max(0, Number(row.querySelector(".add-price-medium")?.value) || 0);
+          const xlarge = Math.max(0, Number(row.querySelector(".add-price-xlarge")?.value) || 0);
+          next.push({
+            id: existing.id || `add-${idx + 1}`,
+            kind,
+            name,
+            price: medium,
+            prices: { small, medium, xlarge }
+          });
+        } else {
+          const single = Math.max(0, Number(row.querySelector(".add-price-single")?.value) || 0);
+          const prevPrices = existing.prices || {};
+          next.push({
+            id: existing.id || `add-${idx + 1}`,
+            kind,
+            name,
+            price: single,
+            prices: {
+              small: prevPrices.small ?? single,
+              medium: single,
+              xlarge: prevPrices.xlarge ?? single
+            }
+          });
+        }
+      });
+      modalAdditions = next;
+    }
+
+    function renderAdditionsEditor() {
+      const container = document.getElementById("additionsEditorList");
+      if (!container) return;
+      const isPizza = document.getElementById("typePizza")?.checked;
+
+      if (modalAdditions.length === 0) {
+        container.innerHTML = `<div style="font-size:0.78rem; color:var(--ink-400); padding:4px 0;">Henüz ilave malzeme veya ek ürün tanımlanmadı. "+ Yeni Satır Ekle" butonunu kullanabilirsiniz.</div>`;
+        return;
+      }
+
+      container.innerHTML = modalAdditions.map((add, idx) => {
+        const p = add.prices || {};
+        const smVal = p.small ?? add.price ?? 0;
+        const mdVal = p.medium ?? add.price ?? 0;
+        const xlVal = p.xlarge ?? add.price ?? 0;
+        const singleVal = add.price ?? mdVal ?? 0;
+
+        if (isPizza) {
+          return `
+            <div class="addition-row is-pizza">
+              <select class="addition-mini-input add-kind-select" aria-label="Tür">
+                <option value="addition" ${add.kind !== "extra_item" ? "selected" : ""}>İlave</option>
+                <option value="extra_item" ${add.kind === "extra_item" ? "selected" : ""}>Ek Ürün</option>
+              </select>
+              <input type="text" class="addition-mini-input add-name-input" value="${escapeModHtml(add.name)}" placeholder="Örn: Ekstra Mozzarella">
+              <div class="addition-price-wrap">
+                <span class="addition-price-label">S (₺)</span>
+                <input type="number" min="0" class="addition-mini-input add-price-small" value="${smVal}">
+              </div>
+              <div class="addition-price-wrap">
+                <span class="addition-price-label">M (₺)</span>
+                <input type="number" min="0" class="addition-mini-input add-price-medium" value="${mdVal}">
+              </div>
+              <div class="addition-price-wrap">
+                <span class="addition-price-label">XL (₺)</span>
+                <input type="number" min="0" class="addition-mini-input add-price-xlarge" value="${xlVal}">
+              </div>
+              <button type="button" class="btn-action-icon btn-action-delete" style="width:32px; height:32px;" title="Satırı Sil" onclick="removeAdditionRow(${idx})">🗑️</button>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="addition-row is-fixed">
+            <select class="addition-mini-input add-kind-select" aria-label="Tür">
+              <option value="addition" ${add.kind !== "extra_item" ? "selected" : ""}>İlave</option>
+              <option value="extra_item" ${add.kind === "extra_item" ? "selected" : ""}>Ek Ürün</option>
+            </select>
+            <input type="text" class="addition-mini-input add-name-input" value="${escapeModHtml(add.name)}" placeholder="Örn: Ekstra Sarımsaklı Sos">
+            <div class="addition-price-wrap">
+              <span class="addition-price-label">Fiyat (₺)</span>
+              <input type="number" min="0" class="addition-mini-input add-price-single" value="${singleVal}">
+            </div>
+            <button type="button" class="btn-action-icon btn-action-delete" style="width:32px; height:32px;" title="Satırı Sil" onclick="removeAdditionRow(${idx})">🗑️</button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.addAdditionRow = function() {
+      syncAdditionsFromDOM();
+      modalAdditions.push({
+        id: `add-${Date.now()}`,
+        kind: "addition",
+        name: "",
+        price: 40,
+        prices: { small: 35, medium: 45, xlarge: 65 }
+      });
+      renderAdditionsEditor();
+      const inputs = document.querySelectorAll("#additionsEditorList .add-name-input");
+      if (inputs.length > 0) inputs[inputs.length - 1].focus();
+    };
+
+    window.removeAdditionRow = function(index) {
+      syncAdditionsFromDOM();
+      modalAdditions.splice(index, 1);
+      renderAdditionsEditor();
+    };
+
+    window.handleCopyAdditionsToAllPizzas = async function() {
+      syncAdditionsFromDOM();
+      const cleaned = MenuAPI.normalizeModifiers({ additions: modalAdditions }).additions;
+      const msg = cleaned.length === 0
+        ? "Liste şu an boş. Tüm pizzalardaki ilave / ek ürün seçenekleri temizlensin mi? (Çıkarılacak malzemeler korunur.)"
+        : `Bu listedeki ${cleaned.length} adet ilave / ek ürün menüdeki TÜM pizzalara kopyalansın mı?\n(Her pizzanın kendi çıkarılacak malzeme listesi korunacaktır.)`;
+
+      if (!confirm(msg)) return;
+      const res = await MenuAPI.copyAdditionsToAllPizzas(cleaned);
+      modalAdditions = res.additions;
+      renderAdditionsEditor();
+      showToast(`${res.updatedCount} pizzaya ilave/ek ürün listesi kopyalandı!`);
+      loadDashboard();
+    };
+
+    document.getElementById("newRemovalInput")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addRemovalFromInput();
+      }
+    });
+
     // Modal Açma: Yeni Ürün
     document.getElementById("btnOpenNewItem").addEventListener("click", () => {
       document.getElementById("itemForm").reset();
       document.getElementById("editItemId").value = "";
       document.getElementById("itemModalTitle").textContent = "Yeni Ürün Ekle";
       document.getElementById("typePizza").checked = true;
+      modalRemovals = [];
+      modalAdditions = [];
       toggleTypeFields(true);
+      renderRemovalsEditor();
+      renderAdditionsEditor();
       document.getElementById("itemModal").classList.add("open");
     });
 
@@ -1748,14 +2140,26 @@
         document.getElementById("editFixedPrice").value = item.fixedPrice || 0;
       }
 
+      const mod = MenuAPI.normalizeModifiers(item.modifiers);
+      modalRemovals = [...mod.removals];
+      modalAdditions = mod.additions.map(a => ({ ...a, prices: { ...a.prices } }));
+
       toggleTypeFields(isPizza);
+      renderRemovalsEditor();
+      renderAdditionsEditor();
       document.getElementById("itemModalTitle").textContent = "Ürünü Düzenle";
       document.getElementById("itemModal").classList.add("open");
     };
 
     function toggleTypeFields(isPizza) {
+      syncAdditionsFromDOM();
       document.getElementById("pizzaPriceFields").style.display = isPizza ? "grid" : "none";
       document.getElementById("extraPriceFields").style.display = !isPizza ? "block" : "none";
+      const copyBtn = document.getElementById("btnCopyAdditionsToPizzas");
+      const hint = document.getElementById("additionsPricingHint");
+      if (copyBtn) copyBtn.style.display = isPizza ? "inline-flex" : "none";
+      if (hint) hint.textContent = isPizza ? "(Small / Med / XL fiyatlı ₺)" : "(Sabit ek fiyatlı ₺)";
+      renderAdditionsEditor();
     }
 
     document.getElementById("typePizza").addEventListener("change", () => toggleTypeFields(true));
@@ -1767,7 +2171,9 @@
     // Ürün Formu Kaydet
     document.getElementById("itemForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      syncAdditionsFromDOM();
       const id = document.getElementById("editItemId").value;
+      const existing = id ? currentMenuItems.find(i => i.id === id) : null;
       const isPizza = document.getElementById("typePizza").checked;
 
       const itemData = {
@@ -1778,7 +2184,11 @@
         badge: document.getElementById("editBadge").value.trim(),
         image: document.getElementById("editImage").value.trim(),
         badgeType: isPizza ? "popular" : "gourmet",
-        isAvailable: true
+        isAvailable: existing ? existing.isAvailable !== false : true,
+        modifiers: MenuAPI.normalizeModifiers({
+          removals: modalRemovals,
+          additions: modalAdditions
+        })
       };
 
       if (isPizza) {

@@ -690,17 +690,77 @@ function saveSupabaseConfig(url, key) {
   }
 }
 
+// Seçenek / Ekle-Çıkar Normalizasyonu
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function normalizeModifiers(raw) {
+  const src = raw && typeof raw === "object" ? raw : {};
+
+  // Çıkarılabilir malzemeler (Fiyat alanı kesinlikle yok)
+  const rawRemovals = Array.isArray(src.removals) ? src.removals : [];
+  const seenRemovals = new Set();
+  const removals = [];
+  for (const r of rawRemovals) {
+    const label = typeof r === "string" ? r.trim() : (r && typeof r.name === "string" ? r.name.trim() : "");
+    if (!label) continue;
+    const key = label.toLocaleLowerCase("tr-TR");
+    if (seenRemovals.has(key)) continue;
+    seenRemovals.add(key);
+    removals.push(label);
+  }
+
+  // İlaveler & Ek Ürünler (Boyuta göre 3 fiyatlı veya sabit tek fiyatlı)
+  const rawAdditions = Array.isArray(src.additions) ? src.additions : [];
+  const additions = [];
+  for (let i = 0; i < rawAdditions.length; i++) {
+    const a = rawAdditions[i];
+    if (!a || typeof a !== "object") continue;
+    const name = typeof a.name === "string" ? a.name.trim() : "";
+    if (!name) continue;
+    const kind = a.kind === "extra_item" ? "extra_item" : "addition";
+    const fallbackPrice = Math.max(0, Number(a.price) || 0);
+    const pSrc = a.prices && typeof a.prices === "object" ? a.prices : {};
+    const small = Math.max(0, Number(pSrc.small ?? fallbackPrice) || 0);
+    const medium = Math.max(0, Number(pSrc.medium ?? fallbackPrice) || 0);
+    const xlarge = Math.max(0, Number(pSrc.xlarge ?? fallbackPrice) || 0);
+    const singlePrice = a.price !== undefined && a.price !== null && a.price !== ""
+      ? Math.max(0, Number(a.price) || 0)
+      : medium;
+
+    additions.push({
+      id: (typeof a.id === "string" && a.id.trim()) ? a.id.trim() : `add-${i + 1}`,
+      name,
+      kind,
+      price: singlePrice,
+      prices: { small, medium, xlarge }
+    });
+  }
+
+  return { removals, additions };
+}
+
+function getAdditionPrice(addition, isPizza, sizeKey = "medium") {
+  if (!addition) return 0;
+  if (isPizza && addition.prices && typeof addition.prices === "object") {
+    const v = addition.prices[sizeKey] ?? addition.prices.medium ?? addition.prices.small ?? addition.price;
+    return Math.max(0, Number(v) || 0);
+  }
+  const fallback = addition.price ?? addition.prices?.medium ?? 0;
+  return Math.max(0, Number(fallback) || 0);
+}
+
 // LocalStorage Yardımcıları
 function getLocalMenu() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      saveLocalMenu(DEFAULT_MENU);
-      return DEFAULT_MENU;
-    }
-    return JSON.parse(raw);
+    const list = raw ? JSON.parse(raw) : DEFAULT_MENU;
+    if (!raw) saveLocalMenu(DEFAULT_MENU);
+    return (Array.isArray(list) ? list : DEFAULT_MENU).map(item => ({
+      ...item,
+      modifiers: normalizeModifiers(item.modifiers)
+    }));
   } catch (e) {
-    return DEFAULT_MENU;
+    return DEFAULT_MENU.map(item => ({ ...item, modifiers: normalizeModifiers(item.modifiers) }));
   }
 }
 
@@ -714,6 +774,9 @@ function saveLocalMenu(menu) {
 // DIŞA AÇIK API
 // ============================================================================
 const MenuAPI = {
+  normalizeModifiers,
+  getAdditionPrice,
+
   // Tüm menüyü getir
   async getMenu() {
     const sb = getSupabaseClient();
@@ -745,7 +808,8 @@ const MenuAPI = {
               image: item.image_url || findFallbackImageByName(item.name),
               isAvailable: item.is_available !== false,
               prices: isPizza ? prices : null,
-              fixedPrice: !isPizza ? Number(item.fixed_price) : null
+              fixedPrice: !isPizza ? Number(item.fixed_price) : null,
+              modifiers: normalizeModifiers(item.modifiers)
             };
           });
         }
@@ -810,29 +874,142 @@ const MenuAPI = {
 
   // Yeni ürün ekle veya mevcut ürünü güncelle
   async saveItem(itemData) {
+    const normalizedItem = {
+      ...itemData,
+      modifiers: normalizeModifiers(itemData.modifiers)
+    };
+
     const menu = getLocalMenu();
-    const existingIndex = menu.findIndex(i => i.id === itemData.id);
+    const existingIndex = menu.findIndex(i => i.id === normalizedItem.id);
 
     if (existingIndex >= 0) {
-      menu[existingIndex] = { ...menu[existingIndex], ...itemData };
+      menu[existingIndex] = { ...menu[existingIndex], ...normalizedItem };
     } else {
-      itemData.id = itemData.id || "item-" + Date.now();
-      menu.push(itemData);
+      normalizedItem.id = normalizedItem.id || "item-" + Date.now();
+      menu.push(normalizedItem);
     }
 
     saveLocalMenu(menu);
 
-    // Supabase bağlıysa oraya da yaz
+    let synced = false;
     const sb = getSupabaseClient();
     if (sb) {
       try {
-        console.log("Supabase save queued for item", itemData.name);
+        const isPizza = !!normalizedItem.prices;
+        const { data: rest } = await sb.from("restaurants").select("id").eq("slug", "ginger-pizza").maybeSingle();
+        const { data: cat } = await sb.from("categories").select("id").eq("slug", normalizedItem.category).maybeSingle();
+
+        let targetId = UUID_RE.test(String(normalizedItem.id || "")) ? normalizedItem.id : null;
+        if (!targetId && normalizedItem.name) {
+          const { data: byName } = await sb
+            .from("menu_items")
+            .select("id")
+            .ilike("name", normalizedItem.name)
+            .maybeSingle();
+          if (byName && byName.id) targetId = byName.id;
+        }
+
+        const rowPayload = {
+          name: normalizedItem.name,
+          description: normalizedItem.ingredients || "",
+          badge: normalizedItem.badge || "",
+          badge_type: normalizedItem.badgeType || (isPizza ? "popular" : "gourmet"),
+          image_url: normalizedItem.image || "",
+          is_available: normalizedItem.isAvailable !== false,
+          is_pizza: isPizza,
+          fixed_price: isPizza ? null : (Number(normalizedItem.fixedPrice) || 0),
+          modifiers: normalizedItem.modifiers,
+          updated_at: new Date().toISOString()
+        };
+        if (rest && rest.id) rowPayload.restaurant_id = rest.id;
+        if (cat && cat.id) rowPayload.category_id = cat.id;
+
+        if (targetId) {
+          const { error: updErr } = await sb.from("menu_items").update(rowPayload).eq("id", targetId);
+          if (updErr) throw updErr;
+        } else {
+          const { data: inserted, error: insErr } = await sb.from("menu_items").insert([rowPayload]).select("id").single();
+          if (insErr) throw insErr;
+          targetId = inserted.id;
+        }
+
+        if (targetId) {
+          await sb.from("item_variants").delete().eq("item_id", targetId);
+          if (isPizza && normalizedItem.prices) {
+            const variants = [
+              { item_id: targetId, size_key: "small", size_label: "Small (24-26 cm)", price: Number(normalizedItem.prices.small) || 0 },
+              { item_id: targetId, size_key: "medium", size_label: "Medium (30-32 cm)", price: Number(normalizedItem.prices.medium) || 0 },
+              { item_id: targetId, size_key: "xlarge", size_label: "Mega / XL (40-42 cm)", price: Number(normalizedItem.prices.xlarge) || 0 }
+            ];
+            const { error: varErr } = await sb.from("item_variants").insert(variants);
+            if (varErr) throw varErr;
+          }
+          normalizedItem.id = targetId;
+        }
+        synced = true;
       } catch (e) {
-        console.error("Supabase save error:", e);
+        console.warn("Supabase saveItem fallback to local:", e);
       }
     }
 
-    return itemData;
+    return { ...normalizedItem, _synced: synced };
+  },
+
+  // İlave & Ek Ürün listesini tüm pizzalara kopyala (mevcut çıkarmaları korur)
+  async copyAdditionsToAllPizzas(rawAdditions) {
+    const normalizedAdditions = normalizeModifiers({ additions: rawAdditions }).additions;
+    const menu = getLocalMenu();
+    let localUpdated = 0;
+
+    const nextMenu = menu.map(item => {
+      if (!item.prices) return item;
+      localUpdated += 1;
+      return {
+        ...item,
+        modifiers: {
+          ...normalizeModifiers(item.modifiers),
+          additions: normalizedAdditions.map(a => ({ ...a, prices: { ...a.prices } }))
+        }
+      };
+    });
+    saveLocalMenu(nextMenu);
+
+    let synced = false;
+    let updatedCount = localUpdated;
+    const sb = getSupabaseClient();
+    if (sb) {
+      try {
+        const { data: rpcCount, error: rpcErr } = await sb.rpc("copy_additions_to_all_pizzas", {
+          p_additions: normalizedAdditions
+        });
+        if (!rpcErr) {
+          synced = true;
+          if (typeof rpcCount === "number") updatedCount = rpcCount;
+        } else {
+          // RPC henüz kurulmadıysa satır bazlı güncelleme dene
+          const { data: pizzas, error: fetchErr } = await sb
+            .from("menu_items")
+            .select("id, modifiers")
+            .eq("is_pizza", true);
+
+          if (!fetchErr && Array.isArray(pizzas)) {
+            await Promise.all(
+              pizzas.map(p => {
+                const mod = normalizeModifiers(p.modifiers);
+                mod.additions = normalizedAdditions;
+                return sb.from("menu_items").update({ modifiers: mod, updated_at: new Date().toISOString() }).eq("id", p.id);
+              })
+            );
+            synced = true;
+            updatedCount = pizzas.length;
+          }
+        }
+      } catch (e) {
+        console.warn("Supabase copyAdditionsToAllPizzas failed, saved locally:", e);
+      }
+    }
+
+    return { updatedCount, synced, additions: normalizedAdditions };
   },
 
   // Ürün sil

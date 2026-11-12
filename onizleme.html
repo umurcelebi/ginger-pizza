@@ -778,6 +778,136 @@
       opacity: 0.72;
     }
 
+    /* Ürün Ekle / Çıkar Özelleştirme Modalı */
+    .customizer-section {
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px dashed var(--sand-200);
+    }
+
+    .customizer-section:last-of-type {
+      border-bottom: none;
+      margin-bottom: 12px;
+      padding-bottom: 4px;
+    }
+
+    .customizer-section-title {
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: var(--ink-900);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .customizer-section-sub {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--ink-500);
+    }
+
+    .customizer-removal-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .customizer-removal-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--sand-200);
+      background: var(--sand-50);
+      color: var(--ink-700);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .customizer-removal-pill.selected {
+      background: #fff2f2;
+      border-color: #e57373;
+      color: #a91d24;
+      text-decoration: line-through;
+    }
+
+    .customizer-addition-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .customizer-addition-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--sand-200);
+      background: var(--white);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .customizer-addition-item.selected {
+      background: var(--ginger-50);
+      border-color: var(--ginger-500);
+    }
+
+    .customizer-addition-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--ink-900);
+    }
+
+    .customizer-addition-price {
+      font-size: 0.84rem;
+      font-weight: 800;
+      color: var(--ginger-600);
+      white-space: nowrap;
+    }
+
+    .customizer-footer-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-top: 14px;
+      border-top: 1px solid var(--sand-200);
+      margin-top: 8px;
+    }
+
+    .cart-item-mods {
+      margin-top: 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.74rem;
+      line-height: 1.35;
+    }
+
+    .cart-mod-rem {
+      color: #a91d24;
+    }
+
+    .cart-mod-add {
+      color: var(--ginger-600);
+      font-weight: 600;
+    }
+
+    .cart-mod-note {
+      color: var(--ink-500);
+      font-style: italic;
+    }
+
     /* Pizza cards grid */
     .menu-grid {
       display: grid;
@@ -2830,6 +2960,21 @@
     </div>
   </aside>
 
+  <!-- Ürün Ekle / Çıkar Özelleştirme Modalı -->
+  <div class="modal-backdrop" id="itemCustomizerBackdrop" onclick="handleModalBackdropClick(event, 'itemCustomizerBackdrop')">
+    <div class="modal-dialog-box" role="dialog" aria-modal="true" aria-labelledby="customizerItemTitle">
+      <div class="modal-top">
+        <div>
+          <h2 class="modal-heading" id="customizerItemTitle">Ürün Seçenekleri</h2>
+          <div id="customizerItemDesc" style="font-size: 0.78rem; color: var(--ink-500); margin-top: 2px;"></div>
+        </div>
+        <button type="button" class="btn-close-drawer" onclick="closeItemCustomizerModal()">✕</button>
+      </div>
+
+      <div class="modal-content-inner" id="customizerModalBody"></div>
+    </div>
+  </div>
+
   <!-- Sipariş Oluşturma / Checkout Modalı -->
   <div class="modal-backdrop" id="checkoutModalBackdrop" onclick="handleModalBackdropClick(event, 'checkoutModalBackdrop')">
     <div class="modal-dialog-box" role="dialog" aria-modal="true" aria-labelledby="checkoutModalTitle">
@@ -3039,6 +3184,250 @@
       }, 3500);
     }
 
+    // Ürün Ekle / Çıkar Özelleştirme Modalı Mantığı
+    let customizerState = {
+      item: null,
+      sizeKey: "medium",
+      selectedRemovals: new Set(),
+      selectedAdditionIndices: new Set(),
+      quantity: 1,
+      note: ""
+    };
+
+    function itemHasModifiers(item) {
+      if (!item || !item.modifiers) return false;
+      const rems = Array.isArray(item.modifiers.removals) ? item.modifiers.removals : [];
+      const adds = Array.isArray(item.modifiers.additions) ? item.modifiers.additions : [];
+      return rems.length > 0 || adds.length > 0;
+    }
+
+    function openItemCustomizerModal(itemId) {
+      const item = menuData.find(i => i.id === itemId);
+      if (!item) return;
+
+      customizerState = {
+        item,
+        sizeKey: item.prices ? (cardSelectedSizes[itemId] || "medium") : "fixed",
+        selectedRemovals: new Set(),
+        selectedAdditionIndices: new Set(),
+        quantity: 1,
+        note: ""
+      };
+
+      const titleEl = document.getElementById("customizerItemTitle");
+      const descEl = document.getElementById("customizerItemDesc");
+      if (titleEl) titleEl.textContent = item.name;
+      if (descEl) descEl.textContent = item.ingredients || "";
+
+      renderCustomizerModal();
+      const backdrop = document.getElementById("itemCustomizerBackdrop");
+      if (backdrop) backdrop.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    window.closeItemCustomizerModal = function() {
+      const backdrop = document.getElementById("itemCustomizerBackdrop");
+      if (backdrop) backdrop.classList.remove("open");
+      document.body.style.overflow = "";
+    };
+
+    window.selectCustomizerSize = function(sizeKey) {
+      if (!customizerState.item || !customizerState.item.prices) return;
+      customizerState.sizeKey = sizeKey;
+      cardSelectedSizes[customizerState.item.id] = sizeKey;
+      renderCustomizerModal();
+    };
+
+    window.toggleCustomizerRemoval = function(index) {
+      if (customizerState.selectedRemovals.has(index)) {
+        customizerState.selectedRemovals.delete(index);
+      } else {
+        customizerState.selectedRemovals.add(index);
+      }
+      renderCustomizerModal();
+    };
+
+    window.toggleCustomizerAddition = function(index) {
+      if (customizerState.selectedAdditionIndices.has(index)) {
+        customizerState.selectedAdditionIndices.delete(index);
+      } else {
+        customizerState.selectedAdditionIndices.add(index);
+      }
+      renderCustomizerModal();
+    };
+
+    window.changeCustomizerQty = function(delta) {
+      customizerState.quantity = Math.max(1, customizerState.quantity + delta);
+      renderCustomizerModal();
+    };
+
+    function renderCustomizerModal() {
+      const body = document.getElementById("customizerModalBody");
+      const item = customizerState.item;
+      if (!body || !item) return;
+
+      const isPizza = !!item.prices;
+      const mod = window.MenuAPI ? MenuAPI.normalizeModifiers(item.modifiers) : (item.modifiers || { removals: [], additions: [] });
+      const sizeKey = customizerState.sizeKey;
+      const basePrice = isPizza ? (item.prices[sizeKey] || 0) : (item.fixedPrice || 0);
+
+      let additionsTotal = 0;
+      customizerState.selectedAdditionIndices.forEach(idx => {
+        const addObj = mod.additions[idx];
+        if (addObj) {
+          additionsTotal += window.MenuAPI
+            ? MenuAPI.getAdditionPrice(addObj, isPizza, sizeKey)
+            : (Number(addObj.price) || 0);
+        }
+      });
+
+      const unitPrice = basePrice + additionsTotal;
+      const lineTotal = unitPrice * customizerState.quantity;
+
+      const additionItems = [];
+      const extraProductItems = [];
+      mod.additions.forEach((addObj, idx) => {
+        const entry = { addObj, idx };
+        if (addObj.kind === "extra_item") extraProductItems.push(entry);
+        else additionItems.push(entry);
+      });
+
+      const renderAdditionSection = (title, entries) => {
+        if (entries.length === 0) return "";
+        return `
+          <div class="customizer-section">
+            <div class="customizer-section-title">
+              <span>${title}</span>
+              <span class="customizer-section-sub">İsteğe bağlı · Çoklu seçim</span>
+            </div>
+            <div class="customizer-addition-list">
+              ${entries.map(({ addObj, idx }) => {
+                const addPrice = window.MenuAPI
+                  ? MenuAPI.getAdditionPrice(addObj, isPizza, sizeKey)
+                  : (Number(addObj.price) || 0);
+                const selected = customizerState.selectedAdditionIndices.has(idx);
+                return `
+                  <label class="customizer-addition-item ${selected ? 'selected' : ''}" onclick="event.preventDefault(); toggleCustomizerAddition(${idx});">
+                    <div class="customizer-addition-left">
+                      <input type="checkbox" ${selected ? "checked" : ""} style="accent-color: var(--ginger-500); width:16px; height:16px; pointer-events:none;">
+                      <span>${escapeHtml(addObj.name)}</span>
+                    </div>
+                    <span class="customizer-addition-price">+${addPrice} ₺</span>
+                  </label>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        `;
+      };
+
+      body.innerHTML = `
+        ${isPizza ? `
+          <div class="customizer-section">
+            <div class="customizer-section-title">
+              <span>Boyut Seçimi</span>
+              <span class="customizer-section-sub">İlave fiyatları boyuta göre güncellenir</span>
+            </div>
+            <div class="size-tabs-row">
+              <button type="button" class="size-option-btn ${sizeKey === 'small' ? 'active' : ''}" onclick="selectCustomizerSize('small')">
+                Small · ${item.prices.small || 0} ₺
+              </button>
+              <button type="button" class="size-option-btn ${sizeKey === 'medium' ? 'active' : ''}" onclick="selectCustomizerSize('medium')">
+                Orta · ${item.prices.medium || 0} ₺
+              </button>
+              <button type="button" class="size-option-btn ${sizeKey === 'xlarge' ? 'active' : ''}" onclick="selectCustomizerSize('xlarge')">
+                Mega · ${item.prices.xlarge || 0} ₺
+              </button>
+            </div>
+          </div>
+        ` : ''}
+
+        ${mod.removals.length > 0 ? `
+          <div class="customizer-section">
+            <div class="customizer-section-title">
+              <span>Çıkarılacak Malzemeler</span>
+              <span class="customizer-section-sub">Ücretsiz · Çıkarmak istediklerinize dokunun</span>
+            </div>
+            <div class="customizer-removal-grid">
+              ${mod.removals.map((rem, idx) => {
+                const selected = customizerState.selectedRemovals.has(idx);
+                return `
+                  <button type="button" class="customizer-removal-pill ${selected ? 'selected' : ''}" onclick="toggleCustomizerRemoval(${idx})">
+                    <span>${selected ? '✕' : '−'} ${escapeHtml(rem)}</span>
+                  </button>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        ` : ''}
+
+        ${renderAdditionSection("İlave Malzemeler", additionItems)}
+        ${renderAdditionSection("Yanına Ek Ürünler & Soslar", extraProductItems)}
+
+        <div class="form-group-modal" style="margin-bottom: 8px;">
+          <label class="form-label-modal" for="customizerItemNoteInput">Ürün Notu (Opsiyonel)</label>
+          <input type="text" id="customizerItemNoteInput" class="form-input-modal" value="${escapeHtml(customizerState.note)}" oninput="customizerState.note = this.value" placeholder="Örn: İyi pişmiş olsun, ince kenar...">
+        </div>
+
+        <div class="customizer-footer-bar">
+          <div class="qty-stepper" style="height: 44px; padding: 0 6px;">
+            <button type="button" class="qty-btn" onclick="changeCustomizerQty(-1)">−</button>
+            <span class="qty-value">${customizerState.quantity}</span>
+            <button type="button" class="qty-btn" onclick="changeCustomizerQty(1)">+</button>
+          </div>
+          <button type="button" class="btn-checkout-action" style="margin-top:0; flex:1;" onclick="confirmItemCustomizerAdd()">
+            <span>Sepete Ekle · ${lineTotal} ₺</span>
+          </button>
+        </div>
+      `;
+    }
+
+    window.confirmItemCustomizerAdd = function() {
+      const item = customizerState.item;
+      if (!item) return;
+
+      if (window.StoreStatus) {
+        currentStoreStatus = StoreStatus.evaluate(currentStoreStatus.settings);
+        if (!currentStoreStatus.isOpen) {
+          renderStoreStatusUI();
+          closeItemCustomizerModal();
+          showToast(`${currentStoreStatus.title} — ${currentStoreStatus.detail}`);
+          return;
+        }
+      }
+
+      const isPizza = !!item.prices;
+      const sizeKey = isPizza ? customizerState.sizeKey : "medium";
+      const mod = window.MenuAPI ? MenuAPI.normalizeModifiers(item.modifiers) : (item.modifiers || { removals: [], additions: [] });
+
+      const selectedRemovals = [];
+      customizerState.selectedRemovals.forEach(idx => {
+        if (mod.removals[idx]) selectedRemovals.push(mod.removals[idx]);
+      });
+
+      const selectedAdditions = [];
+      customizerState.selectedAdditionIndices.forEach(idx => {
+        const a = mod.additions[idx];
+        if (!a) return;
+        const unitPrice = window.MenuAPI
+          ? MenuAPI.getAdditionPrice(a, isPizza, sizeKey)
+          : (Number(a.price) || 0);
+        selectedAdditions.push({ name: a.name, kind: a.kind || "addition", unitPrice });
+      });
+
+      Cart.addItem(item, sizeKey, {
+        removals: selectedRemovals,
+        additions: selectedAdditions,
+        notes: customizerState.note,
+        quantity: customizerState.quantity
+      });
+
+      closeItemCustomizerModal();
+      const sizeName = isPizza ? (sizeKey === "small" ? "Small" : (sizeKey === "medium" ? "Medium" : "XL")) : "";
+      showToast(`🍕 ${item.name} ${sizeName ? '(' + sizeName + ')' : ''} sepete eklendi!`);
+      if (window.SoundAlert) SoundAlert.playBell();
+    };
+
     // Ürünü Sepete Ekle
     window.handleAddToCart = function(itemId) {
       if (window.StoreStatus) {
@@ -3052,6 +3441,11 @@
 
       const item = menuData.find(i => i.id === itemId);
       if (!item || item.isAvailable === false) return;
+
+      if (itemHasModifiers(item)) {
+        openItemCustomizerModal(itemId);
+        return;
+      }
 
       const sizeKey = cardSelectedSizes[itemId] || "medium";
       Cart.addItem(item, sizeKey);
@@ -3112,28 +3506,44 @@
 
       body.innerHTML = `
         <div class="cart-items-list">
-          ${items.map(item => `
+          ${items.map(item => {
+            const rems = Array.isArray(item.removals) ? item.removals : [];
+            const adds = Array.isArray(item.additions) ? item.additions : [];
+            const encodedId = encodeURIComponent(item.cartItemId);
+            return `
             <div class="cart-item-card">
               <div class="cart-item-info">
-                <div class="cart-item-name">${item.name}</div>
-                ${item.sizeLabel ? `<span class="cart-item-size">${item.sizeLabel}</span>` : ''}
+                <div class="cart-item-name">${escapeHtml(item.name)}</div>
+                ${item.sizeLabel ? `<span class="cart-item-size">${escapeHtml(item.sizeLabel)}</span>` : ''}
+                ${(rems.length > 0 || adds.length > 0 || item.manualNote) ? `
+                  <div class="cart-item-mods">
+                    ${rems.length > 0 ? `<div class="cart-mod-rem">− Çıkar: ${escapeHtml(rems.join(", "))}</div>` : ''}
+                    ${adds.length > 0 ? `<div class="cart-mod-add">+ İlave: ${escapeHtml(adds.map(a => `${a.name}${a.unitPrice > 0 ? ` (+${a.unitPrice}₺)` : ''}`).join(", "))}</div>` : ''}
+                    ${item.manualNote ? `<div class="cart-mod-note">Not: ${escapeHtml(item.manualNote)}</div>` : ''}
+                  </div>
+                ` : ''}
                 <div class="cart-item-price-unit">${item.unitPrice} ₺ / adet</div>
               </div>
               <div class="cart-item-controls">
                 <div class="qty-stepper">
-                  <button type="button" class="qty-btn" onclick="handleQtyChange('${item.cartItemId}', -1)" title="Azalt">−</button>
+                  <button type="button" class="qty-btn" onclick="handleQtyChange('${encodedId}', -1)" title="Azalt">−</button>
                   <span class="qty-value">${item.quantity}</span>
-                  <button type="button" class="qty-btn" onclick="handleQtyChange('${item.cartItemId}', 1)" title="Artır">+</button>
+                  <button type="button" class="qty-btn" onclick="handleQtyChange('${encodedId}', 1)" title="Artır">+</button>
                 </div>
                 <div class="cart-item-line-total">${item.unitPrice * item.quantity} ₺</div>
               </div>
             </div>
-          `).join("")}
+          `;
+          }).join("")}
         </div>
       `;
     }
 
-    window.handleQtyChange = function(cartItemId, delta) {
+    window.handleQtyChange = function(encodedCartItemId, delta) {
+      let cartItemId = encodedCartItemId;
+      try {
+        cartItemId = decodeURIComponent(encodedCartItemId);
+      } catch (e) {}
       Cart.updateQuantity(cartItemId, delta);
       renderCartDrawer();
     };
@@ -3164,6 +3574,7 @@
       if (event.target && event.target.id === modalId) {
         if (modalId === "checkoutModalBackdrop") closeCheckoutModal();
         if (modalId === "trackingModalBackdrop") closeTrackingModal();
+        if (modalId === "itemCustomizerBackdrop") closeItemCustomizerModal();
       }
     };
 
@@ -3523,6 +3934,8 @@
           ? `<span class="badge-pill" style="background:#444; color:#fff;">Tükendi</span>`
           : (item.badge ? `<span class="badge-pill badge-${item.badgeType || 'popular'}">${item.badge}</span>` : '');
         const hasImage = !!(item.image && item.image.trim());
+        const hasMods = itemHasModifiers(item);
+        const ctaLabel = !currentStoreStatus.isOpen ? 'Siparişe Kapalı' : (hasMods ? '+ Seç & Ekle' : '+ Sepete Ekle');
 
         // 1. Pizza Kartı (Boyut seçenekli)
         if (item.prices) {
@@ -3566,8 +3979,8 @@
                     <span class="price-label" id="size-label-${item.id}">${sizeLabels[currentSize] || ''}</span>
                   </div>
                   ${isAvailable ? `
-                    <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="${currentStoreStatus.isOpen ? 'Sepete Ekle' : 'Siparişe Kapalı'}" style="border:none; cursor:pointer;">
-                      <span>${currentStoreStatus.isOpen ? '+ Sepete Ekle' : 'Siparişe Kapalı'}</span>
+                    <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="${currentStoreStatus.isOpen ? (hasMods ? 'Malzeme Seç & Sepete Ekle' : 'Sepete Ekle') : 'Siparişe Kapalı'}" style="border:none; cursor:pointer;">
+                      <span>${ctaLabel}</span>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M5 12h14M12 5l7 7-7 7"/>
                       </svg>
@@ -3606,8 +4019,8 @@
                 <span class="price-label">Porsiyon Fiyatı</span>
               </div>
               ${isAvailable ? `
-                <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="${currentStoreStatus.isOpen ? 'Sepete Ekle' : 'Siparişe Kapalı'}" style="border:none; cursor:pointer;">
-                  <span>${currentStoreStatus.isOpen ? '+ Sepete Ekle' : 'Siparişe Kapalı'}</span>
+                <button type="button" class="btn-card-order" onclick="handleAddToCart('${item.id}')" title="${currentStoreStatus.isOpen ? (hasMods ? 'Malzeme Seç & Sepete Ekle' : 'Sepete Ekle') : 'Siparişe Kapalı'}" style="border:none; cursor:pointer;">
+                  <span>${ctaLabel}</span>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
