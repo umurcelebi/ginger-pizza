@@ -2152,80 +2152,12 @@
 
   <script>
     // ========================================================================
-    // Kullanıcılar ve Yetkilendirme (RBAC & Kullanıcı Yönetimi)
+    // Kullanıcılar ve Yetkilendirme (Supabase Auth + app_metadata RBAC)
     // ========================================================================
-    const USERS_STORAGE_KEY = "ginger_pizza_users_list_v1";
-    const DEFAULT_USERS = [
-      {
-        email: "admin@gingerpizza.com",
-        password: "ginger123",
-        role: "admin",
-        roleLabel: "👑 Süper Yönetici",
-        canEditDb: true,
-        canReset: true
-      },
-      {
-        email: "mudur@gingerpizza.com",
-        password: "pizza2026",
-        role: "manager",
-        roleLabel: "💼 Restoran Müdürü",
-        canEditDb: false,
-        canReset: false
-      },
-      {
-        email: "mutfak@gingerpizza.com",
-        password: "mutfak2026",
-        role: "staff",
-        roleLabel: "🍕 Mutfak / Kasa",
-        canEditDb: false,
-        canReset: false
-      }
-    ];
-
     function getActiveAdminSlug() {
       return (typeof window.getActiveRestaurantSlug === "function"
         ? window.getActiveRestaurantSlug()
         : "") || "ginger-pizza";
-    }
-
-    function getDefaultUsersForSlug() {
-      const slug = getActiveAdminSlug();
-      if (slug === "ginger-pizza") return DEFAULT_USERS;
-      const info = window.__ACTIVE_RESTAURANT_INFO__ || {};
-      const clean = String(slug).toLowerCase().replace(/[^a-z0-9]/g, "") || "restoran";
-      const adminEmail = (info.admin_email && String(info.admin_email).trim()) || ("admin@" + clean + ".com");
-      const adminPass = (info.admin_password && String(info.admin_password).trim()) || (clean + "123");
-      return [
-        {
-          email: adminEmail,
-          password: adminPass,
-          role: "admin",
-          roleLabel: "👑 Süper Yönetici",
-          canEditDb: true,
-          canReset: true
-        },
-        {
-          email: "mudur@" + clean + ".com",
-          password: clean + "2026",
-          role: "manager",
-          roleLabel: "💼 Restoran Müdürü",
-          canEditDb: false,
-          canReset: false
-        },
-        {
-          email: "mutfak@" + clean + ".com",
-          password: "mutfak2026",
-          role: "staff",
-          roleLabel: "🍕 Mutfak / Kasa",
-          canEditDb: false,
-          canReset: false
-        }
-      ];
-    }
-
-    function getUsersStorageKey() {
-      const slug = getActiveAdminSlug();
-      return slug === "ginger-pizza" ? USERS_STORAGE_KEY : ("xubo_users_list_v1_" + slug);
     }
 
     function getSessionKey(suffix) {
@@ -2233,124 +2165,75 @@
       return slug === "ginger-pizza" ? ("ginger_" + suffix) : ("xubo_" + slug + "_" + suffix);
     }
 
-    function getStoredUsers() {
-      const defaults = getDefaultUsersForSlug();
-      const key = getUsersStorageKey();
-      try {
-        const raw = localStorage.getItem(key);
-        if (!raw) {
-          localStorage.setItem(key, JSON.stringify(defaults));
-          return defaults;
-        }
-        return JSON.parse(raw);
-      } catch (e) {
-        return defaults;
-      }
+    function isAuthUserAuthorizedForSlug(user, activeSlug) {
+      if (!user) return false;
+      const meta = user.app_metadata || {};
+      const role = String(meta.role || "");
+      const tokenSlug = String(meta.restaurant_slug || "");
+      if (role === "super_admin") return true;
+      if ((role === "restaurant_admin" || role === "staff") && tokenSlug === activeSlug) return true;
+      return false;
     }
 
-    function saveStoredUsers(list) {
-      localStorage.setItem(getUsersStorageKey(), JSON.stringify(list));
-    }
-
-    window.selectLoginUser = function(userType) {
-      const emailField = document.getElementById("loginEmail");
-      const passField = document.getElementById("loginPass");
-      const buttons = document.querySelectorAll(".login-card .size-option-btn");
-      buttons.forEach(b => b.classList.remove("active"));
-      const users = getStoredUsers();
-      const defaults = getDefaultUsersForSlug();
-
-      if (userType === 'admin') {
-        const u = users.find(x => x.role === 'admin') || defaults[0];
-        emailField.value = u.email;
-        passField.value = u.password;
-        if (buttons[0]) buttons[0].classList.add("active");
-      } else if (userType === 'mudur') {
-        const u = users.find(x => x.role === 'manager') || defaults[1];
-        emailField.value = u.email;
-        passField.value = u.password;
-        if (buttons[1]) buttons[1].classList.add("active");
-      } else if (userType === 'mutfak') {
-        const u = users.find(x => x.role === 'staff') || defaults[2];
-        emailField.value = u.email;
-        passField.value = u.password;
-        if (buttons[2]) buttons[2].classList.add("active");
+    function mapAuthUserToUiUser(authUser) {
+      const meta = (authUser && authUser.app_metadata) || {};
+      const authRole = String(meta.role || "");
+      const email = (authUser && authUser.email) || sessionStorage.getItem(getSessionKey("user_email")) || "";
+      if (authRole === "super_admin") {
+        return { email, authRole, role: "admin", roleLabel: "👑 Süper Admin", canEditDb: true, canReset: true };
       }
-    };
+      if (authRole === "restaurant_admin") {
+        return { email, authRole, role: "admin", roleLabel: "👑 Restoran Yöneticisi", canEditDb: true, canReset: true };
+      }
+      return { email, authRole: "staff", role: "staff", roleLabel: "🍕 Mutfak / Kasa", canEditDb: false, canReset: false };
+    }
 
     function getCurrentUser() {
-      const users = getStoredUsers();
-      const defaults = getDefaultUsersForSlug();
-      const email = sessionStorage.getItem(getSessionKey("user_email")) || defaults[0].email;
-      return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || users[0];
+      const email = sessionStorage.getItem(getSessionKey("user_email")) || "";
+      const authRole = sessionStorage.getItem(getSessionKey("user_auth_role")) || "staff";
+      return mapAuthUserToUiUser({ email, app_metadata: { role: authRole } });
     }
 
-    // Kullanıcı Yönetim Listesi Render
     function renderUsersManagement() {
       const container = document.getElementById("usersListContainer");
       if (!container) return;
-      const users = getStoredUsers();
-
-      container.innerHTML = users.map(u => {
-        const isSuperAdmin = u.role === "admin";
-        return `
-          <div style="background:var(--white); border:1px solid var(--sand-200); border-radius:10px; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+      const user = getCurrentUser();
+      container.innerHTML = `
+        <div style="background:var(--white); border:1px solid var(--sand-200); border-radius:10px; padding:16px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
             <div>
               <div style="display:flex; align-items:center; gap:8px;">
-                <strong style="font-size:0.92rem; color:var(--ink-900);">${u.email}</strong>
-                <span class="admin-pill-tag" style="font-size:0.7rem;">${u.roleLabel}</span>
+                <strong style="font-size:0.95rem; color:var(--ink-900);">${user.email || "Yetkili Hesap"}</strong>
+                <span class="admin-pill-tag" style="font-size:0.72rem;">${user.roleLabel}</span>
               </div>
-              <div style="font-size:0.78rem; color:var(--ink-400); margin-top:2px;">
-                Şifre: <span style="font-family:monospace; background:var(--sand-50); padding:2px 6px; border-radius:4px; color:var(--ink-700);">${u.password}</span>
+              <div style="font-size:0.8rem; color:var(--ink-500); margin-top:6px;">
+                Kullanıcı hesapları ve roller Supabase Authentication üzerinden güvenli olarak yönetilmektedir.
               </div>
             </div>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <button type="button" class="btn-header" style="font-size:0.78rem; padding:6px 12px;" onclick="handleChangePassword('${u.email}')">
-                🔑 Şifre Değiştir
-              </button>
-              ${!isSuperAdmin ? `
-                <button type="button" class="btn-action-icon btn-action-delete" title="Kullanıcıyı Sil" onclick="handleDeleteUser('${u.email}')">
-                  🗑️
-                </button>
-              ` : `
-                <span style="font-size:0.75rem; color:var(--ink-400); padding:0 8px;">(Ana Hesap)</span>
-              `}
-            </div>
+            <button type="button" class="btn-header" style="font-size:0.8rem; padding:8px 14px;" onclick="handleChangeOwnPassword()">
+              🔑 Şifremi Değiştir
+            </button>
           </div>
-        `;
-      }).join("");
+        </div>
+      `;
     }
 
-    // Şifre Değiştir
-    window.handleChangePassword = function(email) {
-      const users = getStoredUsers();
-      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-      if (!user) return;
-
-      const newPass = prompt(`"${user.email}" için yeni şifreyi giriniz:`, user.password);
-      if (newPass && newPass.trim() !== "") {
-        user.password = newPass.trim();
-        saveStoredUsers(users);
-        renderUsersManagement();
-        showToast("Şifre başarıyla güncellendi!");
-      }
-    };
-
-    // Kullanıcı Sil
-    window.handleDeleteUser = function(email) {
-      let users = getStoredUsers();
-      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-      if (!user) return;
-      if (user.role === "admin") {
-        alert("Süper Admin hesabı silinemez!");
+    window.handleChangeOwnPassword = async function() {
+      const sb = typeof window.getSupabaseClient === "function" ? window.getSupabaseClient() : null;
+      if (!sb || !sb.auth) {
+        alert("Bulut kimlik doğrulama bağlantısı bulunamadı.");
         return;
       }
-
-      if (confirm(`"${user.email}" kullanıcısını silmek istediğinize emin misiniz?`)) {
-        users = users.filter(u => u.email.toLowerCase() !== email.toLowerCase());
-        saveStoredUsers(users);
-        renderUsersManagement();
-        showToast("Kullanıcı silindi.");
+      const newPass = prompt("Yeni şifrenizi giriniz (en az 6 karakter):");
+      if (!newPass || newPass.trim().length < 6) {
+        if (newPass !== null) alert("Şifre en az 6 karakter olmalıdır.");
+        return;
+      }
+      const { error } = await sb.auth.updateUser({ password: newPass.trim() });
+      if (error) {
+        alert("Şifre güncellenemedi: " + (error.message || "Bilinmeyen hata"));
+      } else {
+        showToast("Şifreniz başarıyla güncellendi!");
       }
     };
 
@@ -2367,15 +2250,39 @@
       setTimeout(() => { toast.style.display = "none"; }, 2500);
     }
 
-    // Oturum ve Yetki Kontrolü
-    function checkAuth() {
-      const isAuth = sessionStorage.getItem(getSessionKey("admin_logged_in")) === "true";
-      if (isAuth) {
+    // Oturum ve Yetki Kontrolü (Supabase Auth)
+    async function checkAuth() {
+      if (typeof window.ensureRestaurantConfigReady === "function") {
+        await window.ensureRestaurantConfigReady();
+      }
+      const activeSlug = getActiveAdminSlug();
+      const sb = typeof window.getSupabaseClient === "function" ? window.getSupabaseClient() : null;
+      let validAuthUser = null;
+
+      if (sb && sb.auth) {
+        try {
+          const { data } = await sb.auth.getSession();
+          const sessionUser = data && data.session ? data.session.user : null;
+          if (isAuthUserAuthorizedForSlug(sessionUser, activeSlug)) {
+            validAuthUser = sessionUser;
+          }
+        } catch (e) {
+          console.warn("Auth session check error:", e);
+        }
+      }
+
+      if (validAuthUser) {
+        const uiUser = mapAuthUserToUiUser(validAuthUser);
+        sessionStorage.setItem(getSessionKey("admin_logged_in"), "true");
+        sessionStorage.setItem(getSessionKey("user_email"), uiUser.email);
+        sessionStorage.setItem(getSessionKey("user_role"), uiUser.role);
+        sessionStorage.setItem(getSessionKey("user_auth_role"), uiUser.authRole);
+
         document.getElementById("loginView").style.display = "none";
         document.getElementById("adminApp").style.display = "block";
 
         // Yetkilere göre arayüzü kısıtla / uyarla
-        const user = getCurrentUser();
+        const user = uiUser;
         const btnDb = document.getElementById("btnOpenDbModal");
         const btnReset = document.getElementById("btnResetDefaults");
         const dbBadge = document.getElementById("dbStatusBadge");
@@ -3597,7 +3504,7 @@
       loadDashboard();
     });
 
-    // Giriş / Çıkış (Çoklu Kullanıcı Desteği)
+    // Giriş / Çıkış (Supabase Auth)
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       if (typeof window.ensureRestaurantConfigReady === "function") {
@@ -3606,27 +3513,49 @@
       const email = document.getElementById("loginEmail").value.trim().toLowerCase();
       const pass = document.getElementById("loginPass").value;
       const errBox = document.getElementById("loginError");
+      const sb = typeof window.getSupabaseClient === "function" ? window.getSupabaseClient() : null;
 
-      const users = getStoredUsers();
-      const matched = users.find(u => u.email.toLowerCase() === email && u.password === pass);
-      if (matched) {
-        errBox.style.display = "none";
-        sessionStorage.setItem(getSessionKey("admin_logged_in"), "true");
-        sessionStorage.setItem(getSessionKey("user_email"), matched.email);
-        sessionStorage.setItem(getSessionKey("user_role"), matched.role);
-        checkAuth();
-        showToast(matched.roleLabel + " olarak giriş yapıldı!");
-      } else {
+      if (!sb || !sb.auth) {
+        errBox.textContent = "Kimlik doğrulama servisine ulaşılamadı.";
+        errBox.style.display = "block";
+        return;
+      }
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error || !data || !data.user) {
         errBox.textContent = "Hatalı e-posta veya şifre girdiniz!";
         errBox.style.display = "block";
+        return;
       }
+
+      const activeSlug = getActiveAdminSlug();
+      if (!isAuthUserAuthorizedForSlug(data.user, activeSlug)) {
+        await sb.auth.signOut();
+        errBox.textContent = "Bu hesap bu restorana yetkili değil!";
+        errBox.style.display = "block";
+        return;
+      }
+
+      const uiUser = mapAuthUserToUiUser(data.user);
+      errBox.style.display = "none";
+      sessionStorage.setItem(getSessionKey("admin_logged_in"), "true");
+      sessionStorage.setItem(getSessionKey("user_email"), uiUser.email);
+      sessionStorage.setItem(getSessionKey("user_role"), uiUser.role);
+      sessionStorage.setItem(getSessionKey("user_auth_role"), uiUser.authRole);
+      await checkAuth();
+      showToast(uiUser.roleLabel + " olarak giriş yapıldı!");
     });
 
-    document.getElementById("btnLogout").addEventListener("click", () => {
+    document.getElementById("btnLogout").addEventListener("click", async () => {
+      const sb = typeof window.getSupabaseClient === "function" ? window.getSupabaseClient() : null;
+      if (sb && sb.auth) {
+        try { await sb.auth.signOut(); } catch (e) {}
+      }
       sessionStorage.removeItem(getSessionKey("admin_logged_in"));
       sessionStorage.removeItem(getSessionKey("user_email"));
       sessionStorage.removeItem(getSessionKey("user_role"));
-      checkAuth();
+      sessionStorage.removeItem(getSessionKey("user_auth_role"));
+      await checkAuth();
       showToast("Oturum kapatıldı.");
     });
 

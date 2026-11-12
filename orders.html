@@ -951,40 +951,27 @@
       return slug === "ginger-pizza" ? ("ginger_" + suffix) : ("xubo_" + slug + "_" + suffix);
     }
 
-    function getKdsUsersStorageKey() {
-      const slug = getKdsActiveSlug();
-      return slug === "ginger-pizza" ? "ginger_users_list_v1" : ("xubo_users_list_v1_" + slug);
+    function isKdsAuthUserAuthorized(user, activeSlug) {
+      if (!user) return false;
+      const meta = user.app_metadata || {};
+      const role = String(meta.role || "");
+      const tokenSlug = String(meta.restaurant_slug || "");
+      if (role === "super_admin") return true;
+      if ((role === "restaurant_admin" || role === "staff") && tokenSlug === activeSlug) return true;
+      return false;
     }
 
-    function getKdsAllowedUsers() {
-      const slug = getKdsActiveSlug();
-      const defaults = slug === "ginger-pizza"
-        ? [
-            { email: "admin@gingerpizza.com", password: "ginger123", role: "admin" },
-            { email: "mudur@gingerpizza.com", password: "pizza2026", role: "manager" },
-            { email: "mutfak@gingerpizza.com", password: "mutfak2026", role: "staff" }
-          ]
-        : (() => {
-            const info = window.__ACTIVE_RESTAURANT_INFO__ || {};
-            const clean = String(slug).toLowerCase().replace(/[^a-z0-9]/g, "") || "restoran";
-            return [
-              { email: (info.admin_email && String(info.admin_email).trim()) || ("admin@" + clean + ".com"), password: (info.admin_password && String(info.admin_password).trim()) || (clean + "123"), role: "admin" },
-              { email: "mudur@" + clean + ".com", password: clean + "2026", role: "manager" },
-              { email: "mutfak@" + clean + ".com", password: "mutfak2026", role: "staff" }
-            ];
-          })();
+    async function checkKdsSupabaseSession() {
+      const sb = typeof window.getSupabaseClient === "function" ? window.getSupabaseClient() : null;
+      if (!sb || !sb.auth) return null;
       try {
-        const raw = localStorage.getItem(getKdsUsersStorageKey());
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        const { data } = await sb.auth.getSession();
+        const user = data && data.session ? data.session.user : null;
+        if (isKdsAuthUserAuthorized(user, getKdsActiveSlug())) {
+          return user;
         }
       } catch (e) {}
-      return defaults;
-    }
-
-    function isKdsAuthenticated() {
-      return sessionStorage.getItem(getKdsSessionKey("admin_logged_in")) === "true";
+      return null;
     }
 
     // Zaman formatlama (Örn: "5 dk önce")
@@ -1498,7 +1485,12 @@
         kdsEmailInput.placeholder = getKdsActiveSlug() === "ginger-pizza" ? "mutfak@gingerpizza.com" : ("mutfak@" + cleanSlug + ".com");
       }
 
-      if (isKdsAuthenticated()) {
+      const authUser = await checkKdsSupabaseSession();
+      if (authUser) {
+        const authRole = (authUser.app_metadata && authUser.app_metadata.role) || "staff";
+        sessionStorage.setItem(getKdsSessionKey("admin_logged_in"), "true");
+        sessionStorage.setItem(getKdsSessionKey("user_email"), authUser.email || "");
+        sessionStorage.setItem(getKdsSessionKey("user_role"), authRole === "staff" ? "staff" : "admin");
         if (authOverlay) authOverlay.style.display = "none";
         startKdsRuntime();
       } else if (kdsLoginForm) {
@@ -1510,18 +1502,41 @@
           const email = document.getElementById("kdsLoginEmail").value.trim().toLowerCase();
           const pass = document.getElementById("kdsLoginPass").value;
           const errBox = document.getElementById("kdsLoginError");
-          const matched = getKdsAllowedUsers().find(u => String(u.email || "").toLowerCase() === email && u.password === pass);
-          if (matched) {
-            sessionStorage.setItem(getKdsSessionKey("admin_logged_in"), "true");
-            sessionStorage.setItem(getKdsSessionKey("user_email"), matched.email);
-            sessionStorage.setItem(getKdsSessionKey("user_role"), matched.role || "staff");
-            if (errBox) errBox.style.display = "none";
-            if (authOverlay) authOverlay.style.display = "none";
-            startKdsRuntime();
-          } else if (errBox) {
-            errBox.textContent = "Hatalı e-posta veya şifre!";
-            errBox.style.display = "block";
+          const sb = typeof window.getSupabaseClient === "function" ? window.getSupabaseClient() : null;
+
+          if (!sb || !sb.auth) {
+            if (errBox) {
+              errBox.textContent = "Kimlik doğrulama servisine ulaşılamadı.";
+              errBox.style.display = "block";
+            }
+            return;
           }
+
+          const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+          if (error || !data || !data.user) {
+            if (errBox) {
+              errBox.textContent = "Hatalı e-posta veya şifre!";
+              errBox.style.display = "block";
+            }
+            return;
+          }
+
+          if (!isKdsAuthUserAuthorized(data.user, getKdsActiveSlug())) {
+            await sb.auth.signOut();
+            if (errBox) {
+              errBox.textContent = "Bu hesap bu restorana yetkili değil!";
+              errBox.style.display = "block";
+            }
+            return;
+          }
+
+          const authRole = (data.user.app_metadata && data.user.app_metadata.role) || "staff";
+          sessionStorage.setItem(getKdsSessionKey("admin_logged_in"), "true");
+          sessionStorage.setItem(getKdsSessionKey("user_email"), data.user.email || email);
+          sessionStorage.setItem(getKdsSessionKey("user_role"), authRole === "staff" ? "staff" : "admin");
+          if (errBox) errBox.style.display = "none";
+          if (authOverlay) authOverlay.style.display = "none";
+          startKdsRuntime();
         });
       }
     });
