@@ -4113,10 +4113,10 @@
 
         <!-- İletişim Butonları -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <a href="tel:02163370201" class="btn-primary" style="background: var(--ink-900); font-size: 0.85rem; padding: 11px; justify-content: center;">
+          <a href="${isGinger ? 'tel:02163370201' : (restInfo && restInfo.phone ? 'tel:' + restInfo.phone.replace(/\D/g, '') : 'tel:02163370201')}" class="btn-primary" style="background: var(--ink-900); font-size: 0.85rem; padding: 11px; justify-content: center;">
             ${isGinger ? '📞 Fırını Ara' : '📞 Restoranı Ara'}
           </a>
-          <a href="https://wa.me/902163370201" target="_blank" rel="noopener" class="btn-primary" style="background: #25D366; font-size: 0.85rem; padding: 11px; justify-content: center;">
+          <a href="${isGinger ? 'https://wa.me/905536660201' : (restInfo && restInfo.phone ? 'https://wa.me/90' + restInfo.phone.replace(/\D/g, '').replace(/^0/, '') : 'https://wa.me/905536660201')}" target="_blank" rel="noopener" class="btn-primary" style="background: #25D366; font-size: 0.85rem; padding: 11px; justify-content: center;">
             💬 WhatsApp
           </a>
         </div>
