@@ -882,7 +882,9 @@
 
       const printArea = document.getElementById("printArea");
       const deliveryLabel = order.delivery_type === "takeaway" ? "GEL-AL" : "PAKET SERVİS";
-      const payLabel = order.payment_method === "door_cash" ? "KAPIDA NAKİT" : "KAPIDA KART";
+      const payLabel = window.StoreStatus
+        ? StoreStatus.getPaymentMethodLabel(order.payment_method, kdsStoreSettings).toLocaleUpperCase("tr-TR")
+        : (order.payment_method === "door_cash" ? "KAPIDA NAKİT" : "KAPIDA KART");
 
       printArea.innerHTML = `
         <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
@@ -945,7 +947,9 @@
       const isDone = order.status === "delivered";
 
       const deliveryLabel = order.delivery_type === "takeaway" ? "🛍️ Gel-Al" : "🛵 Paket Servis";
-      const paymentLabel = order.payment_method === "door_cash" ? "💵 Kapıda Nakit" : "💳 Kapıda Kart";
+      const paymentLabel = window.StoreStatus
+        ? StoreStatus.getPaymentMethodDisplay(order.payment_method, kdsStoreSettings)
+        : (order.payment_method === "door_cash" ? "💵 Kapıda Nakit" : "💳 Kapıda Kart");
 
       // Telefonu WhatsApp linkine dönüştür
       const cleanPhone = (order.customer_phone || "").replace(/\D/g, "");
@@ -1119,17 +1123,22 @@
       const cancelled = doneOrders.filter(o => o.status === "cancelled");
       const activeCount = allOrders.filter(o => o.status === "new" || o.status === "preparing" || o.status === "on_way").length;
 
-      let cardTotal = 0;
-      let cashTotal = 0;
+      const paymentTotals = new Map();
       delivered.forEach(o => {
         const amt = Number(o.total_amount || 0);
-        if (o.payment_method === "door_cash") {
-          cashTotal += amt;
-        } else {
-          cardTotal += amt;
-        }
+        const label = window.StoreStatus
+          ? StoreStatus.getPaymentMethodDisplay(o.payment_method, kdsStoreSettings)
+          : (o.payment_method === "door_cash" ? "💵 Kapıda Nakit" : "💳 Kapıda Kredi Kartı");
+        paymentTotals.set(label, (paymentTotals.get(label) || 0) + amt);
       });
-      const grandTotal = cardTotal + cashTotal;
+      const grandTotal = delivered.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+      const paymentBreakdownHtml = Array.from(paymentTotals.entries())
+        .map(([label, total]) => `
+          <div class="archive-stat-row">
+            <span style="color: var(--ink-muted);">${label}</span>
+            <strong>${total.toLocaleString("tr-TR")} ₺</strong>
+          </div>
+        `).join("");
 
       const summaryBody = document.getElementById("archiveSummaryBody");
       if (summaryBody) {
@@ -1144,14 +1153,7 @@
               <strong style="color: var(--status-cancel);">${cancelled.length} adet</strong>
             </div>
           ` : ''}
-          <div class="archive-stat-row">
-            <span style="color: var(--ink-muted);">💳 Kapıda Kredi Kartı</span>
-            <strong>${cardTotal.toLocaleString("tr-TR")} ₺</strong>
-          </div>
-          <div class="archive-stat-row">
-            <span style="color: var(--ink-muted);">💵 Kapıda Nakit</span>
-            <strong>${cashTotal.toLocaleString("tr-TR")} ₺</strong>
-          </div>
+          ${paymentBreakdownHtml}
           <div class="archive-stat-row total">
             <span>Gün Sonu Toplam Ciro</span>
             <span>${grandTotal.toLocaleString("tr-TR")} ₺</span>

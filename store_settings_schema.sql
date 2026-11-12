@@ -20,6 +20,10 @@ CREATE TABLE IF NOT EXISTS public.store_settings (
     }'::jsonb,
     online_discount_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     online_discount_percent NUMERIC(5, 2) NOT NULL DEFAULT 0,
+    payment_methods JSONB NOT NULL DEFAULT '[
+      {"id": "door_card", "label": "Kapıda Kredi Kartı", "icon": "💳", "enabled": true, "isDefault": true},
+      {"id": "door_cash", "label": "Kapıda Nakit", "icon": "💵", "enabled": true, "isDefault": true}
+    ]'::jsonb,
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -33,6 +37,11 @@ ALTER TABLE public.store_settings
     ADD COLUMN IF NOT EXISTS online_discount_enabled BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE public.store_settings
     ADD COLUMN IF NOT EXISTS online_discount_percent NUMERIC(5, 2) NOT NULL DEFAULT 0;
+ALTER TABLE public.store_settings
+    ADD COLUMN IF NOT EXISTS payment_methods JSONB NOT NULL DEFAULT '[
+      {"id": "door_card", "label": "Kapıda Kredi Kartı", "icon": "💳", "enabled": true, "isDefault": true},
+      {"id": "door_cash", "label": "Kapıda Nakit", "icon": "💵", "enabled": true, "isDefault": true}
+    ]'::jsonb;
 
 -- Siparişler tablosuna ara toplam / online indirim sütunları ekle
 ALTER TABLE public.orders

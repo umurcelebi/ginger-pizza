@@ -39,6 +39,37 @@ function createDefaultWeeklyHours() {
   };
 }
 
+function createDefaultPaymentMethods() {
+  return [
+    { id: "door_card", label: "Kapıda Kredi Kartı", icon: "💳", enabled: true, isDefault: true },
+    { id: "door_cash", label: "Kapıda Nakit", icon: "💵", enabled: true, isDefault: true }
+  ];
+}
+
+function normalizePaymentMethods(raw) {
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return createDefaultPaymentMethods();
+  }
+  const seen = new Set();
+  const list = [];
+  for (let i = 0; i < raw.length; i++) {
+    const item = raw[i];
+    if (!item || typeof item !== "object") continue;
+    const id = String(item.id || "").trim();
+    const label = String(item.label || "").trim();
+    if (!id || !label || seen.has(id)) continue;
+    seen.add(id);
+    list.push({
+      id,
+      label,
+      icon: String(item.icon || "💳").trim() || "💳",
+      enabled: item.enabled !== false,
+      isDefault: Boolean(item.isDefault || id === "door_card" || id === "door_cash")
+    });
+  }
+  return list.length > 0 ? list : createDefaultPaymentMethods();
+}
+
 function createDefaultStoreSettings() {
   return {
     id: STORE_SETTINGS_ROW_ID,
@@ -48,6 +79,7 @@ function createDefaultStoreSettings() {
     weekly_hours: createDefaultWeeklyHours(),
     online_discount_enabled: false,
     online_discount_percent: 0,
+    payment_methods: createDefaultPaymentMethods(),
     updated_at: new Date().toISOString()
   };
 }
@@ -82,6 +114,7 @@ function normalizeStoreSettings(raw) {
     weekly_hours: hours,
     online_discount_enabled: Boolean(src.online_discount_enabled),
     online_discount_percent: clampedPercent,
+    payment_methods: normalizePaymentMethods(src.payment_methods),
     updated_at: src.updated_at || new Date().toISOString()
   };
 }
@@ -227,6 +260,35 @@ const StoreStatus = {
       discountAmount,
       finalTotal
     };
+  },
+
+  getPaymentMethods(settings) {
+    const s = settings ? normalizeStoreSettings(settings) : getLocalStoreSettings();
+    return s.payment_methods;
+  },
+
+  getEnabledPaymentMethods(settings) {
+    return this.getPaymentMethods(settings).filter(m => m.enabled);
+  },
+
+  getPaymentMethodLabel(methodId, settings) {
+    const id = String(methodId || "").trim();
+    const list = this.getPaymentMethods(settings);
+    const found = list.find(m => m.id === id);
+    if (found) return found.label;
+    if (id === "door_cash") return "Kapıda Nakit";
+    if (id === "door_card") return "Kapıda Kredi Kartı";
+    return id || "Kapıda Kredi Kartı";
+  },
+
+  getPaymentMethodDisplay(methodId, settings) {
+    const id = String(methodId || "").trim();
+    const list = this.getPaymentMethods(settings);
+    const found = list.find(m => m.id === id);
+    if (found) return `${found.icon} ${found.label}`.trim();
+    if (id === "door_cash") return "💵 Kapıda Nakit";
+    if (id === "door_card") return "💳 Kapıda Kredi Kartı";
+    return id ? `💳 ${id}` : "💳 Kapıda Kredi Kartı";
   },
 
   evaluate(rawSettings, now = new Date()) {
@@ -390,6 +452,7 @@ const StoreStatus = {
           weekly_hours: normalized.weekly_hours,
           online_discount_enabled: normalized.online_discount_enabled,
           online_discount_percent: normalized.online_discount_percent,
+          payment_methods: normalized.payment_methods,
           updated_at: normalized.updated_at
         };
 
@@ -399,27 +462,35 @@ const StoreStatus = {
           .select()
           .single();
 
-        // Veritabanında indirim sütunları henüz yoksa temel kolonlarla tekrar dene
-        if (error && /online_discount/i.test(String(error.message || ""))) {
-          const basePayload = {
-            id: STORE_SETTINGS_ROW_ID,
-            order_mode: normalized.order_mode,
-            busy_until: normalized.busy_until,
-            status_message: normalized.status_message,
-            weekly_hours: normalized.weekly_hours,
-            updated_at: normalized.updated_at
-          };
-          const retry = await sb
+        // Veritabanında yeni sütunlar (online_discount_* veya payment_methods) henüz yoksa uyumlu kolonlarla tekrar dene
+        if (error && /(online_discount|payment_methods)/i.test(String(error.message || ""))) {
+          const errMsg = String(error.message || "");
+          const retryPayload = { ...payload };
+          if (/online_discount/i.test(errMsg)) {
+            delete retryPayload.online_discount_enabled;
+            delete retryPayload.online_discount_percent;
+          }
+          if (/payment_methods/i.test(errMsg)) {
+            delete retryPayload.payment_methods;
+          }
+          let retry = await sb
             .from("store_settings")
-            .upsert([basePayload], { onConflict: "id" })
+            .upsert([retryPayload], { onConflict: "id" })
             .select()
             .single();
+          if (retry.error && /(online_discount|payment_methods)/i.test(String(retry.error.message || ""))) {
+            delete retryPayload.online_discount_enabled;
+            delete retryPayload.online_discount_percent;
+            delete retryPayload.payment_methods;
+            retry = await sb.from("store_settings").upsert([retryPayload], { onConflict: "id" }).select().single();
+          }
           if (!retry.error && retry.data) {
             return {
               settings: normalizeStoreSettings({
                 ...retry.data,
                 online_discount_enabled: normalized.online_discount_enabled,
-                online_discount_percent: normalized.online_discount_percent
+                online_discount_percent: normalized.online_discount_percent,
+                payment_methods: normalized.payment_methods
               }),
               synced: false,
               error

@@ -1155,6 +1155,48 @@
     @media (max-width: 900px) {
       .report-kpis { grid-template-columns: repeat(2, 1fr); }
     }
+
+    /* Ödeme Tipleri Yönetimi */
+    .payment-methods-box {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--sand-200);
+      background: var(--bg);
+    }
+
+    .payment-methods-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 12px;
+    }
+
+    .payment-method-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--white);
+      border: 1px solid var(--sand-200);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .payment-method-item.is-disabled {
+      opacity: 0.65;
+      background: #faf9f6;
+    }
+
+    .payment-add-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--sand-200);
+    }
   </style>
 </head>
 <body>
@@ -1319,6 +1361,34 @@
 
             <button type="button" class="btn-header btn-header-primary" id="btnSaveOnlineDiscount" onclick="saveOnlineDiscountSettings()">
               💾 İndirimi Kaydet
+            </button>
+          </div>
+        </div>
+
+        <!-- Ödeme Tipleri (Aç/Kapat & Yeni Ekle) -->
+        <div id="adminPaymentMethodsBox" class="payment-methods-box">
+          <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px;">
+            <div>
+              <div style="font-size: 0.9rem; font-weight: 800; color: var(--ink-900);">💳 Ödeme Tipleri</div>
+              <div style="font-size: 0.8rem; color: var(--ink-500); margin-top: 2px;">
+                Müşterilerin ödeme ekranında göreceği seçenekleri satışa açıp kapatabilir veya yenisini ekleyebilirsiniz.
+              </div>
+            </div>
+          </div>
+
+          <div id="adminPaymentMethodsList" class="payment-methods-list"></div>
+
+          <div class="payment-add-row">
+            <select id="newPaymentIcon" class="report-input" aria-label="Ödeme simgesi" style="padding:7px 8px;">
+              <option value="💳">💳 Kart</option>
+              <option value="💵">💵 Nakit</option>
+              <option value="🎫">🎫 Yemek Kartı</option>
+              <option value="🏦">🏦 Havale/EFT</option>
+              <option value="📱">📱 Online / QR</option>
+            </select>
+            <input type="text" id="newPaymentLabel" class="report-input" placeholder="Yeni ödeme tipi (Örn: Multinet, Sodexo, Havale)" style="flex:1; min-width:210px;" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomPaymentMethod();}">
+            <button type="button" class="btn-header btn-header-primary" onclick="addCustomPaymentMethod()">
+              + Ödeme Tipi Ekle
             </button>
           </div>
         </div>
@@ -2188,6 +2258,129 @@
       window.renderAdminDiscountUI();
     }
 
+    window.renderPaymentMethodsEditor = function() {
+      const container = document.getElementById("adminPaymentMethodsList");
+      if (!container || !window.StoreStatus) return;
+      const methods = StoreStatus.getPaymentMethods(adminStoreSettings);
+
+      container.innerHTML = methods.map(m => {
+        const safeId = escapeReportHtml(m.id);
+        const safeLabel = escapeReportHtml(m.label);
+        const safeIcon = escapeReportHtml(m.icon || "💳");
+        return `
+          <div class="payment-method-item ${m.enabled ? '' : 'is-disabled'}">
+            <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+              <span style="font-size:1.1rem; flex-shrink:0;">${safeIcon}</span>
+              <div style="min-width:0;">
+                <div style="font-size:0.86rem; font-weight:700; color:var(--ink-900); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeLabel}</div>
+                <div style="font-size:0.72rem; color:${m.enabled ? 'var(--success)' : 'var(--ink-400)'}; font-weight:700;">
+                  ${m.enabled ? '● Satışa Açık' : '○ Satışa Kapalı'}
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+              <label class="switch" title="Satışa aç / kapat">
+                <input type="checkbox" ${m.enabled ? 'checked' : ''} onchange="togglePaymentMethodEnabled('${safeId}', this.checked)">
+                <span class="slider"></span>
+              </label>
+              ${!m.isDefault ? `
+                <button type="button" class="btn-action-icon btn-action-delete" title="Ödeme tipini sil" onclick="removeCustomPaymentMethod('${safeId}')">🗑️</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join("");
+    };
+
+    window.togglePaymentMethodEnabled = async function(methodId, enabled) {
+      if (!window.StoreStatus) return;
+      const current = adminStoreSettings || await StoreStatus.getSettings();
+      const methods = StoreStatus.getPaymentMethods(current).map(m => ({ ...m }));
+      const target = methods.find(m => m.id === methodId);
+      if (!target) return;
+
+      if (!enabled) {
+        const activeAfter = methods.filter(m => m.id !== methodId && m.enabled).length;
+        if (activeAfter === 0) {
+          showToast("En az 1 ödeme tipi satışa açık kalmalıdır!");
+          renderPaymentMethodsEditor();
+          return;
+        }
+      }
+
+      target.enabled = Boolean(enabled);
+      const res = await StoreStatus.saveSettings({ ...current, payment_methods: methods });
+      adminStoreSettings = res.settings;
+      renderPaymentMethodsEditor();
+      showToast(res.synced
+        ? `"${target.label}" ${enabled ? "satışa açıldı" : "satışa kapatıldı"}.`
+        : "Ödeme tipi yerel olarak güncellendi.");
+    };
+
+    window.addCustomPaymentMethod = async function() {
+      if (!window.StoreStatus) return;
+      const iconEl = document.getElementById("newPaymentIcon");
+      const labelEl = document.getElementById("newPaymentLabel");
+      const icon = iconEl ? iconEl.value : "💳";
+      const label = labelEl ? labelEl.value.trim() : "";
+      if (!label) {
+        showToast("Lütfen yeni ödeme tipi adını girin.");
+        if (labelEl) labelEl.focus();
+        return;
+      }
+
+      const current = adminStoreSettings || await StoreStatus.getSettings();
+      const methods = StoreStatus.getPaymentMethods(current).map(m => ({ ...m }));
+      if (methods.some(m => m.label.toLocaleLowerCase("tr-TR") === label.toLocaleLowerCase("tr-TR"))) {
+        showToast("Bu isimde bir ödeme tipi zaten mevcut.");
+        return;
+      }
+
+      const slugBase = label
+        .toLocaleLowerCase("tr-TR")
+        .replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s")
+        .replace(/ı/g, "i").replace(/ö/g, "o").replace(/ç/g, "c")
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "")
+        .slice(0, 28) || "odeme";
+      let newId = slugBase;
+      if (methods.some(m => m.id === newId)) {
+        newId = `${slugBase}_${Date.now().toString().slice(-4)}`;
+      }
+
+      methods.push({
+        id: newId,
+        label,
+        icon,
+        enabled: true,
+        isDefault: false
+      });
+
+      const res = await StoreStatus.saveSettings({ ...current, payment_methods: methods });
+      adminStoreSettings = res.settings;
+      if (labelEl) labelEl.value = "";
+      renderPaymentMethodsEditor();
+      showToast(res.synced ? `"${label}" ödeme tipi eklendi!` : `"${label}" yerel olarak eklendi.`);
+    };
+
+    window.removeCustomPaymentMethod = async function(methodId) {
+      if (!window.StoreStatus) return;
+      const current = adminStoreSettings || await StoreStatus.getSettings();
+      const methods = StoreStatus.getPaymentMethods(current).map(m => ({ ...m }));
+      const target = methods.find(m => m.id === methodId);
+      if (!target || target.isDefault) return;
+
+      const remaining = methods.filter(m => m.id !== methodId);
+      if (remaining.filter(m => m.enabled).length === 0 && remaining[0]) {
+        remaining[0].enabled = true;
+      }
+
+      const res = await StoreStatus.saveSettings({ ...current, payment_methods: remaining });
+      adminStoreSettings = res.settings;
+      renderPaymentMethodsEditor();
+      showToast(`"${target.label}" kaldırıldı.`);
+    };
+
     window.saveOnlineDiscountSettings = async function() {
       if (!window.StoreStatus) return;
       const btn = document.getElementById("btnSaveOnlineDiscount");
@@ -2225,6 +2418,7 @@
       if (msgInput) msgInput.value = adminStoreSettings.status_message || "";
       renderAdminStoreStatusOnly();
       syncAdminDiscountInputsFromSettings(adminStoreSettings);
+      renderPaymentMethodsEditor();
       renderWeeklyHoursEditor();
 
       if (!storeSubscriptionActive) {
@@ -2237,6 +2431,7 @@
           }
           renderAdminStoreStatusOnly();
           syncAdminDiscountInputsFromSettings(adminStoreSettings);
+          renderPaymentMethodsEditor();
           renderWeeklyHoursEditor();
         });
         setInterval(renderAdminStoreStatusOnly, 30000);
@@ -3114,11 +3309,13 @@
       cancelled: "İptal"
     };
 
-    const PAYMENT_TR = {
-      door_card: "Kapıda Kart",
-      door_cash: "Kapıda Nakit",
-      online: "Online"
-    };
+    function getAdminPaymentLabel(methodId) {
+      if (window.StoreStatus) {
+        return StoreStatus.getPaymentMethodLabel(methodId, adminStoreSettings);
+      }
+      const fallback = { door_card: "Kapıda Kart", door_cash: "Kapıda Nakit", online: "Online" };
+      return fallback[methodId] || methodId || "—";
+    }
 
     window.loadDailyOrdersReport = async function() {
       if (!window.OrderAPI) return;
@@ -3135,8 +3332,9 @@
       const totalDiscount = valid.reduce((s, o) => s + (Number(o.discount_amount) || 0), 0);
       const deliveryCount = valid.filter(o => o.delivery_type !== "takeaway").length;
       const takeawayCount = valid.filter(o => o.delivery_type === "takeaway").length;
-      const cardSum = valid.filter(o => o.payment_method !== "door_cash").reduce((s, o) => s + (Number(o.total_amount) || 0), 0);
+      const cardSum = valid.filter(o => (o.payment_method || "door_card") === "door_card").reduce((s, o) => s + (Number(o.total_amount) || 0), 0);
       const cashSum = valid.filter(o => o.payment_method === "door_cash").reduce((s, o) => s + (Number(o.total_amount) || 0), 0);
+      const otherSum = valid.filter(o => o.payment_method && o.payment_method !== "door_card" && o.payment_method !== "door_cash").reduce((s, o) => s + (Number(o.total_amount) || 0), 0);
 
       document.getElementById("kpiDailyOrders").textContent = String(valid.length);
       document.getElementById("kpiDailyDeliverySplit").textContent = `${deliveryCount} Kurye • ${takeawayCount} Gel-Al`;
@@ -3144,7 +3342,9 @@
       document.getElementById("kpiDailyAvgOrder").textContent = valid.length > 0
         ? `Ort. ${formatTry(netRevenue / valid.length)}`
         : "İptaller hariç";
-      document.getElementById("kpiDailyPaymentSplit").textContent = `💳 ${formatTry(cardSum)} / 💵 ${formatTry(cashSum)}`;
+      document.getElementById("kpiDailyPaymentSplit").textContent = otherSum > 0
+        ? `💳 ${formatTry(cardSum)} / 💵 ${formatTry(cashSum)} / 🎫 ${formatTry(otherSum)}`
+        : `💳 ${formatTry(cardSum)} / 💵 ${formatTry(cashSum)}`;
       document.getElementById("kpiDailyCancelled").textContent = String(cancelled.length);
       document.getElementById("kpiDailyDiscountSum").textContent = totalDiscount > 0
         ? `Online indirim: -${formatTry(totalDiscount)}`
@@ -3161,7 +3361,7 @@
         const timeText = formatIstanbulTime(o.created_at);
         const typeLabel = o.delivery_type === "takeaway" ? "🏃 Gel-Al" : "🛵 Kurye";
         const addr = escapeReportHtml(o.delivery_address || "Gel-Al Siparişi");
-        const payLabel = PAYMENT_TR[o.payment_method] || o.payment_method || "—";
+        const payLabel = getAdminPaymentLabel(o.payment_method);
         const stKey = STATUS_TR[o.status] ? o.status : "new";
         const stText = STATUS_TR[stKey];
         const discText = Number(o.discount_amount) > 0
@@ -3236,7 +3436,7 @@
           <div style="background:var(--bg); border:1px solid var(--sand-200); border-radius:10px; padding:12px 14px; margin-bottom:12px; font-size:0.84rem; line-height:1.5;">
             <div><strong>Müşteri:</strong> ${escapeReportHtml(order.customer_name || "—")} • ${escapeReportHtml(order.customer_phone || "—")}</div>
             <div><strong>Teslimat:</strong> ${order.delivery_type === "takeaway" ? "Gel-Al" : "Kurye"} — ${escapeReportHtml(order.delivery_address || "—")}</div>
-            <div><strong>Ödeme:</strong> ${escapeReportHtml(PAYMENT_TR[order.payment_method] || order.payment_method || "—")}</div>
+            <div><strong>Ödeme:</strong> ${escapeReportHtml(getAdminPaymentLabel(order.payment_method))}</div>
             ${order.order_notes ? `<div><strong>Sipariş Notu:</strong> ${escapeReportHtml(order.order_notes)}</div>` : ""}
           </div>
           <div style="margin-bottom:12px;">
@@ -3401,7 +3601,7 @@
         o.customer_phone || "",
         o.delivery_type === "takeaway" ? "Gel-Al" : "Kurye",
         o.delivery_address || "",
-        PAYMENT_TR[o.payment_method] || o.payment_method || "",
+        getAdminPaymentLabel(o.payment_method),
         Number(o.discount_amount) || 0,
         Number(o.total_amount) || 0,
         STATUS_TR[o.status] || o.status || ""

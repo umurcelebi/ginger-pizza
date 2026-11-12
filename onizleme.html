@@ -3022,12 +3022,12 @@
 
           <div class="form-group-modal">
             <label class="form-label-modal">Ödeme Yöntemi</label>
-            <div class="payment-options-grid">
-              <label class="payment-option-card active" id="cardPayCard">
+            <div class="payment-options-grid" id="checkoutPaymentOptionsGrid">
+              <label class="payment-option-card active" data-pay-id="door_card">
                 <input type="radio" name="paymentOption" value="door_card" checked style="display:none;" onchange="setPaymentMethod('door_card')">
                 <span>💳 Kapıda Kredi Kartı</span>
               </label>
-              <label class="payment-option-card" id="cardPayCash">
+              <label class="payment-option-card" data-pay-id="door_cash">
                 <input type="radio" name="paymentOption" value="door_cash" style="display:none;" onchange="setPaymentMethod('door_cash')">
                 <span>💵 Kapıda Nakit</span>
               </label>
@@ -3171,6 +3171,7 @@
       const settings = await StoreStatus.getSettings();
       currentStoreStatus = StoreStatus.evaluate(settings);
       renderStoreStatusUI();
+      renderCheckoutPaymentMethods();
       syncCartBadges();
       renderCartDrawer();
       if (prevOpen !== currentStoreStatus.isOpen && menuData.length > 0) {
@@ -3631,6 +3632,7 @@
       }
 
       closeCartDrawer();
+      renderCheckoutPaymentMethods();
 
       const modal = document.getElementById("checkoutModalBackdrop");
       const summaryTotal = document.getElementById("checkoutSummaryTotal");
@@ -3681,17 +3683,48 @@
       }
     };
 
+    window.renderCheckoutPaymentMethods = function() {
+      const grid = document.getElementById("checkoutPaymentOptionsGrid");
+      if (!grid) return;
+
+      const enabledList = window.StoreStatus
+        ? StoreStatus.getEnabledPaymentMethods(currentStoreStatus.settings)
+        : [
+            { id: "door_card", label: "Kapıda Kredi Kartı", icon: "💳", enabled: true },
+            { id: "door_cash", label: "Kapıda Nakit", icon: "💵", enabled: true }
+          ];
+
+      if (enabledList.length === 0) {
+        currentPaymentMethod = "";
+        grid.innerHTML = `<div style="grid-column: 1 / -1; color: #b4232c; font-size: 0.85rem; font-weight: 700; padding: 10px 12px; background: #fdf0f1; border-radius: 8px;">Şu anda aktif ödeme yöntemi bulunmuyor.</div>`;
+        return;
+      }
+
+      if (!enabledList.some(m => m.id === currentPaymentMethod)) {
+        currentPaymentMethod = enabledList[0].id;
+      }
+
+      grid.innerHTML = enabledList.map(m => {
+        const isActive = m.id === currentPaymentMethod;
+        const safeId = escapeHtml(m.id);
+        const safeLabel = escapeHtml(`${m.icon || "💳"} ${m.label}`.trim());
+        return `
+          <label class="payment-option-card ${isActive ? 'active' : ''}" data-pay-id="${safeId}">
+            <input type="radio" name="paymentOption" value="${safeId}" ${isActive ? 'checked' : ''} style="display:none;" onchange="setPaymentMethod('${safeId}')">
+            <span>${safeLabel}</span>
+          </label>
+        `;
+      }).join("");
+    };
+
     window.setPaymentMethod = function(method) {
       currentPaymentMethod = method;
-      const cardPayCard = document.getElementById("cardPayCard");
-      const cardPayCash = document.getElementById("cardPayCash");
-      if (method === "door_card") {
-        if (cardPayCard) cardPayCard.classList.add("active");
-        if (cardPayCash) cardPayCash.classList.remove("active");
-      } else {
-        if (cardPayCard) cardPayCard.classList.remove("active");
-        if (cardPayCash) cardPayCash.classList.add("active");
-      }
+      document.querySelectorAll("#checkoutPaymentOptionsGrid .payment-option-card").forEach(card => {
+        const isMatch = card.getAttribute("data-pay-id") === method;
+        card.classList.toggle("active", isMatch);
+        const inp = card.querySelector('input[type="radio"]');
+        if (inp) inp.checked = isMatch;
+      });
     };
 
     window.handleCheckoutSubmit = async function(event) {
@@ -3710,6 +3743,11 @@
 
       if (currentDeliveryType === "delivery" && !address) {
         alert("Lütfen teslimat adresinizi girin.");
+        return;
+      }
+
+      if (!currentPaymentMethod) {
+        alert("Lütfen bir ödeme yöntemi seçin.");
         return;
       }
 
@@ -3868,7 +3906,9 @@
       const progressPercent = cfg.stepIndex <= 1 ? 0 : (cfg.stepIndex === 2 ? 33.33 : (cfg.stepIndex === 3 ? 66.66 : 100));
 
       const items = order.items || [];
-      const paymentLabel = order.payment_method === "door_cash" ? "Kapıda Nakit" : "Kapıda Kredi Kartı";
+      const paymentLabel = window.StoreStatus
+        ? StoreStatus.getPaymentMethodLabel(order.payment_method, currentStoreStatus.settings)
+        : (order.payment_method === "door_cash" ? "Kapıda Nakit" : "Kapıda Kredi Kartı");
       const deliveryLabel = isTakeaway ? "Restorandan Gel-Al" : "Adrese Paket Servis";
 
       body.innerHTML = `
