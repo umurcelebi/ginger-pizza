@@ -34,13 +34,13 @@ const STORE_WEEK_ORDER = ["1", "2", "3", "4", "5", "6", "0"];
 
 function createDefaultWeeklyHours() {
   return {
-    "1": { enabled: true, open: "11:30", close: "23:00" },
-    "2": { enabled: true, open: "11:30", close: "23:00" },
-    "3": { enabled: true, open: "11:30", close: "23:00" },
-    "4": { enabled: true, open: "11:30", close: "23:00" },
-    "5": { enabled: true, open: "11:30", close: "23:00" },
-    "6": { enabled: true, open: "11:30", close: "23:00" },
-    "0": { enabled: true, open: "11:30", close: "23:00" }
+    "1": { enabled: true, open: "11:30", close: "23:45" },
+    "2": { enabled: true, open: "11:30", close: "02:45" },
+    "3": { enabled: true, open: "11:30", close: "02:45" },
+    "4": { enabled: true, open: "11:30", close: "02:45" },
+    "5": { enabled: true, open: "11:30", close: "02:45" },
+    "6": { enabled: true, open: "11:30", close: "02:45" },
+    "0": { enabled: true, open: "11:30", close: "02:45" }
   };
 }
 
