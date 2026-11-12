@@ -413,7 +413,7 @@
   }
 
   window.applyDynamicBranding = async function () {
-    const slug = window.getActiveRestaurantSlug();
+    let slug = window.getActiveRestaurantSlug();
     try {
       // Önbellek varsa ağ yanıtı beklemeden anında uygula (FOUC önleme)
       if (slug && slug !== "ginger-pizza") {
@@ -430,7 +430,8 @@
         } catch (e) {}
       }
       const info = await window.ensureRestaurantConfigReady();
-      renderBrandingFromInfo(info, window.getActiveRestaurantSlug());
+      const finalSlug = (info && info.slug) || window.getActiveRestaurantSlug();
+      renderBrandingFromInfo(info, finalSlug);
     } finally {
       document.documentElement.style.visibility = "";
     }
