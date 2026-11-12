@@ -132,15 +132,16 @@
       }
       if (info) {
         window.__ACTIVE_RESTAURANT_INFO__ = info;
+        try {
+          if (info.slug) localStorage.setItem("xubo_rest_info_" + info.slug, JSON.stringify(info));
+        } catch (e) {}
       }
       return info;
     })();
     return readyPromise;
   };
 
-  window.applyDynamicBranding = async function () {
-    const info = await window.ensureRestaurantConfigReady();
-    const slug = window.getActiveRestaurantSlug();
+  function renderBrandingFromInfo(info, slug) {
     if (!info || slug === "ginger-pizza") return;
 
     if (info.primary_color) {
@@ -369,6 +370,30 @@
         banner.innerHTML = `<h2 style="font-size:1.5rem;margin-bottom:8px;">${info.name || "Bu Mağaza"}</h2><p style="color:#cbd5e1;max-width:420px;">Bu restoran şu anda geçici olarak hizmet dışıdır.</p>`;
         document.body.appendChild(banner);
       }
+    }
+  }
+
+  window.applyDynamicBranding = async function () {
+    const slug = window.getActiveRestaurantSlug();
+    try {
+      // Önbellek varsa ağ yanıtı beklemeden anında uygula (FOUC önleme)
+      if (slug && slug !== "ginger-pizza") {
+        try {
+          const cachedRaw = localStorage.getItem("xubo_rest_info_" + slug);
+          if (cachedRaw) {
+            const cachedInfo = JSON.parse(cachedRaw);
+            if (cachedInfo && cachedInfo.slug === slug) {
+              window.__ACTIVE_RESTAURANT_INFO__ = cachedInfo;
+              renderBrandingFromInfo(cachedInfo, slug);
+              document.documentElement.style.visibility = "";
+            }
+          }
+        } catch (e) {}
+      }
+      const info = await window.ensureRestaurantConfigReady();
+      renderBrandingFromInfo(info, window.getActiveRestaurantSlug());
+    } finally {
+      document.documentElement.style.visibility = "";
     }
   };
 
