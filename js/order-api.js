@@ -885,6 +885,144 @@ const OrderAPI = {
     return { success: true, synced };
   },
 
+  // Geçmiş Satışları (Siparişleri) ve Müşteri Kayıtlarını Restoran Bazlı Sıfırla
+  async resetSalesAndCustomers() {
+    const slug = getRestaurantSlug();
+
+    const localOrders = getLocalOrders();
+    const removedOrderIds = new Set();
+    const remainingOrders = localOrders.filter(o => {
+      const belongsToSlug = (o?.restaurant_slug || "ginger-pizza") === slug;
+      if (belongsToSlug && o?.id != null) {
+        removedOrderIds.add(String(o.id));
+      }
+      return !belongsToSlug;
+    });
+    const localDeletedOrders = localOrders.length - remainingOrders.length;
+    saveLocalOrders(remainingOrders);
+
+    const localCustomers = getLocalCustomers();
+    const remainingCustomers = localCustomers.filter(c => (c?.restaurant_slug || "ginger-pizza") !== slug);
+    const localDeletedCustomers = localCustomers.length - remainingCustomers.length;
+    saveLocalCustomers(remainingCustomers);
+
+    const activeOrderId = localStorage.getItem(ACTIVE_ORDER_KEY);
+    if (activeOrderId && (removedOrderIds.has(String(activeOrderId)) || remainingOrders.length === 0)) {
+      localStorage.removeItem(ACTIVE_ORDER_KEY);
+    }
+
+    const sb = getSupabaseClient();
+    if (!sb) {
+      return {
+        success: true,
+        synced: false,
+        localCleared: true,
+        deletedOrders: localDeletedOrders,
+        deletedCustomers: localDeletedCustomers
+      };
+    }
+
+    try {
+      const rpcRes = await sb.rpc("reset_restaurant_history", { p_restaurant_slug: slug });
+      if (!rpcRes.error) {
+        localStorage.removeItem(ACTIVE_ORDER_KEY);
+        const rpcData = rpcRes.data && typeof rpcRes.data === "object" ? rpcRes.data : {};
+        return {
+          success: true,
+          synced: true,
+          localCleared: true,
+          deletedOrders: Number.isFinite(Number(rpcData.deleted_orders)) ? Number(rpcData.deleted_orders) : localDeletedOrders,
+          deletedCustomers: Number.isFinite(Number(rpcData.deleted_customers)) ? Number(rpcData.deleted_customers) : localDeletedCustomers
+        };
+      }
+
+      const rpcMsg = String(rpcRes.error.message || "");
+      const missingRpc = rpcRes.error.code === "42883"
+        || rpcRes.error.code === "PGRST202"
+        || /Could not find the function/i.test(rpcMsg);
+
+      if (!missingRpc) {
+        return {
+          success: false,
+          synced: false,
+          localCleared: true,
+          deletedOrders: localDeletedOrders,
+          deletedCustomers: localDeletedCustomers,
+          error: rpcMsg || "Supabase sıfırlama RPC hatası"
+        };
+      }
+
+      const custRes = await sb
+        .from("customers")
+        .delete()
+        .eq("restaurant_slug", slug)
+        .select("id");
+
+      let cloudDeletedCustomers = Array.isArray(custRes.data) ? custRes.data.length : 0;
+      if (custRes.error) {
+        const custMsg = String(custRes.error.message || "");
+        const missingCustTable = custRes.error.code === "42P01"
+          || custRes.error.code === "PGRST205"
+          || /does not exist|Could not find the table/i.test(custMsg);
+        if (!missingCustTable) {
+          return {
+            success: false,
+            synced: false,
+            localCleared: true,
+            deletedOrders: localDeletedOrders,
+            deletedCustomers: localDeletedCustomers,
+            error: custMsg || "Müşteri kayıtları buluttan silinemedi"
+          };
+        }
+        cloudDeletedCustomers = 0;
+      }
+
+      let ordRes = await sb
+        .from("orders")
+        .delete()
+        .eq("restaurant_slug", slug)
+        .select("id");
+
+      if (ordRes.error && (ordRes.error.code === "42703" || /restaurant_slug/i.test(ordRes.error.message || ""))) {
+        ordRes = await sb
+          .from("orders")
+          .delete()
+          .not("id", "is", null)
+          .select("id");
+      }
+
+      if (ordRes.error) {
+        return {
+          success: false,
+          synced: false,
+          localCleared: true,
+          deletedOrders: localDeletedOrders,
+          deletedCustomers: cloudDeletedCustomers || localDeletedCustomers,
+          error: String(ordRes.error.message || "Sipariş kayıtları buluttan silinemedi")
+        };
+      }
+
+      localStorage.removeItem(ACTIVE_ORDER_KEY);
+      const cloudDeletedOrders = Array.isArray(ordRes.data) ? ordRes.data.length : localDeletedOrders;
+      return {
+        success: true,
+        synced: true,
+        localCleared: true,
+        deletedOrders: cloudDeletedOrders,
+        deletedCustomers: cloudDeletedCustomers || localDeletedCustomers
+      };
+    } catch (err) {
+      return {
+        success: false,
+        synced: false,
+        localCleared: true,
+        deletedOrders: localDeletedOrders,
+        deletedCustomers: localDeletedCustomers,
+        error: err && err.message ? err.message : String(err)
+      };
+    }
+  },
+
   // Müşterinin Son Aktif Sipariş ID'sini Al
   getActiveOrderId() {
     return localStorage.getItem(ACTIVE_ORDER_KEY);

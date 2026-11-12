@@ -1008,10 +1008,34 @@
     .reports-subtabs {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 8px;
       border-bottom: 1px solid var(--sand-100);
       padding-bottom: 14px;
       margin-bottom: 16px;
+    }
+
+    .btn-reset-sales {
+      margin-left: auto;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-full);
+      border: 1px solid #f3b8bc;
+      background: #fdf0f1;
+      color: var(--danger);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-reset-sales:hover {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: var(--white);
     }
 
     .reports-subtab {
@@ -1304,6 +1328,11 @@
         font-size: 0.78rem;
         flex: 1 1 auto;
         text-align: center;
+      }
+      .btn-reset-sales {
+        width: 100%;
+        margin-left: 0;
+        justify-content: center;
       }
       .reports-filter-bar,
       .reports-filter-group {
@@ -1601,6 +1630,9 @@
             </button>
             <button type="button" class="reports-subtab" id="subtabBtnProducts" onclick="switchReportSubtab('products')">
               🍕 Ürün Raporu
+            </button>
+            <button type="button" class="btn-reset-sales" id="btnResetSalesAndCustomers" onclick="openResetSalesConfirmModal()">
+              🗑️ Satışları &amp; Müşterileri Sıfırla
             </button>
           </div>
 
@@ -2000,6 +2032,52 @@
   </div>
 
   <!-- ========================================================================
+       6B. MODAL: SATIŞLARI & MÜŞTERİLERİ SIFIRLA (2 ADIMLI ONAY + ŞİFRE)
+       ======================================================================== -->
+  <div id="resetSalesConfirmModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 470px;">
+      <h2 class="modal-title" style="color: var(--danger); margin-bottom: 6px;">🗑️ Geçmiş Satışları &amp; Müşterileri Sıfırla</h2>
+      <p style="font-size: 0.86rem; color: var(--ink-500); margin-bottom: 16px;">
+        Bu restorana ait tüm geçmiş siparişler, sipariş kalemleri ve müşteri kayıtları (hem bulut veritabanından hem yerel önbellekten) kalıcı olarak silinecektir. Menü ve dükkan ayarları etkilenmez.
+      </p>
+
+      <!-- Adım 1 / 2 -->
+      <div id="resetSalesStep1View">
+        <div style="background: #fdf0f1; border: 1px solid #f3b8bc; color: #8f1d24; border-radius: 10px; padding: 12px 14px; font-size: 0.84rem; font-weight: 600; line-height: 1.45;">
+          Adım 1 / 2: Tüm geçmiş satış ve müşteri verilerini sıfırlamak istediğinize emin misiniz? Bu işlem geri alınamaz!
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-header" onclick="closeResetSalesConfirmModal()">İptal</button>
+          <button type="button" class="btn-header" id="btnResetSalesStep1Confirm" style="background: var(--danger); border-color: var(--danger); color: var(--white);">
+            Onayla ve Devam Et (1/2) →
+          </button>
+        </div>
+      </div>
+
+      <!-- Adım 2 / 2 (İkinci Onay + Süper Admin Şifresi) -->
+      <form id="resetSalesStep2Form" style="display: none;">
+        <div style="background: #fff4e5; border: 1px solid #f4c88c; color: #8a4308; border-radius: 10px; padding: 12px 14px; font-size: 0.84rem; font-weight: 600; margin-bottom: 14px; line-height: 1.45;">
+          Adım 2 / 2 (Son Onay): Kalıcı sıfırlamayı başlatmak için Süper Admin şifresini girip onaylayın.
+        </div>
+
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label class="form-label" for="resetSalesAdminPassword">Süper Admin Şifresi *</label>
+          <input type="password" id="resetSalesAdminPassword" class="form-input" placeholder="Admin şifrenizi girin" autocomplete="current-password" required>
+        </div>
+
+        <div id="resetSalesPasswordError" style="display: none; color: var(--danger); font-size: 0.82rem; font-weight: 700; margin-bottom: 10px;"></div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-header" onclick="closeResetSalesConfirmModal()">Vazgeç</button>
+          <button type="submit" class="btn-header" id="btnResetSalesStep2Confirm" style="background: var(--danger); border-color: var(--danger); color: var(--white);">
+            ⚠️ Kalıcı Olarak Sıfırla (2/2)
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
        7. MODAL: RAPOR SİPARİŞ DETAYI
        ======================================================================== -->
   <div id="reportOrderDetailModal" class="modal-backdrop">
@@ -2019,10 +2097,10 @@
   <div id="toast" class="toast-msg">Değişiklikler kaydedildi</div>
 
   <!-- Menu API, Dükkan Durumu & Sipariş/Rapor API -->
-  <script src="js/config.js?v=20261112b"></script>
-  <script src="js/menu-api.js?v=20261112b"></script>
-  <script src="js/store-status.js?v=20261112b"></script>
-  <script src="js/order-api.js?v=20261112b"></script>
+  <script src="js/config.js?v=20261112c"></script>
+  <script src="js/menu-api.js?v=20261112c"></script>
+  <script src="js/store-status.js?v=20261112c"></script>
+  <script src="js/order-api.js?v=20261112c"></script>
 
   <script>
     // ========================================================================
@@ -2207,10 +2285,12 @@
         // Veritabanı ve Sıfırlama Kısıtlaması (Admin dışındakilere tamamen gizli)
         const btnUsers = document.getElementById("btnOpenUsersModal");
         const tabReports = document.getElementById("tabBtnReports");
+        const btnResetSales = document.getElementById("btnResetSalesAndCustomers");
         const canViewReports = user.role !== "staff";
         if (btnUsers) btnUsers.style.display = user.canEditDb ? "inline-flex" : "none";
         if (btnDb) btnDb.style.display = user.canEditDb ? "inline-flex" : "none";
         if (btnReset) btnReset.style.display = user.canReset ? "inline-flex" : "none";
+        if (btnResetSales) btnResetSales.style.display = user.canReset ? "inline-flex" : "none";
         if (dbBadge) dbBadge.style.display = user.canEditDb ? "inline-flex" : "none";
         if (tabReports) tabReports.style.display = canViewReports ? "inline-flex" : "none";
         if (!canViewReports && typeof window.switchAdminMainTab === "function") {
@@ -3184,6 +3264,116 @@
       closeResetConfirmModal();
       showToast("Menü varsayılanlarına sıfırlandı.");
       loadDashboard();
+    });
+
+    // Geçmiş Satışlar & Müşteriler Sıfırlama (2 Adımlı Onay + Süper Admin Şifre Doğrulaması)
+    window.closeResetSalesConfirmModal = function() {
+      const modal = document.getElementById("resetSalesConfirmModal");
+      const passInput = document.getElementById("resetSalesAdminPassword");
+      const errBox = document.getElementById("resetSalesPasswordError");
+      const step2Btn = document.getElementById("btnResetSalesStep2Confirm");
+      if (modal) modal.classList.remove("open");
+      if (passInput) passInput.value = "";
+      if (errBox) {
+        errBox.style.display = "none";
+        errBox.textContent = "";
+      }
+      if (step2Btn) {
+        step2Btn.disabled = false;
+        step2Btn.textContent = "⚠️ Kalıcı Olarak Sıfırla (2/2)";
+      }
+    };
+
+    window.openResetSalesConfirmModal = function() {
+      const user = getCurrentUser();
+      if (!user || !user.canReset) {
+        alert("Yetkisiz Erişim: Geçmiş satışları ve müşterileri yalnızca Süper Admin sıfırlayabilir.");
+        return;
+      }
+      document.getElementById("resetSalesStep1View").style.display = "block";
+      document.getElementById("resetSalesStep2Form").style.display = "none";
+      document.getElementById("resetSalesAdminPassword").value = "";
+      const errBox = document.getElementById("resetSalesPasswordError");
+      errBox.style.display = "none";
+      errBox.textContent = "";
+      document.getElementById("resetSalesConfirmModal").classList.add("open");
+    };
+
+    document.getElementById("btnResetSalesStep1Confirm").addEventListener("click", () => {
+      document.getElementById("resetSalesStep1View").style.display = "none";
+      document.getElementById("resetSalesStep2Form").style.display = "block";
+      const errBox = document.getElementById("resetSalesPasswordError");
+      errBox.style.display = "none";
+      errBox.textContent = "";
+      document.getElementById("resetSalesAdminPassword").focus();
+    });
+
+    document.getElementById("resetSalesStep2Form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = getCurrentUser();
+      if (!user || !user.canReset) {
+        closeResetSalesConfirmModal();
+        alert("Yetkisiz Erişim!");
+        return;
+      }
+
+      const entered = document.getElementById("resetSalesAdminPassword").value;
+      const errBox = document.getElementById("resetSalesPasswordError");
+      const adminAccount = getStoredUsers().find(u => u.role === "admin") || DEFAULT_USERS[0];
+
+      if (!entered || entered !== adminAccount.password) {
+        errBox.textContent = "Hatalı Süper Admin şifresi! Sıfırlama işlemi iptal edildi.";
+        errBox.style.display = "block";
+        document.getElementById("resetSalesAdminPassword").select();
+        return;
+      }
+
+      if (!window.OrderAPI || typeof OrderAPI.resetSalesAndCustomers !== "function") {
+        errBox.textContent = "Sıfırlama API'si yüklenemedi. Lütfen sayfayı yenileyin.";
+        errBox.style.display = "block";
+        return;
+      }
+
+      const submitBtn = document.getElementById("btnResetSalesStep2Confirm");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "⏳ Sıfırlanıyor...";
+
+      try {
+        const result = await OrderAPI.resetSalesAndCustomers();
+        cachedDailyOrders = [];
+        cachedCustomersList = [];
+        cachedProductRows = [];
+
+        if (!result || !result.success) {
+          closeResetSalesConfirmModal();
+          await Promise.all([
+            loadDailyOrdersReport(),
+            loadCustomersReport(),
+            loadProductRangeReport()
+          ]);
+          alert(
+            "Yerel veriler temizlendi ancak bulut veritabanı (Supabase) sıfırlanamadı:\n"
+            + (result && result.error ? result.error : "Bilinmeyen hata")
+            + "\n\nLütfen Supabase SQL Editor üzerinden güncel reports_and_customers_schema.sql dosyasını çalıştırın."
+          );
+          return;
+        }
+
+        closeResetSalesConfirmModal();
+        await Promise.all([
+          loadDailyOrdersReport(),
+          loadCustomersReport(),
+          loadProductRangeReport()
+        ]);
+        showToast(
+          result.synced
+            ? "Tüm geçmiş satışlar ve müşteri kayıtları sıfırlandı."
+            : "Yerel geçmiş satışlar ve müşteri kayıtları sıfırlandı."
+        );
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "⚠️ Kalıcı Olarak Sıfırla (2/2)";
+      }
     });
 
     // Kullanıcı Yönetim Modalı Açma/Kapatma (Sadece Süper Admin)

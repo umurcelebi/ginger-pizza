@@ -314,3 +314,82 @@ SET
   total_spent = EXCLUDED.total_spent,
   last_order_at = EXCLUDED.last_order_at,
   updated_at = NOW();
+
+-- ============================================================================
+-- 8. SATIŞ & MÜŞTERİ SIFIRLAMA POLİTİKALARI VE RPC (RESTORAN BAZLI)
+-- ============================================================================
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'orders' AND policyname = 'orders_anon_delete'
+  ) THEN
+    CREATE POLICY "orders_anon_delete"
+      ON public.orders
+      FOR DELETE
+      TO anon, authenticated
+      USING (true);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'order_items' AND policyname = 'order_items_anon_delete'
+  ) THEN
+    CREATE POLICY "order_items_anon_delete"
+      ON public.order_items
+      FOR DELETE
+      TO anon, authenticated
+      USING (true);
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public' AND tablename = 'customers' AND policyname = 'customers_anon_delete'
+  ) THEN
+    CREATE POLICY "customers_anon_delete"
+      ON public.customers
+      FOR DELETE
+      TO anon, authenticated
+      USING (true);
+  END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.reset_restaurant_history(
+  p_restaurant_slug TEXT DEFAULT 'ginger-pizza'
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_slug TEXT := COALESCE(NULLIF(TRIM(p_restaurant_slug), ''), 'ginger-pizza');
+  v_deleted_order_items INTEGER := 0;
+  v_deleted_orders INTEGER := 0;
+  v_deleted_customers INTEGER := 0;
+BEGIN
+  DELETE FROM public.order_items oi
+  USING public.orders o
+  WHERE oi.order_id = o.id
+    AND COALESCE(NULLIF(TRIM(o.restaurant_slug), ''), 'ginger-pizza') = v_slug;
+  GET DIAGNOSTICS v_deleted_order_items = ROW_COUNT;
+
+  DELETE FROM public.orders o
+  WHERE COALESCE(NULLIF(TRIM(o.restaurant_slug), ''), 'ginger-pizza') = v_slug;
+  GET DIAGNOSTICS v_deleted_orders = ROW_COUNT;
+
+  DELETE FROM public.customers c
+  WHERE COALESCE(NULLIF(TRIM(c.restaurant_slug), ''), 'ginger-pizza') = v_slug;
+  GET DIAGNOSTICS v_deleted_customers = ROW_COUNT;
+
+  RETURN jsonb_build_object(
+    'restaurant_slug', v_slug,
+    'deleted_order_items', v_deleted_order_items,
+    'deleted_orders', v_deleted_orders,
+    'deleted_customers', v_deleted_customers
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.reset_restaurant_history(TEXT) TO anon, authenticated;
+
