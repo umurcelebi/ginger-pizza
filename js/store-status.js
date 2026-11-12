@@ -17,6 +17,7 @@ function getStoreSettingsStorageKey() {
     : `ginger_pizza_store_settings_v1_${slug}`;
 }
 
+const STORE_SETTINGS_CONFIG_KEY = "ginger_pizza_supabase_config_v1";
 const STORE_SETTINGS_ROW_ID = getStoreSettingsRowId();
 
 const STORE_DAY_NAMES = {
