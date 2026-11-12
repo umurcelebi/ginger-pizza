@@ -801,6 +801,9 @@ const MenuAPI = {
 
   // Tüm menüyü getir (Aktif restoran filtreli)
   async getMenu() {
+    if (typeof window !== "undefined" && typeof window.ensureRestaurantConfigReady === "function") {
+      await window.ensureRestaurantConfigReady();
+    }
     const sb = getSupabaseClient();
     const activeSlug = getMenuRestaurantSlug();
 

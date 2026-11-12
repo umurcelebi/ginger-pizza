@@ -258,6 +258,60 @@ GRANT EXECUTE ON FUNCTION public.set_restaurant_status(TEXT, BOOLEAN) TO anon, a
 GRANT EXECUTE ON FUNCTION public.delete_restaurant_permanently(TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_platform_restaurants_summary() TO anon, authenticated;
 
+-- 6. Restoran Bilgilerini & Özel Domaini Güncelle
+CREATE OR REPLACE FUNCTION public.update_restaurant_details(
+  p_slug TEXT,
+  p_name TEXT,
+  p_phone TEXT DEFAULT '',
+  p_address TEXT DEFAULT '',
+  p_primary_color TEXT DEFAULT '#d86a1a',
+  p_custom_domain TEXT DEFAULT NULL
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_slug TEXT := TRIM(COALESCE(p_slug, ''));
+  v_clean_name TEXT := TRIM(COALESCE(p_name, ''));
+  v_clean_domain TEXT := LOWER(REGEXP_REPLACE(TRIM(COALESCE(p_custom_domain, '')), '^https?://', '', 'i'));
+  v_updated INT := 0;
+BEGIN
+  IF v_slug = '' THEN
+    RAISE EXCEPTION 'Restoran slug boş olamaz.';
+  END IF;
+  IF v_clean_name = '' THEN
+    RAISE EXCEPTION 'Restoran adı boş olamaz.';
+  END IF;
+
+  v_clean_domain := SPLIT_PART(v_clean_domain, '/', 1);
+
+  UPDATE public.restaurants
+  SET name = v_clean_name,
+      phone = TRIM(COALESCE(p_phone, '')),
+      address = TRIM(COALESCE(p_address, '')),
+      primary_color = COALESCE(NULLIF(TRIM(p_primary_color), ''), '#d86a1a'),
+      custom_domain = NULLIF(v_clean_domain, ''),
+      updated_at = NOW()
+  WHERE slug = v_slug;
+  GET DIAGNOSTICS v_updated = ROW_COUNT;
+
+  IF v_updated = 0 THEN
+    RAISE EXCEPTION 'Restoran bulunamadı: %', v_slug;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'success', TRUE,
+    'slug', v_slug,
+    'name', v_clean_name,
+    'custom_domain', NULLIF(v_clean_domain, '')
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.update_restaurant_details(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT) TO anon, authenticated;
+
 -- Master Panel için restaurants tablosuna anon okuma/güncelleme/ekleme politikaları (güvenlik için kontrol)
 DO $$
 BEGIN

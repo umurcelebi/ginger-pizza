@@ -423,13 +423,17 @@ const StoreStatus = {
   },
 
   async getSettings() {
+    if (typeof window !== "undefined" && typeof window.ensureRestaurantConfigReady === "function") {
+      await window.ensureRestaurantConfigReady();
+    }
+    const rowId = getStoreSettingsRowId();
     const sb = getStoreSupabaseClient();
     if (sb) {
       try {
         const { data, error } = await sb
           .from("store_settings")
           .select("*")
-          .eq("id", STORE_SETTINGS_ROW_ID)
+          .eq("id", rowId)
           .maybeSingle();
 
         if (!error && data) {
@@ -446,12 +450,13 @@ const StoreStatus = {
 
   async saveSettings(newSettings) {
     const normalized = saveLocalStoreSettings(newSettings);
+    const rowId = getStoreSettingsRowId();
     const sb = getStoreSupabaseClient();
 
     if (sb) {
       try {
         const payload = {
-          id: STORE_SETTINGS_ROW_ID,
+          id: rowId,
           order_mode: normalized.order_mode,
           busy_until: normalized.busy_until,
           status_message: normalized.status_message,
