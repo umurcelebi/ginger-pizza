@@ -47,6 +47,7 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overflow-x: hidden; }
     body {
       background-color: var(--bg);
       color: var(--ink);
@@ -54,6 +55,7 @@
       font-size: 14px;
       line-height: 1.45;
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
@@ -698,7 +700,49 @@
     }
 
     @media (max-width: 700px) {
-      .kanban-board { grid-template-columns: 1fr; }
+      .kanban-board {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 12px;
+      }
+      .col-body {
+        max-height: none;
+        overflow-y: visible;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .kds-header {
+        padding: 10px 12px;
+        gap: 8px;
+      }
+      .brand-title {
+        font-size: 1.12rem;
+      }
+      .kds-actions {
+        width: 100%;
+        gap: 6px;
+      }
+      .btn-kds {
+        padding: 7px 10px;
+        font-size: 0.76rem;
+      }
+      .kds-mode-grid,
+      .archive-modal-actions,
+      .btn-group-new {
+        grid-template-columns: 1fr;
+      }
+      .btn-kds-mode.span-2 {
+        grid-column: span 1;
+      }
+      .archive-modal-backdrop {
+        padding: 10px;
+      }
+      .archive-modal-box {
+        padding: 18px 15px;
+        max-height: calc(100dvh - 20px);
+        overflow-y: auto;
+      }
     }
   </style>
 </head>
@@ -861,6 +905,7 @@
 
   <script>
     let allOrders = [];
+    let kdsStoreSettings = null;
     let soundEnabled = true;
     let knownNewOrderIds = new Set();
 
@@ -1243,8 +1288,6 @@
       });
 
       // Mutfak Hızlı Dükkan Durumu & Yoğun Mod Kontrolü
-      let kdsStoreSettings = null;
-
       function renderKdsStoreStatus() {
         if (!window.StoreStatus) return;
         const st = StoreStatus.evaluate(kdsStoreSettings);

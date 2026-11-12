@@ -48,6 +48,7 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overflow-x: hidden; }
     body {
       background-color: var(--bg);
       color: var(--ink-900);
@@ -55,8 +56,10 @@
       font-size: 15px;
       line-height: 1.5;
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
     }
 
     /* Giriş Ekranı */
@@ -1197,6 +1200,139 @@
       padding-top: 10px;
       border-top: 1px dashed var(--sand-200);
     }
+
+    .table-container {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 768px) {
+      .admin-header-inner {
+        padding: 10px 14px;
+        min-height: auto;
+      }
+      .admin-brand-title {
+        font-size: 1.15rem;
+      }
+      .admin-nav-actions {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 6px;
+      }
+      #currentUserInfo {
+        width: 100%;
+        margin-right: 0 !important;
+        font-size: 0.78rem !important;
+      }
+      .btn-header {
+        padding: 7px 11px;
+        font-size: 0.78rem;
+      }
+      .admin-main {
+        padding: 16px 12px 48px;
+      }
+      .store-control-card,
+      .reports-card {
+        padding: 14px 12px;
+      }
+      .toolbar-card {
+        padding: 12px;
+        gap: 10px;
+      }
+      .table-container table {
+        min-width: 660px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .admin-section-tabs {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+      .admin-section-tab {
+        text-align: center;
+        padding: 8px 8px;
+        font-size: 0.8rem;
+      }
+      .stats-row {
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+      .stat-card {
+        padding: 12px 14px;
+      }
+      .stat-value {
+        font-size: 1.45rem;
+      }
+      .store-mode-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      .btn-mode {
+        justify-content: center;
+        padding: 9px 8px;
+        font-size: 0.78rem;
+        text-align: center;
+      }
+      .store-message-input,
+      .search-input-admin,
+      #reportCustomerSearch,
+      #newPaymentLabel {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: none !important;
+      }
+      .online-discount-box {
+        padding: 12px;
+      }
+      .discount-controls-group {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .payment-methods-list,
+      .store-hours-grid,
+      .report-kpis {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .reports-subtabs {
+        gap: 6px;
+      }
+      .reports-subtab {
+        padding: 7px 10px;
+        font-size: 0.78rem;
+        flex: 1 1 auto;
+        text-align: center;
+      }
+      .reports-filter-bar,
+      .reports-filter-group {
+        width: 100%;
+      }
+      .report-input {
+        flex: 1 1 120px;
+        min-width: 0;
+      }
+      .modal-backdrop {
+        padding: 10px;
+      }
+      .modal-box {
+        padding: 18px 15px;
+        max-height: calc(100dvh - 20px);
+        border-radius: 16px;
+      }
+      .pizza-price-grid,
+      .users-form-grid-top,
+      .users-form-grid-bot {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .store-mode-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1663,7 +1799,7 @@
         </div>
 
         <!-- Pizza Fiyat Alanları -->
-        <div id="pizzaPriceFields" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+        <div id="pizzaPriceFields" class="pizza-price-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
           <div class="form-group">
             <label class="form-label">Small (24-26cm) ₺</label>
             <input type="number" id="editPriceSmall" class="form-input" value="390">
@@ -1786,7 +1922,7 @@
           + Yeni Kullanıcı Tanımla
         </h3>
         <form id="newUserForm">
-          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 10px;">
+          <div class="users-form-grid-top" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 10px;">
             <div>
               <label class="form-label" style="font-size:0.78rem;">E-Posta Adresi</label>
               <input type="email" id="newEmail" class="form-input" placeholder="kasa2@gingerpizza.com" required>
@@ -1796,7 +1932,7 @@
               <input type="text" id="newPass" class="form-input" placeholder="Şifre belirleyin" required>
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: flex-end;">
+          <div class="users-form-grid-bot" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: flex-end;">
             <div>
               <label class="form-label" style="font-size:0.78rem;">Rol / Yetki Seviyesi</label>
               <select id="newRole" class="form-input">

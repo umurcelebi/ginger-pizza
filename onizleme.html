@@ -68,6 +68,7 @@
 
     html {
       scroll-behavior: smooth;
+      overflow-x: hidden;
     }
 
     body {
@@ -1650,6 +1651,9 @@
       top: 0;
       right: 0;
       bottom: 0;
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100dvh;
       width: 100%;
       max-width: 440px;
       background: #fff;
@@ -1864,6 +1868,9 @@
       border-radius: 20px;
       width: 100%;
       max-width: 520px;
+      max-height: calc(100dvh - 32px);
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
       animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1879,6 +1886,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-shrink: 0;
     }
     .modal-heading {
       font-family: var(--font-display);
@@ -1888,6 +1896,8 @@
     }
     .modal-content-inner {
       padding: 24px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     /* Delivery Type Tabs in Modal */
@@ -2206,13 +2216,112 @@
       }
     }
 
+    @media (max-width: 640px) {
+      .filter-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 12px;
+      }
+      .filter-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .filter-btn {
+        flex-shrink: 0;
+        white-space: nowrap;
+        padding: 8px 13px;
+        font-size: 0.82rem;
+      }
+      .menu-search-wrapper {
+        max-width: none;
+      }
+      .map-frame-wrapper,
+      .map-frame-wrapper iframe {
+        min-height: 280px;
+      }
+    }
+
+    @media (max-width: 540px) {
+      .container {
+        padding: 0 16px;
+      }
+      .header-inner {
+        height: 64px;
+        padding: 0 12px;
+        gap: 6px;
+      }
+      .brand-mark {
+        width: 42px;
+        height: 42px;
+      }
+      .brand-title {
+        font-size: 1.08rem;
+      }
+      .btn-header-track {
+        padding: 6px 9px;
+        font-size: 0.72rem;
+      }
+      .btn-header-cart {
+        padding: 7px 11px;
+        font-size: 0.78rem;
+        gap: 5px;
+      }
+      .web-order-hub-banner {
+        padding: 18px 16px !important;
+      }
+      .drawer-header,
+      .drawer-body,
+      .drawer-footer {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      .modal-backdrop {
+        padding: 10px;
+      }
+      .modal-dialog-box {
+        max-height: calc(100dvh - 20px);
+        border-radius: 16px;
+      }
+      .modal-top {
+        padding: 14px 16px;
+      }
+    }
+
     @media (max-width: 440px) {
       .delivery-type-selector,
       .payment-options-grid {
         grid-template-columns: 1fr;
       }
       .modal-content-inner {
-        padding: 18px;
+        padding: 16px;
+      }
+      .size-option-btn {
+        font-size: 0.72rem;
+        white-space: nowrap;
+        padding: 6px 2px;
+      }
+      .step-item {
+        width: auto;
+        flex: 1;
+        min-width: 0;
+      }
+      .step-label {
+        font-size: 0.65rem;
+      }
+      .tracking-stepper-track {
+        left: 20px;
+        right: 20px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .brand-subtitle {
+        display: none;
+      }
+      .pizza-card-bottom {
+        flex-wrap: wrap;
+        gap: 10px;
       }
     }
 
@@ -2672,7 +2781,7 @@
       </div>
 
       <!-- Doğrudan Web Siparişi Banner / Kartı -->
-      <div style="background: linear-gradient(135deg, #fff7f2, #ffe6d4); border: 2px solid var(--ginger-400); border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; box-shadow: 0 8px 24px rgba(216, 106, 26, 0.12);">
+      <div class="web-order-hub-banner" style="background: linear-gradient(135deg, #fff7f2, #ffe6d4); border: 2px solid var(--ginger-400); border-radius: var(--radius-lg); padding: 24px 28px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; box-shadow: 0 8px 24px rgba(216, 106, 26, 0.12);">
         <div style="max-width: 600px;">
           <div style="display: inline-flex; align-items: center; gap: 6px; background: var(--ginger-500); color: #fff; font-size: 0.76rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; margin-bottom: 8px;">
             En Hızlı & Doğrudan Fırından

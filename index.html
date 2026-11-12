@@ -51,8 +51,13 @@
       padding: 0;
     }
 
+    html, body {
+      overflow-x: hidden;
+    }
+
     body {
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       background:
@@ -373,7 +378,19 @@
       .top-bar {
         flex-direction: column;
         align-items: flex-start;
-        padding-top: 20px;
+        padding: 16px 16px 0;
+        gap: 10px;
+      }
+      .brand-mark {
+        width: 52px;
+        height: 52px;
+      }
+      .main-wrap {
+        padding: 20px 14px 28px;
+      }
+      .coming-card {
+        padding: 24px 18px;
+        border-radius: 20px;
       }
       .cta-row {
         flex-direction: column;
@@ -381,6 +398,9 @@
       .btn-primary,
       .btn-secondary {
         width: 100%;
+      }
+      .site-footer {
+        padding: 0 16px 22px;
       }
     }
   </style>
