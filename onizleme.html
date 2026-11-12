@@ -3082,10 +3082,10 @@
        Menu API & Dinamik Veri Yükleyici
        ======================================================================== -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js"></script>
-  <script src="js/menu-api.js"></script>
-  <script src="js/store-status.js"></script>
-  <script src="js/order-api.js"></script>
+  <script src="js/config.js?v=20261112"></script>
+  <script src="js/menu-api.js?v=20261112"></script>
+  <script src="js/store-status.js?v=20261112"></script>
+  <script src="js/order-api.js?v=20261112"></script>
   <script>
     let menuData = [];
     const cardSelectedSizes = {};
@@ -3707,7 +3707,7 @@
       grid.innerHTML = enabledList.map(m => {
         const isActive = m.id === currentPaymentMethod;
         const safeId = escapeHtml(m.id);
-        const safeLabel = escapeHtml(`${m.icon || "💳"} ${m.label}`.trim());
+        const safeLabel = escapeHtml(`${m.icon ? m.icon + " " : ""}${m.label}`.trim());
         return `
           <label class="payment-option-card ${isActive ? 'active' : ''}" data-pay-id="${safeId}">
             <input type="radio" name="paymentOption" value="${safeId}" ${isActive ? 'checked' : ''} style="display:none;" onchange="setPaymentMethod('${safeId}')">

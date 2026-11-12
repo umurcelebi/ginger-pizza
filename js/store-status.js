@@ -62,7 +62,7 @@ function normalizePaymentMethods(raw) {
     list.push({
       id,
       label,
-      icon: String(item.icon || "💳").trim() || "💳",
+      icon: typeof item.icon === "string" ? item.icon.trim() : "",
       enabled: item.enabled !== false,
       isDefault: Boolean(item.isDefault || id === "door_card" || id === "door_cash")
     });
@@ -285,10 +285,10 @@ const StoreStatus = {
     const id = String(methodId || "").trim();
     const list = this.getPaymentMethods(settings);
     const found = list.find(m => m.id === id);
-    if (found) return `${found.icon} ${found.label}`.trim();
+    if (found) return `${found.icon ? found.icon + " " : ""}${found.label}`.trim();
     if (id === "door_cash") return "💵 Kapıda Nakit";
     if (id === "door_card") return "💳 Kapıda Kredi Kartı";
-    return id ? `💳 ${id}` : "💳 Kapıda Kredi Kartı";
+    return id || "Kapıda Kredi Kartı";
   },
 
   evaluate(rawSettings, now = new Date()) {
