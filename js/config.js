@@ -221,7 +221,7 @@
       }
       const heroDesc = document.querySelector(".hero-desc");
       if (heroDesc) {
-        heroDesc.textContent = "Günlük taze dana kıyması, yüksek ısıda mühürlenmiş çıtır kenarlı smash köfteler ve özel soslar. Kadıköy'ün imza smash burger deneyimi.";
+        heroDesc.textContent = "Günlük taze dana kıyması, yüksek ısıda mühürlenmiş çıtır kenarlı smash köfteler ve özel soslar. Bahçelievler'in imza smash burger deneyimi.";
       }
       const heroBadges = document.querySelectorAll(".hero-badge-item");
       if (heroBadges.length >= 3) {
@@ -247,7 +247,7 @@
       const craftTitle = document.querySelector("#hikaye .section-title");
       if (craftTitle) craftTitle.textContent = "İyi smash burger aceleye gelmez.";
       const craftDesc = document.querySelector("#hikaye .section-desc");
-      if (craftDesc) craftDesc.textContent = "Kadıköy Zühtüpaşa'daki ızgaramızda her gün aynı tutkuyla hazırlanıyoruz. İyi bir smash burgerin sırrı; taze ette, doğru ısıda ve dengeli soslarda gizlidir.";
+      if (craftDesc) craftDesc.textContent = "Bahçelievler Deli Hüseyin Paşa Caddesi'ndeki mutfağımızda her gün aynı tutkuyla hazırlanıyoruz. İyi bir smash burgerin sırrı; taze ette, doğru ısıda ve dengeli soslarda gizlidir.";
       const craftCards = document.querySelectorAll("#hikaye .craft-card");
       if (craftCards.length >= 3) {
         craftCards[0].querySelector(".craft-title").textContent = "Gramajına Göre Smash Köfte";
@@ -287,20 +287,32 @@
       }
 
       const contactTitle = document.querySelector("#iletisim .section-title");
-      if (contactTitle) contactTitle.textContent = "Kadıköy'de Sıcak Bir Burger Molası";
+      if (contactTitle) contactTitle.textContent = "Bahçelievler'de Sıcak Bir Burger Molası";
       const contactDesc = document.querySelector("#iletisim .section-desc");
-      if (contactDesc) contactDesc.textContent = "Kadıköy Zühtüpaşa'da ızgaradan yeni çıkmış smash burgerlerimizle sizleri ağırlamaktan mutluluk duyuyoruz.";
+      if (contactDesc) contactDesc.textContent = "Bahçelievler'de ızgaradan yeni çıkmış smash burgerlerimizle sizleri ağırlamaktan mutluluk duyuyoruz.";
 
       const contactVals = document.querySelectorAll("#iletisim .contact-val");
-      if (contactVals[0] && info.address) contactVals[0].textContent = info.address;
+      const fullAddress = info.address || "Deli Hüseyin Paşa Caddesi 36/B Ejder Apartmanı, Bahçelievler / İstanbul";
+      if (contactVals[0]) contactVals[0].textContent = fullAddress;
       if (contactVals[2]) contactVals[2].innerHTML = "Haftanın her günü:<br>12:00 – 03:45 (Paket Servis &amp; Gel Al)";
 
+      const mapLink = document.querySelector('#iletisim a[href*="maps.google.com"]');
+      if (mapLink) {
+        mapLink.setAttribute("href", `https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`);
+      }
+      const mapIframe = document.querySelector(".map-frame-wrapper iframe");
+      if (mapIframe) {
+        mapIframe.setAttribute("title", `${info.name || "We Smash The Burger"} Konumu`);
+        mapIframe.setAttribute("src", `https://maps.google.com/maps?q=${encodeURIComponent(fullAddress)}&t=&z=16&ie=UTF8&iwloc=&output=embed`);
+      }
+
       const footerTagline = document.querySelector(".footer-tagline");
-      if (footerTagline) footerTagline.textContent = "Kadıköy'ün imza smash burger noktası. Taze dana eti, sıcak ızgara ve özel soslar.";
+      if (footerTagline) footerTagline.textContent = "Bahçelievler'in imza smash burger noktası. Taze dana eti, sıcak ızgara ve özel soslar.";
 
       const footerLinks = document.querySelectorAll(".footer-links li");
       footerLinks.forEach(li => {
-        if (li.textContent.includes("Rıdvanpaşa")) li.textContent = info.address || "Zühtüpaşa Mah. Şefik Bey Sk. No: 31 B";
+        if (li.textContent.includes("Rıdvanpaşa")) li.textContent = fullAddress;
+        if (li.textContent.includes("Kadıköy / İstanbul")) li.textContent = "Bahçelievler / İstanbul";
         if (li.textContent.includes("gingerpizza") && !info.instagram) li.style.display = "none";
       });
       if (!info.instagram) {
@@ -310,7 +322,7 @@
       }
       const footerBottomMeta = document.querySelector(".footer-bottom span");
       if (footerBottomMeta && footerBottomMeta.textContent.includes("Pizza")) {
-        footerBottomMeta.textContent = "Kadıköy, İstanbul · Smash Burger";
+        footerBottomMeta.textContent = "Bahçelievler, İstanbul · Smash Burger";
       }
 
       // Admin Paneli — Pizza yerine Burger / Gramaj metinleri

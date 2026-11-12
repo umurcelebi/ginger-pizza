@@ -23,7 +23,7 @@ BEGIN
   -- 1. Restoran adresi güncelleme
   UPDATE public.restaurants
   SET
-    address = 'Zühtüpaşa Mah. Şefik Bey Sk. No: 31 B, Kadıköy / İstanbul',
+    address = 'Deli Hüseyin Paşa Caddesi 36/B Ejder Apartmanı, Bahçelievler / İstanbul',
     updated_at = NOW()
   WHERE id = v_rest_id;
 
