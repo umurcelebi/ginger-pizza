@@ -394,7 +394,7 @@ const StoreStatus = {
         reason: "open",
         effectiveMode: "auto",
         title: "Siparişe Açık",
-        detail: `Bugün kapanış saati ${activeClose}. Sıcak pizzalarımız siparişe hazır.`,
+        detail: `Bugün kapanış saati ${activeClose}. ${getStoreSettingsRowId() === "ginger-pizza" ? "Sıcak pizzalarımız" : "Lezzetlerimiz"} siparişe hazır.`,
         nextOpenText: "",
         todaySchedule,
         activeCloseTime: activeClose,

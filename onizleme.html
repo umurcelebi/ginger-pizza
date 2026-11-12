@@ -3568,8 +3568,11 @@
       });
 
       closeItemCustomizerModal();
-      const sizeName = isPizza ? (sizeKey === "small" ? "Small" : (sizeKey === "medium" ? "Medium" : "XL")) : "";
-      showToast(`🍕 ${item.name} ${sizeName ? '(' + sizeName + ')' : ''} sepete eklendi!`);
+      const isGinger = typeof window.getActiveRestaurantSlug !== "function" || window.getActiveRestaurantSlug() === "ginger-pizza";
+      const sizeName = isPizza ? (isGinger
+        ? (sizeKey === "small" ? "Small" : (sizeKey === "medium" ? "Medium" : "XL"))
+        : (sizeKey === "small" ? "70 gr." : (sizeKey === "medium" ? "140 gr." : "210 gr."))) : "";
+      showToast(`${isGinger ? "🍕" : "🍔"} ${item.name} ${sizeName ? '(' + sizeName + ')' : ''} sepete eklendi!`);
       if (window.SoundAlert) SoundAlert.playBell();
     };
 
@@ -3595,8 +3598,11 @@
       const sizeKey = cardSelectedSizes[itemId] || "medium";
       Cart.addItem(item, sizeKey);
 
-      const sizeName = item.prices ? (sizeKey === "small" ? "Small" : (sizeKey === "medium" ? "Medium" : "XL")) : "";
-      showToast(`🍕 ${item.name} ${sizeName ? '(' + sizeName + ')' : ''} sepete eklendi!`);
+      const isGinger = typeof window.getActiveRestaurantSlug !== "function" || window.getActiveRestaurantSlug() === "ginger-pizza";
+      const sizeName = item.prices ? (isGinger
+        ? (sizeKey === "small" ? "Small" : (sizeKey === "medium" ? "Medium" : "XL"))
+        : (sizeKey === "small" ? "70 gr." : (sizeKey === "medium" ? "140 gr." : "210 gr."))) : "";
+      showToast(`${isGinger ? "🍕" : "🍔"} ${item.name} ${sizeName ? '(' + sizeName + ')' : ''} sepete eklendi!`);
       if (window.SoundAlert) SoundAlert.playBell();
     };
 
@@ -3630,11 +3636,12 @@
       const total = Cart.getTotal();
 
       if (items.length === 0) {
+        const isGinger = typeof window.getActiveRestaurantSlug !== "function" || window.getActiveRestaurantSlug() === "ginger-pizza";
         body.innerHTML = `
           <div class="cart-empty-state">
-            <div class="cart-empty-icon">🍕</div>
+            <div class="cart-empty-icon">${isGinger ? "🍕" : "🍔"}</div>
             <h3 style="font-family: var(--font-display); font-size: 1.2rem; color: var(--ink-900); margin-bottom: 6px;">Sepetiniz Henüz Boş</h3>
-            <p style="font-size: 0.88rem; margin-bottom: 20px;">Menümüzdeki taş fırın artisan lezzetlerden dilediğinizi ekleyin.</p>
+            <p style="font-size: 0.88rem; margin-bottom: 20px;">${isGinger ? "Menümüzdeki taş fırın artisan lezzetlerden dilediğinizi ekleyin." : "Menümüzdeki sıcak ızgara smash burger ve eşlikçilerden dilediğinizi ekleyin."}</p>
             <button type="button" class="btn-primary" onclick="closeCartDrawer(); window.location.hash='#menu';">
               Menüye Göz At
             </button>
@@ -3987,6 +3994,8 @@
       const status = order.status || "new";
       const isTakeaway = order.delivery_type === "takeaway";
 
+      const isGinger = typeof window.getActiveRestaurantSlug !== "function" || window.getActiveRestaurantSlug() === "ginger-pizza";
+
       // Durum Konfigürasyonu
       const statusConfigs = {
         new: {
@@ -3994,15 +4003,19 @@
           badgeBg: "rgba(230, 126, 34, 0.15)",
           badgeColor: "#d86a1a",
           title: "Siparişiniz Alındı!",
-          desc: "Mutfağımız siparişinizi inceleyip onaylıyor. Birazdan taş fırına verilecek.",
+          desc: isGinger
+            ? "Mutfağımız siparişinizi inceleyip onaylıyor. Birazdan taş fırına verilecek."
+            : "Mutfağımız siparişinizi inceleyip onaylıyor. Birazdan ızgarada hazırlanmaya başlanacak.",
           stepIndex: 1
         },
         preparing: {
-          badgeText: "🔥 Taş Fırında",
+          badgeText: isGinger ? "🔥 Taş Fırında" : "🔥 Izgarada Hazırlanıyor",
           badgeBg: "rgba(243, 156, 18, 0.18)",
           badgeColor: "#e67e22",
-          title: "Taş Fırında Pişiyor!",
-          desc: "48 saat dinlenmiş hamurunuz açıldı, taze malzemelerle fırına sürüldü.",
+          title: isGinger ? "Taş Fırında Pişiyor!" : "Siparişiniz Hazırlanıyor!",
+          desc: isGinger
+            ? "48 saat dinlenmiş hamurunuz açıldı, taze malzemelerle fırına sürüldü."
+            : "Taze smash köfteleriniz sıcak ızgarada özenle mühürleniyor ve paketleniyor.",
           stepIndex: 2
         },
         on_way: {
@@ -4010,7 +4023,9 @@
           badgeBg: "rgba(52, 152, 219, 0.18)",
           badgeColor: "#2980b9",
           title: isTakeaway ? "Siparişiniz Hazır!" : "Kuryemiz Yola Çıktı!",
-          desc: isTakeaway ? "Göztepe Rıdvanpaşa fırınımızdan sıcacık teslim alabilirsiniz." : "Özel ısı korumalı çantamızla sıcacık kapınıza doğru geliyor.",
+          desc: isTakeaway
+            ? (isGinger ? "Göztepe Rıdvanpaşa fırınımızdan sıcacık teslim alabilirsiniz." : "Restoranımızdan sıcacık teslim alabilirsiniz.")
+            : "Özel ısı korumalı çantamızla sıcacık kapınıza doğru geliyor.",
           stepIndex: 3
         },
         delivered: {
@@ -4060,7 +4075,7 @@
             </div>
             <div class="step-item ${cfg.stepIndex >= 2 ? 'completed' : ''} ${cfg.stepIndex === 2 ? 'active' : ''}">
               <div class="step-dot">2</div>
-              <span class="step-label">Fırında</span>
+              <span class="step-label">${isGinger ? 'Fırında' : 'Hazırlanıyor'}</span>
             </div>
             <div class="step-item ${cfg.stepIndex >= 3 ? 'completed' : ''} ${cfg.stepIndex === 3 ? 'active' : ''}">
               <div class="step-dot">3</div>
@@ -4113,7 +4128,7 @@
         <!-- İletişim Butonları -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <a href="tel:02163370201" class="btn-primary" style="background: var(--ink-900); font-size: 0.85rem; padding: 11px; justify-content: center;">
-            📞 Fırını Ara
+            ${isGinger ? '📞 Fırını Ara' : '📞 Restoranı Ara'}
           </a>
           <a href="https://wa.me/902163370201" target="_blank" rel="noopener" class="btn-primary" style="background: #25D366; font-size: 0.85rem; padding: 11px; justify-content: center;">
             💬 WhatsApp
@@ -4150,23 +4165,44 @@
         return;
       }
 
-      const sizeLabels = {
+      const isGinger = typeof window.getActiveRestaurantSlug !== "function" || window.getActiveRestaurantSlug() === "ginger-pizza";
+      const sizeLabels = isGinger ? {
         small: "Small (24-26 cm)",
         medium: "Medium (30-32 cm)",
         xlarge: "Mega / XL (40-42 cm)"
+      } : {
+        small: "70 gr. (Single)",
+        medium: "140 gr. (Double)",
+        xlarge: "210 gr. (Triple)"
+      };
+      const shortSizeLabels = isGinger ? {
+        small: "Small · 24-26",
+        medium: "Orta · 30-32",
+        xlarge: "Mega · 40-42"
+      } : {
+        small: "Single · 70 gr.",
+        medium: "Double · 140 gr.",
+        xlarge: "Triple · 210 gr."
       };
 
       grid.innerHTML = items.map(item => {
         const isAvailable = item.isAvailable !== false;
         const disabledStyle = !isAvailable ? 'style="opacity: 0.68; filter: grayscale(20%);"' : '';
+        let derivedBadge = item.badge || "";
+        if (!isGinger && !derivedBadge && item.ingredients) {
+          if (/3\s*adet\s*70\s*gr|210\s*gr/i.test(item.ingredients)) derivedBadge = "210 gr.";
+          else if (/2\s*adet\s*70\s*gr|140\s*gr/i.test(item.ingredients)) derivedBadge = "140 gr.";
+          else if (/70\s*gr/i.test(item.ingredients)) derivedBadge = "70 gr.";
+          else if (/200\s*gr/i.test(item.ingredients)) derivedBadge = "200 gr.";
+        }
         const statusBadge = !isAvailable
           ? `<span class="badge-pill" style="background:#444; color:#fff;">Tükendi</span>`
-          : (item.badge ? `<span class="badge-pill badge-${item.badgeType || 'popular'}">${item.badge}</span>` : '');
+          : (derivedBadge ? `<span class="badge-pill badge-${item.badgeType || 'popular'}">${derivedBadge}</span>` : '');
         const hasImage = !!(item.image && item.image.trim());
         const hasMods = itemHasModifiers(item);
         const ctaLabel = !currentStoreStatus.isOpen ? 'Siparişe Kapalı' : (hasMods ? '+ Seç & Ekle' : '+ Sepete Ekle');
 
-        // 1. Pizza Kartı (Boyut seçenekli)
+        // 1. Çoklu Boyut / Gramaj Kartı
         if (item.prices) {
           const currentSize = cardSelectedSizes[item.id] || "medium";
           const currentPrice = item.prices[currentSize] || item.prices.medium || item.prices.small || 0;
@@ -4187,16 +4223,16 @@
                   <p class="pizza-ingredients">${item.ingredients || ''}</p>
 
                   <div class="size-selector-box">
-                    <div class="size-label">Boyut Seçimi</div>
-                    <div class="size-tabs-row" role="radiogroup" aria-label="${item.name} boyut seçimi">
+                    <div class="size-label">${isGinger ? "Boyut Seçimi" : "Gramaj Seçimi"}</div>
+                    <div class="size-tabs-row" role="radiogroup" aria-label="${item.name} ${isGinger ? 'boyut' : 'gramaj'} seçimi">
                       <button type="button" class="size-option-btn ${currentSize === 'small' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'small')">
-                        Small · 24-26
+                        ${shortSizeLabels.small}
                       </button>
                       <button type="button" class="size-option-btn ${currentSize === 'medium' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'medium')">
-                        Orta · 30-32
+                        ${shortSizeLabels.medium}
                       </button>
                       <button type="button" class="size-option-btn ${currentSize === 'xlarge' ? 'active' : ''}" onclick="changePizzaSize('${item.id}', 'xlarge')">
-                        Mega · 40-42
+                        ${shortSizeLabels.xlarge}
                       </button>
                     </div>
                   </div>
@@ -4336,7 +4372,7 @@
       }
 
       const sizeGuide = document.querySelector(".size-guide-strip");
-      if (sizeGuide && !menuData.some(i => i.prices)) {
+      if (sizeGuide && slug !== "we-smash-the-burger" && !menuData.some(i => i.prices)) {
         sizeGuide.style.display = "none";
       }
     }

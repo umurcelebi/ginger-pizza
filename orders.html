@@ -931,11 +931,17 @@
         ? StoreStatus.getPaymentMethodLabel(order.payment_method, kdsStoreSettings).toLocaleUpperCase("tr-TR")
         : (order.payment_method === "door_cash" ? "KAPIDA NAKİT" : "KAPIDA KART");
 
+      const isGinger = typeof window.getActiveRestaurantSlug !== "function" || window.getActiveRestaurantSlug() === "ginger-pizza";
+      const restInfo = window.__ACTIVE_RESTAURANT_INFO__ || {};
+      const receiptTitle = isGinger ? "GINGER PIZZA" : (restInfo.name || "RESTORAN").toLocaleUpperCase("tr-TR");
+      const receiptAddress = isGinger ? "Göztepe Rıdvanpaşa Sk. No:16" : (restInfo.address || "");
+      const receiptPhone = isGinger ? "0216 337 02 01" : (restInfo.phone || "");
+
       printArea.innerHTML = `
         <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 6px;">
-          <div style="font-size: 15px; font-weight: bold; letter-spacing: 0.5px;">GINGER PIZZA</div>
-          <div style="font-size: 10px; margin-top: 2px;">Göztepe Rıdvanpaşa Sk. No:16</div>
-          <div style="font-size: 10px;">Tel: 0216 337 02 01</div>
+          <div style="font-size: 15px; font-weight: bold; letter-spacing: 0.5px;">${receiptTitle}</div>
+          ${receiptAddress ? `<div style="font-size: 10px; margin-top: 2px;">${receiptAddress}</div>` : ''}
+          ${receiptPhone ? `<div style="font-size: 10px;">Tel: ${receiptPhone}</div>` : ''}
           <div style="font-size: 14px; font-weight: bold; margin-top: 5px;">SİPARİŞ #${order.order_number || order.id.slice(-4)}</div>
           <div style="font-size: 10px; margin-top: 2px;">${new Date(order.created_at || Date.now()).toLocaleString("tr-TR")}</div>
         </div>
@@ -999,7 +1005,9 @@
       // Telefonu WhatsApp linkine dönüştür
       const cleanPhone = (order.customer_phone || "").replace(/\D/g, "");
       const waNumber = cleanPhone.startsWith("0") ? "90" + cleanPhone.slice(1) : (cleanPhone.startsWith("90") ? cleanPhone : "90" + cleanPhone);
-      const waMsg = encodeURIComponent(`Merhaba ${order.customer_name}, Ginger Pizza siparişiniz (#${order.order_number || ''}) hakkında yazıyoruz.`);
+      const isGinger = typeof window.getActiveRestaurantSlug !== "function" || window.getActiveRestaurantSlug() === "ginger-pizza";
+      const restName = isGinger ? "Ginger Pizza" : ((window.__ACTIVE_RESTAURANT_INFO__ && window.__ACTIVE_RESTAURANT_INFO__.name) || "Restoran");
+      const waMsg = encodeURIComponent(`Merhaba ${order.customer_name}, ${restName} siparişiniz (#${order.order_number || ''}) hakkında yazıyoruz.`);
       const waUrl = `https://wa.me/${waNumber}?text=${waMsg}`;
 
       // Aksiyon Butonları (Kolona Göre)
@@ -1008,7 +1016,7 @@
         actionsHtml = `
           <div class="btn-group-new">
             <button type="button" class="btn-step-next" onclick="updateStatus('${order.id}', 'preparing')">
-              ✓ Kabul Et & Fırına Ver
+              ${isGinger ? "✓ Kabul Et & Fırına Ver" : "✓ Kabul Et & Hazırla"}
             </button>
             <button type="button" class="btn-cancel" onclick="updateStatus('${order.id}', 'cancelled')">
               ✕ Reddet
@@ -1133,9 +1141,10 @@
         ? newOrders.map(renderOrderCard).join("")
         : '<div class="col-empty">Şu anda yeni sipariş yok.</div>';
 
+      const isGinger = typeof window.getActiveRestaurantSlug !== "function" || window.getActiveRestaurantSlug() === "ginger-pizza";
       listPrep.innerHTML = prepOrders.length > 0
         ? prepOrders.map(renderOrderCard).join("")
-        : '<div class="col-empty">Fırında bekleyen pizza yok.</div>';
+        : `<div class="col-empty">${isGinger ? "Fırında bekleyen pizza yok." : "Hazırlanan sipariş yok."}</div>`;
 
       listWay.innerHTML = wayOrders.length > 0
         ? wayOrders.map(renderOrderCard).join("")
@@ -1209,8 +1218,9 @@
       const warnBox = document.getElementById("archiveActiveWarning");
       if (warnBox) {
         if (activeCount > 0) {
+          const isGinger = typeof window.getActiveRestaurantSlug !== "function" || window.getActiveRestaurantSlug() === "ginger-pizza";
           warnBox.style.display = "block";
-          warnBox.textContent = `ℹ️ Dikkat: Hala işlemde (Yeni / Fırında / Yolda) bekleyen ${activeCount} aktif sipariş var. Bu siparişler arşive alınmayacak, ekranda kalmaya devam edecektir.`;
+          warnBox.textContent = `ℹ️ Dikkat: Hala işlemde (Yeni / ${isGinger ? "Fırında" : "Hazırlanıyor"} / Yolda) bekleyen ${activeCount} aktif sipariş var. Bu siparişler arşive alınmayacak, ekranda kalmaya devam edecektir.`;
         } else {
           warnBox.style.display = "none";
         }
