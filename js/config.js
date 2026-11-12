@@ -319,6 +319,9 @@
         document.querySelectorAll("#iletisim .contact-item").forEach(item => {
           if (item.textContent.includes("Instagram")) item.style.display = "none";
         });
+        document.querySelectorAll('.cta-row a[href*="instagram"]').forEach(a => {
+          a.style.display = "none";
+        });
       }
       const footerBottomMeta = document.querySelector(".footer-bottom span");
       if (footerBottomMeta && footerBottomMeta.textContent.includes("Pizza")) {
@@ -355,6 +358,30 @@
       if (prepEmpty) prepEmpty.textContent = "Hazırlanan sipariş yok.";
       const kdsMsgInput = document.getElementById("kdsStoreMessageInput");
       if (kdsMsgInput) kdsMsgInput.setAttribute("placeholder", "Örn: Mutfak yoğunluğu nedeniyle kısa bir ara verdik.");
+
+      // Hazırlanıyoruz Açılış Sayfası (index.html)
+      const heroEyebrow = document.querySelector(".hero-eyebrow");
+      if (heroEyebrow && heroEyebrow.textContent.includes("Fırın")) {
+        heroEyebrow.textContent = "🔥 Izgaramız Sıcak, Sitemiz Hazırlanıyor";
+      }
+      const comingTitle = document.getElementById("comingTitle");
+      if (comingTitle) {
+        comingTitle.innerHTML = "Yeni smash burger menümüz ve online sipariş sistemimiz <em>çok yakında</em> burada.";
+      }
+      const comingDesc = document.querySelector(".coming-card .hero-desc");
+      if (comingDesc && comingDesc.textContent.includes("taş fırın")) {
+        comingDesc.textContent = "Bahçelievler'deki mutfağımızdan sıcacık smash burgerlerimizi doğrudan web sitemiz üzerinden sipariş edebilmeniz için son hazırlıklarımızı yapıyoruz. Bu sırada telefonla hemen sipariş verebilirsiniz.";
+      }
+      const comingInfoVals = document.querySelectorAll(".info-box .info-val");
+      if (comingInfoVals.length >= 4) {
+        if (comingInfoVals[0]) comingInfoVals[0].innerHTML = `${fullAddress}<span class="info-sub"><a href="https://maps.google.com/?q=${encodeURIComponent(fullAddress)}" target="_blank" rel="noopener noreferrer">Google Haritalar'da Aç →</a></span>`;
+        if (comingInfoVals[2]) comingInfoVals[2].innerHTML = `Haftanın her günü: 12:00 – 03:45<span class="info-sub">Paket Servis &amp; Gel Al</span>`;
+        if (comingInfoVals[3] && !info.instagram) comingInfoVals[3].closest(".info-item").style.display = "none";
+      }
+      const comingFooterMeta = document.querySelector(".site-footer div");
+      if (comingFooterMeta && comingFooterMeta.textContent.includes("Ginger")) {
+        comingFooterMeta.textContent = `© 2026 ${info.name || "We Smash The Burger"} · Bahçelievler, İstanbul`;
+      }
     }
 
     if (info.phone) {
