@@ -671,11 +671,11 @@ function getSupabaseClient() {
 
 function getSupabaseConfig() {
   try {
-    const raw = localStorage.getItem(CONFIG_KEY);
-    if (raw) return JSON.parse(raw);
     if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.anonKey) {
       return { url: window.SUPABASE_CONFIG.url, key: window.SUPABASE_CONFIG.anonKey };
     }
+    const raw = localStorage.getItem(CONFIG_KEY);
+    if (raw) return JSON.parse(raw);
     return null;
   } catch (e) {
     return null;
@@ -850,7 +850,7 @@ const MenuAPI = {
               badge: item.badge || "",
               badgeType: item.badge_type || "popular",
               ingredients: item.description || "",
-              image: item.image_url || findFallbackImageByName(item.name),
+              image: item.image_url || (activeSlug === "ginger-pizza" ? findFallbackImageByName(item.name) : ""),
               isAvailable: item.is_available !== false,
               prices: isPizza ? prices : null,
               fixedPrice: !isPizza ? Number(item.fixed_price) : null,
@@ -1009,12 +1009,31 @@ const MenuAPI = {
         }
 
         if (targetId) {
+          const existingLabels = {};
+          try {
+            const { data: prevVars } = await sb
+              .from("item_variants")
+              .select("size_key, size_label")
+              .eq("item_id", targetId);
+            if (Array.isArray(prevVars)) {
+              prevVars.forEach(v => {
+                if (v && v.size_key && v.size_label) existingLabels[v.size_key] = v.size_label;
+              });
+            }
+          } catch (e) {}
+
+          const defaultLabels = activeSlug === "we-smash-the-burger"
+            ? { small: "70 gr. (Single)", medium: "140 gr. (Double)", xlarge: "210 gr. (Triple)" }
+            : (activeSlug === "ginger-pizza"
+                ? { small: "Small (24-26 cm)", medium: "Medium (30-32 cm)", xlarge: "Mega / XL (40-42 cm)" }
+                : { small: "Küçük / Seçenek 1", medium: "Orta / Seçenek 2", xlarge: "Büyük / Seçenek 3" });
+
           await sb.from("item_variants").delete().eq("item_id", targetId);
           if (isPizza && normalizedItem.prices) {
             const variants = [
-              { item_id: targetId, size_key: "small", size_label: "Small (24-26 cm)", price: Number(normalizedItem.prices.small) || 0 },
-              { item_id: targetId, size_key: "medium", size_label: "Medium (30-32 cm)", price: Number(normalizedItem.prices.medium) || 0 },
-              { item_id: targetId, size_key: "xlarge", size_label: "Mega / XL (40-42 cm)", price: Number(normalizedItem.prices.xlarge) || 0 }
+              { item_id: targetId, size_key: "small", size_label: existingLabels.small || defaultLabels.small, price: Number(normalizedItem.prices.small) || 0 },
+              { item_id: targetId, size_key: "medium", size_label: existingLabels.medium || defaultLabels.medium, price: Number(normalizedItem.prices.medium) || 0 },
+              { item_id: targetId, size_key: "xlarge", size_label: existingLabels.xlarge || defaultLabels.xlarge, price: Number(normalizedItem.prices.xlarge) || 0 }
             ];
             const { error: varErr } = await sb.from("item_variants").insert(variants);
             if (varErr) throw varErr;

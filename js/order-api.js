@@ -675,17 +675,6 @@ const OrderAPI = {
           .order("created_at", { ascending: false })
           .limit(100);
 
-        // Eğer Supabase'de restaurant_slug veya is_archived sütunu henüz eklenmediyse geriye dönük uyumluluk
-        if (error && (error.code === "42703" || error.code === "PGRST204" || /(is_archived|restaurant_slug)/i.test(String(error.message || "")))) {
-          const fallbackRes = await sb
-            .from("orders")
-            .select("*, order_items(*)")
-            .order("created_at", { ascending: false })
-            .limit(100);
-          orders = fallbackRes.data;
-          error = fallbackRes.error;
-        }
-
         if (!error && orders) {
           return orders.map(o => ({
             ...o,
@@ -783,18 +772,6 @@ const OrderAPI = {
           .lte("created_at", bounds.endIso)
           .order("created_at", { ascending: false })
           .limit(1500);
-
-        if (error && (error.code === "42703" || error.code === "PGRST204" || /restaurant_slug/i.test(String(error.message || "")))) {
-          const fallbackRes = await sb
-            .from("orders")
-            .select("*, order_items(*)")
-            .gte("created_at", bounds.startIso)
-            .lte("created_at", bounds.endIso)
-            .order("created_at", { ascending: false })
-            .limit(1500);
-          orders = fallbackRes.data;
-          error = fallbackRes.error;
-        }
 
         if (!error && Array.isArray(orders)) {
           return orders.map(o => ({
@@ -900,15 +877,6 @@ const OrderAPI = {
             .order("created_at", { ascending: false })
             .limit(1500);
 
-          if (ordErr && /restaurant_slug/i.test(String(ordErr.message || ""))) {
-            const fbOrd = await sb
-              .from("orders")
-              .select("customer_name, customer_phone, delivery_address, total_amount, status, created_at")
-              .neq("status", "cancelled")
-              .order("created_at", { ascending: false })
-              .limit(1500);
-            ordData = fbOrd.data;
-          }
           if (Array.isArray(ordData)) {
             customers = aggregateCustomersFromOrders(ordData, slug);
           }
@@ -1077,14 +1045,6 @@ const OrderAPI = {
         .eq("restaurant_slug", slug)
         .select("id");
 
-      if (ordRes.error && (ordRes.error.code === "42703" || /restaurant_slug/i.test(ordRes.error.message || ""))) {
-        ordRes = await sb
-          .from("orders")
-          .delete()
-          .not("id", "is", null)
-          .select("id");
-      }
-
       if (ordRes.error) {
         return {
           success: false,
@@ -1127,19 +1087,22 @@ const OrderAPI = {
     localStorage.removeItem(getActiveOrderTokenStorageKey());
   },
 
-  // Gerçek Zamanlı Dinleyici (Realtime WebSockets & Polling)
+  // Gerçek Zamanlı Dinleyici (Realtime WebSockets & Polling — Restoran İzoleli)
   subscribe(callback) {
     const sb = getSupabaseClient();
+    const activeSlug = getRestaurantSlug();
     let channel = null;
 
     if (sb && sb.channel) {
       try {
         channel = sb
-          .channel("realtime-orders")
+          .channel(`realtime-orders-${activeSlug}`)
           .on(
             "postgres_changes",
-            { event: "*", schema: "public", table: "orders" },
+            { event: "*", schema: "public", table: "orders", filter: `restaurant_slug=eq.${activeSlug}` },
             payload => {
+              const rowSlug = payload?.new?.restaurant_slug || payload?.old?.restaurant_slug;
+              if (rowSlug && rowSlug !== getRestaurantSlug()) return;
               callback(payload);
             }
           )
