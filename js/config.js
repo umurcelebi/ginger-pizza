@@ -219,187 +219,330 @@
       if (ogDesc) ogDesc.setAttribute("content", `${info.name} — Taze malzemeler ve hızlı online sipariş.`);
     }
 
-    // Logo güncelleme (özellikle We Smash The Burger için özel logo)
-    if (slug === "we-smash-the-burger") {
-      const logoSrc = "images/we-smash-logo.jpg";
+    // Tüm non-ginger restoranlar için tam veri odaklı profil + sızıntısız genel varsayılanlar
+    const rawProfile = (info.profile && typeof info.profile === "object") ? info.profile : {};
+    const wsFallback = slug === "we-smash-the-burger" ? {
+      logo_url: "images/we-smash-logo.jpg",
+      hero_tag: "Bahçelievler'in İmza Smash Burgeri",
+      hero_title_html: `Gerçek smash,<br>sıcak ızgara,<br><span class="highlight">We Smash</span> lezzeti.`,
+      hero_desc: "Günlük taze dana kıyması, yüksek ısıda mühürlenmiş çıtır kenarlı smash köfteler ve özel soslar. Bahçelievler'in imza smash burger deneyimi.",
+      featured: {
+        image: "https://yemeksepeti.dhmedia.io/image/global-menu-service/YS_TR/vendor/rcqj/product/76850501-950a-4301-bc42-c2ebca4ddaa0.jpg?width=600&height=600",
+        name: "Houston Burger",
+        desc: "2 adet 70 gr. smash köfte, 2x cheddar, ıceberg, turşu & burger sos",
+        pill: "70 / 140 / 210 gr."
+      },
+      story_title: "İyi smash burger aceleye gelmez.",
+      story_desc: "Bahçelievler Deli Hüseyin Paşa Caddesi'ndeki mutfağımızda her gün aynı tutkuyla hazırlanıyoruz. İyi bir smash burgerin sırrı; taze ette, doğru ısıda ve dengeli soslarda gizlidir.",
+      craft_cards: [
+        { title: "Gramajına Göre Smash Köfte", text: "70 gr. tekli, 140 gr. double ve 210 gr. triple köfte gramajlarıyla damak tadınıza göre porsiyon seçin." },
+        { title: "Yüksek Isıda Izgara", text: "Özel smash presi ile ızgarada saniyeler içinde mühürlenen köfteler dışı çıtır, içi sulu kalır." },
+        { title: "Özel Soslar & Peynirler", text: "Cheddar, kaşar ve Erzincan tulum peynirleri; trüflü mayonez, barbekü, jalapeno salsa ve burger sosla buluşur." }
+      ],
+      menu_desc: "Her biri sipariş anında sıcak ızgarada hazırlanan smash burger menüler, burgerler ve eşlikçiler.",
+      search_placeholder: "Burger, menü veya sos ara (örn: houston, texas...)",
+      size_guide_title: "Gramaj Rehberi:",
+      size_guide_items_html: `<span><strong>Jr. (70 gr.):</strong> 1 Adet Smash Köfte</span><span>•</span><span><strong>Double (140 gr.):</strong> 2 Adet Smash Köfte</span><span>•</span><span><strong>Triple (210 gr.):</strong> 3 Adet Smash Köfte</span>`,
+      hub_banner_eyebrow: "En Hızlı & Doğrudan Izgaradan",
+      hub_banner_desc: "Menüden burgerinizi ve gramajınızı seçin, sepetinize ekleyin; mutfağımız anında hazırlasın ve canlı olarak takip edin.",
+      hub_cta_label: "🍔 Menüden Seç",
+      contact_title: "Bahçelievler'de Sıcak Bir Burger Molası",
+      contact_desc: "Bahçelievler'de ızgaradan yeni çıkmış smash burgerlerimizle sizleri ağırlamaktan mutluluk duyuyoruz.",
+      hours_html: "Haftanın her günü:<br>12:00 – 03:45 (Paket Servis &amp; Gel Al)",
+      footer_tagline: "Bahçelievler'in imza smash burger noktası. Taze dana eti, sıcak ızgara ve özel soslar.",
+      footer_city: "Bahçelievler / İstanbul",
+      footer_meta: "Bahçelievler, İstanbul · Smash Burger",
+      coming_eyebrow: "🔥 Izgaramız Sıcak, Sitemiz Hazırlanıyor",
+      coming_title_html: "Yeni smash burger menümüz ve online sipariş sistemimiz <em>çok yakında</em> burada.",
+      coming_desc: "Bahçelievler'deki mutfağımızdan sıcacık smash burgerlerimizi doğrudan web sitemiz üzerinden sipariş edebilmeniz için son hazırlıklarımızı yapıyoruz. Bu sırada telefonla hemen sipariş verebilirsiniz.",
+      coming_hours_html: `Haftanın her günü: 12:00 – 03:45<span class="info-sub">Paket Servis &amp; Gel Al</span>`
+    } : {};
+
+    const p = Object.assign({}, wsFallback, rawProfile);
+    const brandName = info.name || "Restoran";
+    const fullAddress = (info.address || "").trim();
+
+    // Logo
+    if (p.logo_url) {
       document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(link => {
-        link.setAttribute("href", logoSrc);
+        link.setAttribute("href", p.logo_url);
       });
       document.querySelectorAll('img[src*="images/logo.jpg"], .brand-logo img, .pin-gate-logo img').forEach(img => {
-        swapImg(img, logoSrc);
-        img.setAttribute("alt", `${info.name || "We Smash The Burger"} Logo`);
+        swapImg(img, p.logo_url);
+        img.setAttribute("alt", `${brandName} Logo`);
         img.style.objectFit = "contain";
         img.style.background = "#ffffff";
+        img.style.display = "";
       });
+    } else {
+      document.querySelectorAll('img[src*="images/logo.jpg"], .brand-logo img, .pin-gate-logo img').forEach(img => {
+        img.style.display = "none";
+      });
+    }
 
-      // Vitrin sayfası Smash Burger teması (pizzaya dair metin bırakma)
-      const heroTitle = document.querySelector(".hero-title");
-      if (heroTitle) {
-        heroTitle.innerHTML = `Gerçek smash,<br>sıcak ızgara,<br><span class="highlight">We Smash</span> lezzeti.`;
+    // Hero
+    const heroTag = document.querySelector(".hero-tag");
+    if (heroTag) {
+      const dot = heroTag.querySelector(".hero-tag-dot");
+      const tagText = p.hero_tag || brandName;
+      if (dot) {
+        heroTag.innerHTML = "";
+        heroTag.appendChild(dot);
+        heroTag.appendChild(document.createTextNode(" " + tagText));
+      } else {
+        heroTag.textContent = tagText;
       }
-      const heroDesc = document.querySelector(".hero-desc");
-      if (heroDesc) {
-        heroDesc.textContent = "Günlük taze dana kıyması, yüksek ısıda mühürlenmiş çıtır kenarlı smash köfteler ve özel soslar. Bahçelievler'in imza smash burger deneyimi.";
-      }
-      const heroBadges = document.querySelectorAll(".hero-badge-item");
-      if (heroBadges.length >= 3) {
+    }
+    const heroTitle = document.querySelector(".hero-title");
+    if (heroTitle) {
+      heroTitle.innerHTML = p.hero_title_html || `Taze lezzet,<br>özenli mutfak,<br><span class="highlight">${brandName}</span>.`;
+    }
+    const heroDesc = document.querySelector(".hero-desc");
+    if (heroDesc) {
+      heroDesc.textContent = p.hero_desc || `${brandName} mutfağından özenle hazırlanan taze lezzetleri doğrudan online sipariş edin.`;
+    }
+    const heroBadges = document.querySelectorAll(".hero-badge-item");
+    if (heroBadges.length >= 3) {
+      if (Array.isArray(p.hero_badges) && p.hero_badges.length >= 3) {
+        p.hero_badges.slice(0, 3).forEach((b, idx) => {
+          const t = heroBadges[idx].querySelector(".hero-badge-title");
+          const d = heroBadges[idx].querySelector(".hero-badge-desc");
+          if (t) t.textContent = b.title || "";
+          if (d) d.textContent = b.desc || "";
+        });
+      } else if (slug === "we-smash-the-burger") {
         heroBadges[0].querySelector(".hero-badge-title").textContent = "70 / 140 / 210 gr.";
         heroBadges[0].querySelector(".hero-badge-desc").textContent = "Single, Double ve Triple smash köfte gramaj seçenekleri.";
         heroBadges[1].querySelector(".hero-badge-title").textContent = "Sıcak Izgara";
         heroBadges[1].querySelector(".hero-badge-desc").textContent = "Yüksek ısıda ezilerek mühürlenen sulu ve çıtır kenarlı köfteler.";
         heroBadges[2].querySelector(".hero-badge-title").textContent = "%100 Dana";
         heroBadges[2].querySelector(".hero-badge-desc").textContent = "Katkısız taze dana köfte, erimiş cheddar ve günlük brioche ekmek.";
+      } else {
+        const badgesWrap = heroBadges[0].closest(".hero-badges");
+        if (badgesWrap) badgesWrap.style.display = "none";
       }
+    }
+
+    // Öne çıkan vitrin kartı
+    const heroVisual = document.querySelector(".hero-visual");
+    if (p.featured && p.featured.image) {
+      if (heroVisual) heroVisual.style.display = "";
       const featuredImg = document.querySelector(".featured-image-wrapper img");
       if (featuredImg) {
-        swapImg(featuredImg, "https://yemeksepeti.dhmedia.io/image/global-menu-service/YS_TR/vendor/rcqj/product/76850501-950a-4301-bc42-c2ebca4ddaa0.jpg?width=600&height=600");
-        featuredImg.setAttribute("alt", "We Smash The Burger — Houston Burger");
+        swapImg(featuredImg, p.featured.image);
+        featuredImg.setAttribute("alt", `${brandName} — ${p.featured.name || "Öne Çıkan"}`);
       }
       const featuredName = document.querySelector(".featured-name");
-      if (featuredName) featuredName.textContent = "Houston Burger";
+      if (featuredName) featuredName.textContent = p.featured.name || "";
       const featuredDesc = document.querySelector(".featured-desc-mini");
-      if (featuredDesc) featuredDesc.textContent = "2 adet 70 gr. smash köfte, 2x cheddar, ıceberg, turşu & burger sos";
+      if (featuredDesc) featuredDesc.textContent = p.featured.desc || "";
       const featuredPill = document.querySelector(".featured-pill-price");
-      if (featuredPill) featuredPill.textContent = "70 / 140 / 210 gr.";
+      if (featuredPill) featuredPill.textContent = p.featured.pill || "";
+    } else if (heroVisual) {
+      heroVisual.style.display = "none";
+    }
 
-      const craftTitle = document.querySelector("#hikaye .section-title");
-      if (craftTitle) craftTitle.textContent = "İyi smash burger aceleye gelmez.";
-      const craftDesc = document.querySelector("#hikaye .section-desc");
-      if (craftDesc) craftDesc.textContent = "Bahçelievler Deli Hüseyin Paşa Caddesi'ndeki mutfağımızda her gün aynı tutkuyla hazırlanıyoruz. İyi bir smash burgerin sırrı; taze ette, doğru ısıda ve dengeli soslarda gizlidir.";
-      const craftCards = document.querySelectorAll("#hikaye .craft-card");
-      if (craftCards.length >= 3) {
-        craftCards[0].querySelector(".craft-title").textContent = "Gramajına Göre Smash Köfte";
-        craftCards[0].querySelector(".craft-text").textContent = "70 gr. tekli, 140 gr. double ve 210 gr. triple köfte gramajlarıyla damak tadınıza göre porsiyon seçin.";
-        craftCards[1].querySelector(".craft-title").textContent = "Yüksek Isıda Izgara";
-        craftCards[1].querySelector(".craft-text").textContent = "Özel smash presi ile ızgarada saniyeler içinde mühürlenen köfteler dışı çıtır, içi sulu kalır.";
-        craftCards[2].querySelector(".craft-title").textContent = "Özel Soslar & Peynirler";
-        craftCards[2].querySelector(".craft-text").textContent = "Cheddar, kaşar ve Erzincan tulum peynirleri; trüflü mayonez, barbekü, jalapeno salsa ve burger sosla buluşur.";
+    // Hikaye bölümü (#hikaye)
+    const craftTitle = document.querySelector("#hikaye .section-title");
+    if (craftTitle) craftTitle.textContent = p.story_title || `${brandName} Mutfağı`;
+    const craftDesc = document.querySelector("#hikaye .section-desc");
+    if (craftDesc) {
+      craftDesc.textContent = p.story_desc || (fullAddress
+        ? `${fullAddress} adresindeki mutfağımızda her gün aynı özenle hazırlanıyoruz.`
+        : `${brandName} mutfağında her gün aynı özen ve tutkuyla hazırlanıyoruz.`);
+    }
+    const craftGrid = document.querySelector("#hikaye .craft-grid");
+    const craftCards = document.querySelectorAll("#hikaye .craft-card");
+    if (Array.isArray(p.craft_cards) && p.craft_cards.length > 0 && craftCards.length > 0) {
+      if (craftGrid) craftGrid.style.display = "";
+      craftCards.forEach((card, idx) => {
+        const item = p.craft_cards[idx];
+        if (!item) {
+          card.style.display = "none";
+          return;
+        }
+        card.style.display = "";
+        const t = card.querySelector(".craft-title");
+        const d = card.querySelector(".craft-text");
+        if (t) t.textContent = item.title || "";
+        if (d) d.textContent = item.text || "";
+      });
+    } else if (craftGrid) {
+      craftGrid.style.display = "none";
+    }
+
+    // Menü bölümü (#menu)
+    const menuDesc = document.querySelector("#menu .section-desc");
+    if (menuDesc) menuDesc.textContent = p.menu_desc || `${brandName} mutfağından sipariş anında taze hazırlanan lezzetler.`;
+    const menuSearch = document.getElementById("menuSearch");
+    if (menuSearch) menuSearch.setAttribute("placeholder", p.search_placeholder || "Menüde ürün veya kategori ara...");
+
+    const sizeGuideStrip = document.querySelector(".size-guide-strip");
+    const sizeGuideTitle = document.querySelector(".size-guide-strip-title");
+    const sizeGuideItems = document.querySelector(".size-guide-items");
+    const sgTitle = p.size_guide_title || (slug === "we-smash-the-burger" ? "Gramaj Rehberi:" : "");
+    const sgItems = p.size_guide_items_html || (slug === "we-smash-the-burger"
+      ? `<span><strong>Jr. (70 gr.):</strong> 1 Adet Smash Köfte</span><span>•</span><span><strong>Double (140 gr.):</strong> 2 Adet Smash Köfte</span><span>•</span><span><strong>Triple (210 gr.):</strong> 3 Adet Smash Köfte</span>`
+      : "");
+    if (sgTitle || sgItems) {
+      if (sizeGuideStrip) sizeGuideStrip.style.display = "";
+      if (sizeGuideTitle && sgTitle) {
+        sizeGuideTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> ${sgTitle}`;
       }
+      if (sizeGuideItems && sgItems) sizeGuideItems.innerHTML = sgItems;
+    } else if (sizeGuideStrip) {
+      sizeGuideStrip.style.display = "none";
+    }
 
-      const menuDesc = document.querySelector("#menu .section-desc");
-      if (menuDesc) menuDesc.textContent = "Her biri sipariş anında sıcak ızgarada hazırlanan smash burger menüler, burgerler ve eşlikçiler.";
-      const menuSearch = document.getElementById("menuSearch");
-      if (menuSearch) menuSearch.setAttribute("placeholder", "Burger, menü veya sos ara (örn: houston, texas...)");
+    const hubBanner = document.querySelector(".web-order-hub-banner");
+    if (hubBanner) {
+      hubBanner.innerHTML = hubBanner.innerHTML
+        .replace("En Hızlı & Doğrudan Fırından", p.hub_banner_eyebrow || "En Hızlı & Doğrudan Mutfaktan")
+        .replace(/Menüden pizzanızı ve boyutunuzu seçin[^<]*/g, p.hub_banner_desc || "Menüden ürününüzü seçin, sepetinize ekleyin; mutfağımız anında hazırlasın ve canlı olarak takip edin.")
+        .replace("🍕 Menüden Seç", p.hub_cta_label || "🍽️ Menüden Seç");
+    }
 
-      const sizeGuideTitle = document.querySelector(".size-guide-strip-title");
-      if (sizeGuideTitle) {
-        sizeGuideTitle.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Gramaj Rehberi:`;
+    // İletişim & Harita (#iletisim)
+    const contactTitle = document.querySelector("#iletisim .section-title");
+    if (contactTitle) contactTitle.textContent = p.contact_title || `${brandName} ile İletişim`;
+    const contactDesc = document.querySelector("#iletisim .section-desc");
+    if (contactDesc) contactDesc.textContent = p.contact_desc || "Sipariş ve sorularınız için bize dilediğiniz zaman ulaşabilirsiniz.";
+
+    const contactVals = document.querySelectorAll("#iletisim .contact-val");
+    if (contactVals[0]) {
+      contactVals[0].textContent = fullAddress || "Adres bilgisi yakında eklenecektir.";
+    }
+    if (contactVals[2]) {
+      if (p.hours_html) {
+        contactVals[2].innerHTML = p.hours_html;
+      } else {
+        const hoursItem = contactVals[2].closest(".contact-item");
+        if (hoursItem) hoursItem.style.display = "none";
       }
-      const sizeGuideItems = document.querySelector(".size-guide-items");
-      if (sizeGuideItems) {
-        sizeGuideItems.innerHTML = `
-          <span><strong>Jr. (70 gr.):</strong> 1 Adet Smash Köfte</span>
-          <span>•</span>
-          <span><strong>Double (140 gr.):</strong> 2 Adet Smash Köfte</span>
-          <span>•</span>
-          <span><strong>Triple (210 gr.):</strong> 3 Adet Smash Köfte</span>
-        `;
-      }
+    }
 
-      const hubBanner = document.querySelector(".web-order-hub-banner");
-      if (hubBanner) {
-        hubBanner.innerHTML = hubBanner.innerHTML
-          .replace("En Hızlı & Doğrudan Fırından", "En Hızlı & Doğrudan Izgaradan")
-          .replace(/Menüden pizzanızı ve boyutunuzu seçin[^<]*/g, "Menüden burgerinizi ve gramajınızı seçin, sepetinize ekleyin; mutfağımız anında hazırlasın ve canlı olarak takip edin.")
-          .replace("🍕 Menüden Seç", "🍔 Menüden Seç");
-      }
-
-      const contactTitle = document.querySelector("#iletisim .section-title");
-      if (contactTitle) contactTitle.textContent = "Bahçelievler'de Sıcak Bir Burger Molası";
-      const contactDesc = document.querySelector("#iletisim .section-desc");
-      if (contactDesc) contactDesc.textContent = "Bahçelievler'de ızgaradan yeni çıkmış smash burgerlerimizle sizleri ağırlamaktan mutluluk duyuyoruz.";
-
-      const contactVals = document.querySelectorAll("#iletisim .contact-val");
-      const fullAddress = info.address || "Deli Hüseyin Paşa Caddesi 36/B Ejder Apartmanı, Bahçelievler / İstanbul";
-      if (contactVals[0]) contactVals[0].textContent = fullAddress;
-      if (contactVals[2]) contactVals[2].innerHTML = "Haftanın her günü:<br>12:00 – 03:45 (Paket Servis &amp; Gel Al)";
-
-      const mapLink = document.querySelector('#iletisim a[href*="maps.google.com"]');
-      if (mapLink) {
-        mapLink.setAttribute("href", `https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`);
-      }
-      const mapIframe = document.querySelector(".map-frame-wrapper iframe");
+    const mapLink = document.querySelector('#iletisim a[href*="maps.google.com"]');
+    const mapWrapper = document.querySelector(".map-frame-wrapper");
+    const mapIframe = document.querySelector(".map-frame-wrapper iframe");
+    if (fullAddress) {
+      if (mapLink) mapLink.setAttribute("href", `https://maps.google.com/?q=${encodeURIComponent(fullAddress)}`);
+      if (mapWrapper) mapWrapper.style.display = "";
       if (mapIframe) {
-        mapIframe.setAttribute("title", `${info.name || "We Smash The Burger"} Konumu`);
+        mapIframe.setAttribute("title", `${brandName} Konumu`);
         mapIframe.setAttribute("src", `https://maps.google.com/maps?q=${encodeURIComponent(fullAddress)}&t=&z=16&ie=UTF8&iwloc=&output=embed`);
       }
+    } else {
+      if (mapLink) mapLink.style.display = "none";
+      if (mapWrapper) mapWrapper.style.display = "none";
+    }
 
-      const footerTagline = document.querySelector(".footer-tagline");
-      if (footerTagline) footerTagline.textContent = "Bahçelievler'in imza smash burger noktası. Taze dana eti, sıcak ızgara ve özel soslar.";
+    // Instagram & Footer
+    const footerTagline = document.querySelector(".footer-tagline");
+    if (footerTagline) footerTagline.textContent = p.footer_tagline || `${brandName} — Özenle hazırlanan taze lezzetler.`;
 
-      const footerLinks = document.querySelectorAll(".footer-links li");
-      footerLinks.forEach(li => {
-        if (li.textContent.includes("Rıdvanpaşa")) li.textContent = fullAddress;
-        if (li.textContent.includes("Kadıköy / İstanbul")) li.textContent = "Bahçelievler / İstanbul";
-        if (li.textContent.includes("gingerpizza") && !info.instagram) li.style.display = "none";
+    const footerLinks = document.querySelectorAll(".footer-links li");
+    footerLinks.forEach(li => {
+      if (li.textContent.includes("Rıdvanpaşa")) {
+        if (fullAddress) li.textContent = fullAddress;
+        else li.style.display = "none";
+      }
+      if (li.textContent.includes("Kadıköy / İstanbul")) {
+        if (p.footer_city) li.textContent = p.footer_city;
+        else li.style.display = "none";
+      }
+      if (li.textContent.includes("gingerpizza") && !info.instagram) li.style.display = "none";
+    });
+    if (!info.instagram) {
+      document.querySelectorAll("#iletisim .contact-item").forEach(item => {
+        if (item.textContent.includes("Instagram")) item.style.display = "none";
       });
-      if (!info.instagram) {
-        document.querySelectorAll("#iletisim .contact-item").forEach(item => {
-          if (item.textContent.includes("Instagram")) item.style.display = "none";
-        });
-        document.querySelectorAll('.cta-row a[href*="instagram"]').forEach(a => {
-          a.style.display = "none";
-        });
-      }
-      const footerBottomMeta = document.querySelector(".footer-bottom span");
-      if (footerBottomMeta && footerBottomMeta.textContent.includes("Pizza")) {
-        footerBottomMeta.textContent = "Bahçelievler, İstanbul · Smash Burger";
-      }
+      document.querySelectorAll('.cta-row a[href*="instagram"]').forEach(a => {
+        a.style.display = "none";
+      });
+    }
+    const footerBottomMeta = document.querySelector(".footer-bottom span");
+    if (footerBottomMeta && footerBottomMeta.textContent.includes("Pizza")) {
+      footerBottomMeta.textContent = p.footer_meta || brandName;
+    }
 
-      // Admin Paneli — Pizza yerine Burger / Gramaj metinleri
-      const tabBtnMenu = document.getElementById("tabBtnMenu");
-      if (tabBtnMenu) tabBtnMenu.textContent = "🍔 Menü & Dükkan Yönetimi";
-      const statPizzasEl = document.getElementById("statPizzas");
-      if (statPizzasEl && statPizzasEl.parentElement) {
-        const lbl = statPizzasEl.parentElement.querySelector(".stat-label");
-        const sub = statPizzasEl.parentElement.querySelector(".stat-sub");
-        if (lbl) lbl.textContent = "Gramajlı Ürün";
-        if (sub) sub.textContent = "Çoklu gramaj seçenekleri";
+    // Admin Paneli — Pizza yerine restoran profiline / genel mutfağa uygun etiketler
+    const tabBtnMenu = document.getElementById("tabBtnMenu");
+    if (tabBtnMenu) tabBtnMenu.textContent = slug === "we-smash-the-burger" ? "🍔 Menü & Dükkan Yönetimi" : "🍽️ Menü & Dükkan Yönetimi";
+    const statPizzasEl = document.getElementById("statPizzas");
+    if (statPizzasEl && statPizzasEl.parentElement) {
+      const lbl = statPizzasEl.parentElement.querySelector(".stat-label");
+      const sub = statPizzasEl.parentElement.querySelector(".stat-sub");
+      if (lbl) lbl.textContent = slug === "we-smash-the-burger" ? "Gramajlı Ürün" : "Varyantlı Ürün";
+      if (sub) sub.textContent = slug === "we-smash-the-burger" ? "Çoklu gramaj seçenekleri" : "Çoklu boyut / seçenek";
+    }
+    const adminStoreMsg = document.getElementById("adminStoreMessage");
+    if (adminStoreMsg) {
+      adminStoreMsg.setAttribute("placeholder", "Örn: Mutfak yoğunluğu nedeniyle 30 dk siparişe ara verdik.");
+    }
+    const reportSubBtn = document.querySelector('[data-report-tab="products"]');
+    if (reportSubBtn) reportSubBtn.textContent = slug === "we-smash-the-burger" ? "🍔 Ürün Raporu" : "📊 Ürün Raporu";
+    document.querySelectorAll("#itemModal label, #itemModal option, #itemModal .form-label").forEach(el => {
+      if (el.textContent.includes("Pizza")) {
+        el.textContent = el.textContent.replace(/Pizza/g, slug === "we-smash-the-burger" ? "Burger / Gramajlı" : "Çoklu Seçenekli");
       }
-      const adminStoreMsg = document.getElementById("adminStoreMessage");
-      if (adminStoreMsg) {
-        adminStoreMsg.setAttribute("placeholder", "Örn: Mutfak yoğunluğu nedeniyle 30 dk siparişe ara verdik.");
-      }
-      const reportSubBtn = document.querySelector('[data-report-tab="products"]');
-      if (reportSubBtn) reportSubBtn.textContent = "🍔 Ürün Raporu";
-      document.querySelectorAll("#itemModal label, #itemModal option, #itemModal .form-label").forEach(el => {
-        if (el.textContent.includes("Pizza")) el.textContent = el.textContent.replace(/Pizza/g, "Burger / Gramajlı");
+      if (slug === "we-smash-the-burger") {
         if (el.textContent.includes("Small (24-26 cm)")) el.textContent = "70 gr. (Single)";
         if (el.textContent.includes("Medium (30-32 cm)")) el.textContent = "140 gr. (Double)";
         if (el.textContent.includes("Mega / XL (40-42 cm)")) el.textContent = "210 gr. (Triple)";
-      });
+      } else {
+        if (el.textContent.includes("Small (24-26 cm)")) el.textContent = "Küçük / Seçenek 1";
+        if (el.textContent.includes("Medium (30-32 cm)")) el.textContent = "Orta / Seçenek 2";
+        if (el.textContent.includes("Mega / XL (40-42 cm)")) el.textContent = "Büyük / Seçenek 3";
+      }
+    });
 
-      // KDS (orders.html) — Pizza / Fırın yerine Izgara / Mutfak
-      const prepTitle = document.querySelector(".col-prep .col-title-wrap span");
-      if (prepTitle) prepTitle.textContent = "🍔 Izgarada / Hazırlanıyor";
-      const prepEmpty = document.querySelector("#listPrep .col-empty");
-      if (prepEmpty) prepEmpty.textContent = "Hazırlanan sipariş yok.";
-      const kdsMsgInput = document.getElementById("kdsStoreMessageInput");
-      if (kdsMsgInput) kdsMsgInput.setAttribute("placeholder", "Örn: Mutfak yoğunluğu nedeniyle kısa bir ara verdik.");
+    // KDS (orders.html) — Pizza / Fırın yerine Mutfak
+    const prepTitle = document.querySelector(".col-prep .col-title-wrap span");
+    if (prepTitle) prepTitle.textContent = slug === "we-smash-the-burger" ? "🍔 Izgarada / Hazırlanıyor" : "👨‍🍳 Mutfakta / Hazırlanıyor";
+    const prepEmpty = document.querySelector("#listPrep .col-empty");
+    if (prepEmpty) prepEmpty.textContent = "Hazırlanan sipariş yok.";
+    const kdsMsgInput = document.getElementById("kdsStoreMessageInput");
+    if (kdsMsgInput) kdsMsgInput.setAttribute("placeholder", "Örn: Mutfak yoğunluğu nedeniyle kısa bir ara verdik.");
 
-      // Hazırlanıyoruz Açılış Sayfası (index.html)
-      const heroEyebrow = document.querySelector(".hero-eyebrow");
-      if (heroEyebrow && heroEyebrow.textContent.includes("Fırın")) {
-        heroEyebrow.textContent = "🔥 Izgaramız Sıcak, Sitemiz Hazırlanıyor";
+    // Hazırlanıyoruz Açılış Sayfası (index.html)
+    const heroEyebrow = document.querySelector(".hero-eyebrow");
+    if (heroEyebrow && heroEyebrow.textContent.includes("Fırın")) {
+      heroEyebrow.textContent = p.coming_eyebrow || "✨ Mutfağımız Hazırlanıyor";
+    }
+    const comingTitle = document.getElementById("comingTitle");
+    if (comingTitle) {
+      comingTitle.innerHTML = p.coming_title_html || `${brandName} menümüz ve online sipariş sistemimiz <em>çok yakında</em> burada.`;
+    }
+    const comingDesc = document.querySelector(".coming-card .hero-desc");
+    if (comingDesc && comingDesc.textContent.includes("taş fırın")) {
+      comingDesc.textContent = p.coming_desc || `${brandName} lezzetlerini doğrudan web sitemiz üzerinden sipariş edebilmeniz için son hazırlıklarımızı yapıyoruz.`;
+    }
+    const comingInfoVals = document.querySelectorAll(".info-box .info-val");
+    if (comingInfoVals.length >= 4) {
+      if (comingInfoVals[0]) {
+        if (fullAddress) {
+          comingInfoVals[0].innerHTML = `${fullAddress}<span class="info-sub"><a href="https://maps.google.com/?q=${encodeURIComponent(fullAddress)}" target="_blank" rel="noopener noreferrer">Google Haritalar'da Aç →</a></span>`;
+        } else {
+          const item = comingInfoVals[0].closest(".info-item");
+          if (item) item.style.display = "none";
+        }
       }
-      const comingTitle = document.getElementById("comingTitle");
-      if (comingTitle) {
-        comingTitle.innerHTML = "Yeni smash burger menümüz ve online sipariş sistemimiz <em>çok yakında</em> burada.";
+      if (comingInfoVals[2]) {
+        if (p.coming_hours_html) {
+          comingInfoVals[2].innerHTML = p.coming_hours_html;
+        } else {
+          const item = comingInfoVals[2].closest(".info-item");
+          if (item) item.style.display = "none";
+        }
       }
-      const comingDesc = document.querySelector(".coming-card .hero-desc");
-      if (comingDesc && comingDesc.textContent.includes("taş fırın")) {
-        comingDesc.textContent = "Bahçelievler'deki mutfağımızdan sıcacık smash burgerlerimizi doğrudan web sitemiz üzerinden sipariş edebilmeniz için son hazırlıklarımızı yapıyoruz. Bu sırada telefonla hemen sipariş verebilirsiniz.";
+      if (comingInfoVals[3] && !info.instagram) {
+        const item = comingInfoVals[3].closest(".info-item");
+        if (item) item.style.display = "none";
       }
-      const comingInfoVals = document.querySelectorAll(".info-box .info-val");
-      if (comingInfoVals.length >= 4) {
-        if (comingInfoVals[0]) comingInfoVals[0].innerHTML = `${fullAddress}<span class="info-sub"><a href="https://maps.google.com/?q=${encodeURIComponent(fullAddress)}" target="_blank" rel="noopener noreferrer">Google Haritalar'da Aç →</a></span>`;
-        if (comingInfoVals[2]) comingInfoVals[2].innerHTML = `Haftanın her günü: 12:00 – 03:45<span class="info-sub">Paket Servis &amp; Gel Al</span>`;
-        if (comingInfoVals[3] && !info.instagram) comingInfoVals[3].closest(".info-item").style.display = "none";
-      }
-      const comingFooterMeta = document.querySelector(".site-footer div");
-      if (comingFooterMeta && comingFooterMeta.textContent.includes("Ginger")) {
-        comingFooterMeta.textContent = `© 2026 ${info.name || "We Smash The Burger"} · Bahçelievler, İstanbul`;
-      }
+    }
+    const comingFooterMeta = document.querySelector(".site-footer div");
+    if (comingFooterMeta && comingFooterMeta.textContent.includes("Ginger")) {
+      comingFooterMeta.textContent = `© 2026 ${brandName}${p.footer_city ? " · " + p.footer_city : ""}`;
     }
 
     // Sipariş Kanalları (.hub-grid) — Her restoran sadece kendi aktif kanallarını görür
