@@ -96,14 +96,16 @@
   async function fetchRestaurantByQuery(filterQuery) {
     if (typeof fetch !== "function") return null;
     try {
-      const cols = "id,name,slug,custom_domain,phone,address,instagram,primary_color,is_active";
-      const url = `${SUPABASE_URL}/rest/v1/restaurants?select=${cols}&${filterQuery}&limit=1`;
-      const res = await fetch(url, {
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`
-        }
-      });
+      const baseCols = "id,name,slug,custom_domain,phone,address,instagram,primary_color,is_active";
+      const colsWithProfile = baseCols + ",profile";
+      const headers = {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`
+      };
+      let res = await fetch(`${SUPABASE_URL}/rest/v1/restaurants?select=${colsWithProfile}&${filterQuery}&limit=1`, { headers });
+      if (res.status === 400) {
+        res = await fetch(`${SUPABASE_URL}/rest/v1/restaurants?select=${baseCols}&${filterQuery}&limit=1`, { headers });
+      }
       if (!res.ok) return null;
       const rows = await res.json();
       return Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
@@ -397,6 +399,64 @@
       const comingFooterMeta = document.querySelector(".site-footer div");
       if (comingFooterMeta && comingFooterMeta.textContent.includes("Ginger")) {
         comingFooterMeta.textContent = `© 2026 ${info.name || "We Smash The Burger"} · Bahçelievler, İstanbul`;
+      }
+    }
+
+    // Sipariş Kanalları (.hub-grid) — Her restoran sadece kendi aktif kanallarını görür
+    const hubGrid = document.querySelector(".hub-grid");
+    if (hubGrid) {
+      const profile = (info.profile && typeof info.profile === "object") ? info.profile : {};
+      const defaultChannels = slug === "we-smash-the-burger"
+        ? { yemeksepeti: "https://www.yemeksepeti.com/restaurant/rcqj/we-smash-the-burger" }
+        : {};
+      const channels = (profile.channels && typeof profile.channels === "object")
+        ? profile.channels
+        : defaultChannels;
+      const waRaw = typeof profile.whatsapp === "string" ? profile.whatsapp.trim() : "";
+      const waDigits = waRaw.replace(/\D/g, "");
+      const waDisplay = (typeof profile.whatsapp_display === "string" && profile.whatsapp_display.trim())
+        ? profile.whatsapp_display.trim()
+        : waRaw;
+
+      let visibleCount = 0;
+      hubGrid.querySelectorAll(".hub-card[data-channel]").forEach(card => {
+        const ch = card.getAttribute("data-channel");
+        let show = false;
+
+        if (ch === "phone") {
+          if (info.phone && String(info.phone).trim()) {
+            show = true;
+            const cleanTel = String(info.phone).replace(/\s+/g, "");
+            card.setAttribute("href", `tel:${cleanTel}`);
+            const act = card.querySelector(".btn-hub-action");
+            if (act) act.textContent = info.phone;
+          }
+        } else if (ch === "whatsapp") {
+          if (waDigits) {
+            show = true;
+            card.setAttribute("href", `https://wa.me/${waDigits}?text=Merhaba%2C%20sipari%C5%9F%20vermek%20istiyorum.`);
+            const act = card.querySelector(".btn-hub-action");
+            if (act) act.textContent = waDisplay;
+          }
+        } else if (ch === "trendyol" || ch === "yemeksepeti" || ch === "migros") {
+          const chUrl = channels[ch] ? String(channels[ch]).trim() : "";
+          if (/^https?:\/\//i.test(chUrl)) {
+            show = true;
+            card.setAttribute("href", chUrl);
+            if (ch === "trendyol") {
+              const desc = card.querySelector(".hub-card-desc");
+              if (desc) desc.textContent = "Bölgenize hızlı Trendyol Go kuryesiyle teslimat.";
+            }
+          }
+        }
+
+        card.style.display = show ? "" : "none";
+        if (show) visibleCount += 1;
+      });
+
+      hubGrid.classList.remove("hub-grid--cols-1", "hub-grid--cols-2", "hub-grid--cols-3", "hub-grid--cols-4");
+      if (visibleCount >= 1 && visibleCount <= 4) {
+        hubGrid.classList.add(`hub-grid--cols-${visibleCount}`);
       }
     }
 

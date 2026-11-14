@@ -1211,6 +1211,24 @@
       gap: 14px;
     }
 
+    @media (min-width: 1101px) {
+      .hub-grid.hub-grid--cols-1 {
+        grid-template-columns: minmax(0, 340px);
+        justify-content: center;
+      }
+      .hub-grid.hub-grid--cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 320px));
+        justify-content: center;
+      }
+      .hub-grid.hub-grid--cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 300px));
+        justify-content: center;
+      }
+      .hub-grid.hub-grid--cols-4 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
     .hub-card {
       background: var(--white);
       border: 1px solid var(--sand-100);
@@ -2833,7 +2851,7 @@
 
       <div class="hub-grid">
         <!-- Telefon -->
-        <a href="tel:02163370201" class="hub-card">
+        <a href="tel:02163370201" class="hub-card" data-channel="phone">
           <div class="hub-logo-circle hub-logo-phone">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
@@ -2845,7 +2863,7 @@
         </a>
 
         <!-- WhatsApp -->
-        <a href="https://wa.me/905536660201?text=Merhaba%2C%20sipari%C5%9F%20vermek%20istiyorum." target="_blank" rel="noopener noreferrer" class="hub-card">
+        <a href="https://wa.me/905536660201?text=Merhaba%2C%20sipari%C5%9F%20vermek%20istiyorum." target="_blank" rel="noopener noreferrer" class="hub-card" data-channel="whatsapp">
           <div class="hub-logo-circle hub-logo-img"><img src="images/channels/whatsapp.svg" alt="WhatsApp logosu" loading="lazy"></div>
           <h3 class="hub-card-title">WhatsApp</h3>
           <p class="hub-card-desc">Siparişinizi WhatsApp'tan yazarak da iletebilirsiniz.</p>
@@ -2853,7 +2871,7 @@
         </a>
 
         <!-- Trendyol Go -->
-        <a href="https://tgoyemek.com/restoranlar/1152" target="_blank" rel="noopener noreferrer" class="hub-card">
+        <a href="https://tgoyemek.com/restoranlar/1152" target="_blank" rel="noopener noreferrer" class="hub-card" data-channel="trendyol">
           <div class="hub-logo-circle hub-logo-img"><img src="images/channels/trendyol.svg" alt="Trendyol logosu" loading="lazy"></div>
           <h3 class="hub-card-title">Trendyol Go</h3>
           <p class="hub-card-desc">Göztepe ve çevre mahallelere hızlı Trendyol Go kuryesiyle teslimat.</p>
@@ -2861,7 +2879,7 @@
         </a>
 
         <!-- Yemeksepeti -->
-        <a href="https://www.yemeksepeti.com/restaurant/depv/ginger-pizza" target="_blank" rel="noopener noreferrer" class="hub-card">
+        <a href="https://www.yemeksepeti.com/restaurant/depv/ginger-pizza" target="_blank" rel="noopener noreferrer" class="hub-card" data-channel="yemeksepeti">
           <div class="hub-logo-circle hub-logo-img"><img src="images/channels/yemeksepeti.png" alt="Yemeksepeti logosu" loading="lazy"></div>
           <h3 class="hub-card-title">Yemeksepeti</h3>
           <p class="hub-card-desc">Yemeksepeti güvencesiyle menüyü inceleyip hemen sipariş verin.</p>
@@ -2869,7 +2887,7 @@
         </a>
 
         <!-- Migros Yemek -->
-        <a href="https://www.migros.com.tr/yemek/ginger-pizza-kadikoy-goztepe-mah-st-18b72" target="_blank" rel="noopener noreferrer" class="hub-card">
+        <a href="https://www.migros.com.tr/yemek/ginger-pizza-kadikoy-goztepe-mah-st-18b72" target="_blank" rel="noopener noreferrer" class="hub-card" data-channel="migros">
           <div class="hub-logo-circle hub-logo-img"><img src="images/channels/migros.svg" alt="Migros Yemek logosu" loading="lazy"></div>
           <h3 class="hub-card-title">Migros Yemek</h3>
           <p class="hub-card-desc">Migros Yemek avantajları ve indirim kuponlarıyla kapınızda.</p>
@@ -3225,7 +3243,7 @@
        Menu API & Dinamik Veri Yükleyici
        ======================================================================== -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js?v=20261114a"></script>
+  <script src="js/config.js?v=20261114b"></script>
   <script src="js/menu-api.js?v=20261114a"></script>
   <script src="js/store-status.js?v=20261114a"></script>
   <script src="js/order-api.js?v=20261112i"></script>
@@ -4140,14 +4158,31 @@
         </div>
 
         <!-- İletişim Butonları -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <a href="${isGinger ? 'tel:02163370201' : (restInfo && restInfo.phone ? 'tel:' + restInfo.phone.replace(/\D/g, '') : 'tel:02163370201')}" class="btn-primary" style="background: var(--ink-900); font-size: 0.85rem; padding: 11px; justify-content: center;">
-            ${isGinger ? '📞 Fırını Ara' : '📞 Restoranı Ara'}
-          </a>
-          <a href="${isGinger ? 'https://wa.me/905536660201' : (restInfo && restInfo.phone ? 'https://wa.me/90' + restInfo.phone.replace(/\D/g, '').replace(/^0/, '') : 'https://wa.me/905536660201')}" target="_blank" rel="noopener" class="btn-primary" style="background: #25D366; font-size: 0.85rem; padding: 11px; justify-content: center;">
-            💬 WhatsApp
-          </a>
-        </div>
+        ${(() => {
+          const waNum = isGinger
+            ? "905536660201"
+            : (restInfo && restInfo.profile && restInfo.profile.whatsapp
+                ? String(restInfo.profile.whatsapp).replace(/\D/g, "")
+                : "");
+          const telHref = isGinger
+            ? "tel:02163370201"
+            : (restInfo && restInfo.phone ? "tel:" + restInfo.phone.replace(/\D/g, "") : "");
+          if (!telHref && !waNum) return "";
+          return `
+            <div style="display: grid; grid-template-columns: ${telHref && waNum ? '1fr 1fr' : '1fr'}; gap: 10px;">
+              ${telHref ? `
+                <a href="${telHref}" class="btn-primary" style="background: var(--ink-900); font-size: 0.85rem; padding: 11px; justify-content: center;">
+                  ${isGinger ? '📞 Fırını Ara' : '📞 Restoranı Ara'}
+                </a>
+              ` : ''}
+              ${waNum ? `
+                <a href="https://wa.me/${waNum}" target="_blank" rel="noopener" class="btn-primary" style="background: #25D366; font-size: 0.85rem; padding: 11px; justify-content: center;">
+                  💬 WhatsApp
+                </a>
+              ` : ''}
+            </div>
+          `;
+        })()}
       `;
     }
 
