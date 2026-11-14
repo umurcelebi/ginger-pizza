@@ -14,7 +14,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js?v=20261114c"></script>
-  <script src="js/store-status.js?v=20261114a"></script>
+  <script src="js/store-status.js?v=20261114b"></script>
   <script src="js/order-api.js?v=20261112i"></script>
 
   <style>
@@ -781,19 +781,25 @@
     </div>
 
     <div class="kds-actions">
+      <a href="https://xubo.app/restoran/" id="btnKdsMasterPanel" class="btn-kds" style="display:none; background:#1e293b; color:#f8fafc; border-color:#334155;" title="Xubo Master Yönetim Paneline Dön">
+        🛡️ Master Panel
+      </a>
       <button type="button" class="btn-kds btn-kds-store is-open" id="btnKdsStoreStatus" onclick="openKdsStoreModal()" title="Dükkan sipariş durumu ve yoğun mod kontrolü">
         🟢 Siparişe Açık
       </button>
       <button type="button" class="btn-kds btn-kds-sound active" id="btnToggleSound" title="Yeni sipariş geldiğinde ses çal">
         🔔 Ses Açık (Test Et)
       </button>
+      <button type="button" class="btn-kds" id="btnToggleAutoPrint" title="Yeni sipariş düştüğünde adisyon fişini otomatik yazdır">
+        🖨️ Oto-Fiş: Kapalı
+      </button>
       <button type="button" class="btn-kds" id="btnRefreshOrders" title="Siparişleri yenile">
         🔄 Yenile
       </button>
-      <a href="admin.html" class="btn-kds" title="Menü yönetimine dön">
+      <a href="admin.html" id="kdsLinkAdmin" class="btn-kds" title="Menü yönetimine dön">
         📋 Menü Paneli
       </a>
-      <a href="onizleme.html" target="_blank" class="btn-kds" title="Önizleme sitesini yeni sekmede aç">
+      <a href="onizleme.html" id="kdsLinkStorefront" target="_blank" class="btn-kds" title="Önizleme sitesini yeni sekmede aç">
         🌐 Önizleme
       </a>
     </div>
@@ -928,6 +934,8 @@
     let allOrders = [];
     let kdsStoreSettings = null;
     let soundEnabled = true;
+    let autoPrintEnabled = false;
+    let hasInitialOrderLoadDone = false;
     let knownNewOrderIds = new Set();
     let kdsRuntimeStarted = false;
 
@@ -1037,6 +1045,12 @@
           <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
             <span>ONLINE İNDİRİM (%${escapeHtml(order.discount_percent || 0)}):</span>
             <span>-${escapeHtml(order.discount_amount)} TL</span>
+          </div>
+        ` : ''}
+        ${Number(order.delivery_fee) > 0 ? `
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+            <span>TESLİMAT ÜCRETİ:</span>
+            <span>+${escapeHtml(order.delivery_fee)} TL</span>
           </div>
         ` : ''}
         <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-bottom: 4px;">
@@ -1223,11 +1237,13 @@
         ? doneOrders.slice(0, 50).map(renderOrderCard).join("")
         : '<div class="col-empty">Henüz tamamlanan sipariş yok.</div>';
 
-      // Yeni gelen sipariş varsa ses çal!
+      // Yeni gelen sipariş varsa ses çal ve Oto-Fiş açıksa yazdır!
       let hasBrandNew = false;
+      let latestBrandNewId = null;
       newOrders.forEach(o => {
         if (!knownNewOrderIds.has(o.id)) {
           hasBrandNew = true;
+          latestBrandNewId = o.id;
           knownNewOrderIds.add(o.id);
         }
       });
@@ -1235,6 +1251,12 @@
       if (hasBrandNew && soundEnabled) {
         SoundAlert.playBell();
       }
+      if (hasBrandNew && hasInitialOrderLoadDone && autoPrintEnabled && latestBrandNewId) {
+        setTimeout(() => {
+          try { window.printOrderReceipt(latestBrandNewId); } catch (e) {}
+        }, 350);
+      }
+      hasInitialOrderLoadDone = true;
     }
 
     // Gün Sonu Özet & Onay Modalı
@@ -1363,6 +1385,32 @@
         btnSound.className = soundEnabled ? "btn-kds btn-kds-sound active" : "btn-kds btn-kds-sound";
         btnSound.textContent = soundEnabled ? "🔔 Ses Açık (Test Et)" : "🔕 Ses Kapalı";
       });
+
+      // Oto-Fiş Butonu ve Linkler
+      const activeKdsSlug = getKdsActiveSlug();
+      const autoPrintKey = `kds_auto_print_${activeKdsSlug}`;
+      autoPrintEnabled = localStorage.getItem(autoPrintKey) === "true";
+      const btnAutoPrint = document.getElementById("btnToggleAutoPrint");
+      if (btnAutoPrint) {
+        const syncAutoPrintBtn = () => {
+          btnAutoPrint.className = autoPrintEnabled ? "btn-kds btn-kds-sound active" : "btn-kds";
+          btnAutoPrint.textContent = autoPrintEnabled ? "🖨️ Oto-Fiş: Açık" : "🖨️ Oto-Fiş: Kapalı";
+        };
+        syncAutoPrintBtn();
+        btnAutoPrint.addEventListener("click", () => {
+          autoPrintEnabled = !autoPrintEnabled;
+          localStorage.setItem(autoPrintKey, autoPrintEnabled ? "true" : "false");
+          syncAutoPrintBtn();
+        });
+      }
+      const kdsLinkAdmin = document.getElementById("kdsLinkAdmin");
+      const kdsLinkStorefront = document.getElementById("kdsLinkStorefront");
+      if (kdsLinkAdmin && activeKdsSlug && activeKdsSlug !== "ginger-pizza") {
+        kdsLinkAdmin.href = `admin.html?r=${encodeURIComponent(activeKdsSlug)}`;
+      }
+      if (kdsLinkStorefront && activeKdsSlug && activeKdsSlug !== "ginger-pizza") {
+        kdsLinkStorefront.href = `onizleme.html?r=${encodeURIComponent(activeKdsSlug)}`;
+      }
 
       // Yenile Butonu
       document.getElementById("btnRefreshOrders").addEventListener("click", () => {
@@ -1522,6 +1570,8 @@
           }
 
           const authRole = (data.user.app_metadata && data.user.app_metadata.role) || "staff";
+          const btnMaster = document.getElementById("btnKdsMasterPanel");
+          if (btnMaster) btnMaster.style.display = authRole === "super_admin" ? "inline-flex" : "none";
           sessionStorage.setItem(getKdsSessionKey("admin_logged_in"), "true");
           sessionStorage.setItem(getKdsSessionKey("user_email"), data.user.email || email);
           sessionStorage.setItem(getKdsSessionKey("user_role"), authRole === "staff" ? "staff" : "admin");
@@ -1534,6 +1584,8 @@
       const authUser = await checkKdsSupabaseSession();
       if (authUser) {
         const authRole = (authUser.app_metadata && authUser.app_metadata.role) || "staff";
+        const btnMaster = document.getElementById("btnKdsMasterPanel");
+        if (btnMaster) btnMaster.style.display = authRole === "super_admin" ? "inline-flex" : "none";
         sessionStorage.setItem(getKdsSessionKey("admin_logged_in"), "true");
         sessionStorage.setItem(getKdsSessionKey("user_email"), authUser.email || "");
         sessionStorage.setItem(getKdsSessionKey("user_role"), authRole === "staff" ? "staff" : "admin");

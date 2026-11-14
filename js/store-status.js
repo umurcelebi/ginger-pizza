@@ -83,6 +83,8 @@ function createDefaultStoreSettings() {
     weekly_hours: createDefaultWeeklyHours(),
     online_discount_enabled: false,
     online_discount_percent: 0,
+    min_order_amount: 0,
+    delivery_fee: 0,
     payment_methods: createDefaultPaymentMethods(),
     updated_at: new Date().toISOString()
   };
@@ -109,6 +111,10 @@ function normalizeStoreSettings(raw) {
 
   const rawPercent = Number(src.online_discount_percent);
   const clampedPercent = Number.isFinite(rawPercent) ? Math.min(90, Math.max(0, Math.round(rawPercent * 100) / 100)) : 0;
+  const rawMinOrder = Number(src.min_order_amount);
+  const cleanMinOrder = Number.isFinite(rawMinOrder) ? Math.max(0, Math.round(rawMinOrder * 100) / 100) : 0;
+  const rawDeliveryFee = Number(src.delivery_fee);
+  const cleanDeliveryFee = Number.isFinite(rawDeliveryFee) ? Math.max(0, Math.round(rawDeliveryFee * 100) / 100) : 0;
 
   return {
     id: getStoreSettingsRowId(),
@@ -118,6 +124,8 @@ function normalizeStoreSettings(raw) {
     weekly_hours: hours,
     online_discount_enabled: Boolean(src.online_discount_enabled),
     online_discount_percent: clampedPercent,
+    min_order_amount: cleanMinOrder,
+    delivery_fee: cleanDeliveryFee,
     payment_methods: normalizePaymentMethods(src.payment_methods),
     updated_at: src.updated_at || new Date().toISOString()
   };
@@ -125,12 +133,16 @@ function normalizeStoreSettings(raw) {
 
 function getStoreSupabaseClient() {
   try {
+    if (typeof window.getSupabaseClient === "function") {
+      const shared = window.getSupabaseClient();
+      if (shared) return shared;
+    }
     let config = null;
-    const raw = localStorage.getItem(STORE_SETTINGS_CONFIG_KEY);
-    if (raw) {
-      config = JSON.parse(raw);
-    } else if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.anonKey) {
+    if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url && window.SUPABASE_CONFIG.anonKey) {
       config = { url: window.SUPABASE_CONFIG.url, key: window.SUPABASE_CONFIG.anonKey };
+    } else {
+      const raw = localStorage.getItem(STORE_SETTINGS_CONFIG_KEY);
+      if (raw) config = JSON.parse(raw);
     }
     if (config && config.url && config.key && window.supabase) {
       return window.supabase.createClient(config.url, config.key);
@@ -248,13 +260,17 @@ const StoreStatus = {
   calculateDiscount(subtotal, rawSettings) {
     const s = normalizeStoreSettings(rawSettings);
     const cleanSub = Math.max(0, Number(subtotal) || 0);
+    const minOrderAmount = Math.max(0, Number(s.min_order_amount) || 0);
+    const deliveryFee = Math.max(0, Number(s.delivery_fee) || 0);
     if (!s.online_discount_enabled || s.online_discount_percent <= 0 || cleanSub <= 0) {
       return {
         enabled: false,
         percent: 0,
         subtotal: cleanSub,
         discountAmount: 0,
-        finalTotal: cleanSub
+        finalTotal: cleanSub,
+        minOrderAmount,
+        deliveryFee
       };
     }
     const discountAmount = Math.round(cleanSub * (s.online_discount_percent / 100));
@@ -264,7 +280,9 @@ const StoreStatus = {
       percent: s.online_discount_percent,
       subtotal: cleanSub,
       discountAmount,
-      finalTotal
+      finalTotal,
+      minOrderAmount,
+      deliveryFee
     };
   },
 
@@ -463,6 +481,8 @@ const StoreStatus = {
           weekly_hours: normalized.weekly_hours,
           online_discount_enabled: normalized.online_discount_enabled,
           online_discount_percent: normalized.online_discount_percent,
+          min_order_amount: normalized.min_order_amount,
+          delivery_fee: normalized.delivery_fee,
           payment_methods: normalized.payment_methods,
           updated_at: normalized.updated_at
         };
@@ -473,8 +493,8 @@ const StoreStatus = {
           .select()
           .single();
 
-        // Veritabanında yeni sütunlar (online_discount_* veya payment_methods) henüz yoksa uyumlu kolonlarla tekrar dene
-        if (error && /(online_discount|payment_methods)/i.test(String(error.message || ""))) {
+        // Veritabanında yeni sütunlar henüz yoksa uyumlu kolonlarla tekrar dene
+        if (error && /(online_discount|payment_methods|min_order_amount|delivery_fee)/i.test(String(error.message || ""))) {
           const errMsg = String(error.message || "");
           const retryPayload = { ...payload };
           if (/online_discount/i.test(errMsg)) {
@@ -484,14 +504,20 @@ const StoreStatus = {
           if (/payment_methods/i.test(errMsg)) {
             delete retryPayload.payment_methods;
           }
+          if (/(min_order_amount|delivery_fee)/i.test(errMsg)) {
+            delete retryPayload.min_order_amount;
+            delete retryPayload.delivery_fee;
+          }
           let retry = await sb
             .from("store_settings")
             .upsert([retryPayload], { onConflict: "id" })
             .select()
             .single();
-          if (retry.error && /(online_discount|payment_methods)/i.test(String(retry.error.message || ""))) {
+          if (retry.error && /(online_discount|payment_methods|min_order_amount|delivery_fee)/i.test(String(retry.error.message || ""))) {
             delete retryPayload.online_discount_enabled;
             delete retryPayload.online_discount_percent;
+            delete retryPayload.min_order_amount;
+            delete retryPayload.delivery_fee;
             delete retryPayload.payment_methods;
             retry = await sb.from("store_settings").upsert([retryPayload], { onConflict: "id" }).select().single();
           }
@@ -501,6 +527,8 @@ const StoreStatus = {
                 ...retry.data,
                 online_discount_enabled: normalized.online_discount_enabled,
                 online_discount_percent: normalized.online_discount_percent,
+                min_order_amount: normalized.min_order_amount,
+                delivery_fee: normalized.delivery_fee,
                 payment_methods: normalized.payment_methods
               }),
               synced: false,

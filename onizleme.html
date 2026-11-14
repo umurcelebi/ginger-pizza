@@ -3245,7 +3245,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js?v=20261114c"></script>
   <script src="js/menu-api.js?v=20261114a"></script>
-  <script src="js/store-status.js?v=20261114a"></script>
+  <script src="js/store-status.js?v=20261114b"></script>
   <script src="js/order-api.js?v=20261112i"></script>
   <script>
     let menuData = [];
@@ -3803,26 +3803,52 @@
       renderCheckoutPaymentMethods();
 
       const modal = document.getElementById("checkoutModalBackdrop");
+      updateCheckoutTotalsUI();
+      if (modal) modal.classList.add("open");
+      document.body.style.overflow = "hidden";
+    };
+
+    window.updateCheckoutTotalsUI = function() {
       const summaryTotal = document.getElementById("checkoutSummaryTotal");
       const breakdownEl = document.getElementById("checkoutDiscountBreakdown");
+      const submitBtn = document.getElementById("btnSubmitOrder");
       const rawTotal = Cart.getTotal();
       const disc = window.StoreStatus
         ? StoreStatus.calculateDiscount(rawTotal, currentStoreStatus.settings)
-        : { enabled: false, percent: 0, subtotal: rawTotal, discountAmount: 0, finalTotal: rawTotal };
+        : { enabled: false, percent: 0, subtotal: rawTotal, discountAmount: 0, finalTotal: rawTotal, minOrderAmount: 0, deliveryFee: 0 };
+
+      const isDelivery = currentDeliveryType === "delivery";
+      const minOrder = isDelivery ? Math.max(0, Number(disc.minOrderAmount) || 0) : 0;
+      const deliveryFee = isDelivery ? Math.max(0, Number(disc.deliveryFee) || 0) : 0;
+      const grandTotal = Math.max(0, disc.finalTotal + deliveryFee);
+      const isBelowMin = isDelivery && minOrder > 0 && disc.finalTotal < minOrder;
 
       if (breakdownEl) {
+        const rows = [];
         if (disc.enabled && disc.discountAmount > 0) {
+          rows.push(`<div style="display:flex; justify-content:space-between; width:100%;"><span>🎁 Online Sipariş İndirimi (%${disc.percent})</span><span>${disc.subtotal} ₺ → -${disc.discountAmount} ₺</span></div>`);
+        }
+        if (deliveryFee > 0) {
+          rows.push(`<div style="display:flex; justify-content:space-between; width:100%; color:var(--ink-700);"><span>🛵 Paket Servis Teslimat Ücreti</span><span>+${deliveryFee} ₺</span></div>`);
+        }
+        if (isBelowMin) {
+          const diff = Math.ceil(minOrder - disc.finalTotal);
+          rows.push(`<div style="width:100%; margin-top:4px; padding:6px 8px; border-radius:6px; background:#fff3e0; color:#b8500c; font-weight:700; font-size:0.78rem;">⚠️ Paket servis minimum tutarı ${minOrder} ₺'dir. Sepete ${diff} ₺ daha ürün ekleyin veya "Gel-Al" seçin.</div>`);
+        }
+        if (rows.length > 0) {
           breakdownEl.style.display = "flex";
-          breakdownEl.style.justifyContent = "space-between";
-          breakdownEl.innerHTML = `<span>🎁 Online Sipariş İndirimi (%${disc.percent})</span><span>${disc.subtotal} ₺ → -${disc.discountAmount} ₺</span>`;
+          breakdownEl.style.flexDirection = "column";
+          breakdownEl.style.gap = "4px";
+          breakdownEl.innerHTML = rows.join("");
         } else {
           breakdownEl.style.display = "none";
           breakdownEl.innerHTML = "";
         }
       }
-      if (summaryTotal) summaryTotal.textContent = `${disc.finalTotal} ₺`;
-      if (modal) modal.classList.add("open");
-      document.body.style.overflow = "hidden";
+      if (summaryTotal) summaryTotal.textContent = `${grandTotal} ₺`;
+      if (submitBtn) {
+        submitBtn.disabled = isBelowMin;
+      }
     };
 
     window.closeCheckoutModal = function() {
@@ -3848,6 +3874,9 @@
         if (tabTakeaway) tabTakeaway.classList.add("active");
         if (groupAddress) groupAddress.style.display = "none";
         if (custAddress) custAddress.required = false;
+      }
+      if (typeof window.updateCheckoutTotalsUI === "function") {
+        window.updateCheckoutTotalsUI();
       }
     };
 
@@ -3919,6 +3948,15 @@
         return;
       }
 
+      if (currentDeliveryType === "delivery" && window.StoreStatus) {
+        const discCheck = StoreStatus.calculateDiscount(Cart.getTotal(), currentStoreStatus.settings);
+        const minOrder = Math.max(0, Number(discCheck.minOrderAmount) || 0);
+        if (minOrder > 0 && discCheck.finalTotal < minOrder) {
+          alert(`Paket servis için minimum sepet tutarı ${minOrder} ₺ olmalıdır. Lütfen sepetinize ürün ekleyin veya "Gel-Al" seçeneğini tercih edin.`);
+          return;
+        }
+      }
+
       const submitBtn = document.getElementById("btnSubmitOrder");
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -3946,7 +3984,9 @@
           alert(err.message);
           return;
         }
-        alert("Sipariş oluşturulurken bir hata oluştu. Lütfen tekrar deneyin veya telefonla arayın: 0216 337 02 01");
+        const rawErrMsg = (err && err.message) ? String(err.message).replace(/^[A-Z_]+:\s*/, "") : "";
+        const restPhone = (window.__ACTIVE_RESTAURANT_INFO__ && window.__ACTIVE_RESTAURANT_INFO__.phone) || "";
+        alert(rawErrMsg || ("Sipariş oluşturulurken bir hata oluştu. Lütfen tekrar deneyin" + (restPhone ? ` veya telefonla arayın: ${restPhone}` : ".")));
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;

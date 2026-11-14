@@ -1411,7 +1411,10 @@
 
         <div class="admin-nav-actions">
           <span id="currentUserInfo" style="font-size: 0.82rem; color: var(--ink-500); font-weight: 600; margin-right: 4px;"></span>
-          <a href="orders.html" class="btn-header btn-header-primary" style="display:inline-flex; align-items:center; gap:6px; background:#d86a1a; color:#fff;" title="Mutfak / Kasa canlı sipariş ekranını açar">
+          <a href="https://xubo.app/restoran/" id="btnBackToMasterPanel" class="btn-header" style="display:none; background:#1e293b; color:#f8fafc; border-color:#334155;" title="Xubo Master Yönetim Paneline Dön">
+            🛡️ Master Panel
+          </a>
+          <a href="orders.html" id="navLinkOrders" class="btn-header btn-header-primary" style="display:inline-flex; align-items:center; gap:6px; background:#d86a1a; color:#fff;" title="Mutfak / Kasa canlı sipariş ekranını açar">
             🔔 Canlı Siparişler
           </a>
           <span id="dbStatusBadge" class="db-status-badge db-status-local">● Bulut Bağlantısı</span>
@@ -1424,7 +1427,7 @@
           <button type="button" class="btn-header" id="btnOpenQrModal" onclick="openQrCodeModal()" title="Paket Servis QR Kodu oluştur ve indir">
             📱 QR Kod
           </button>
-          <a href="onizleme.html" target="_blank" class="btn-header" title="Önizleme sitesini yeni sekmede açar">
+          <a href="onizleme.html" id="navLinkStorefront" target="_blank" class="btn-header" title="Önizleme sitesini yeni sekmede açar">
             🌐 Önizlemeyi Gör
           </a>
           <button type="button" class="btn-header" id="btnLogout">
@@ -1541,6 +1544,31 @@
           </div>
         </div>
 
+        <!-- Paket Servis Kuralları (Minimum Sepet Tutarı & Teslimat Ücreti) -->
+        <div id="adminDeliveryRulesBox" class="payment-methods-box" style="margin-top: 12px;">
+          <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px;">
+            <div>
+              <div style="font-size: 0.9rem; font-weight: 800; color: var(--ink-900);">🛵 Paket Servis Alt Limiti &amp; Teslimat Ücreti</div>
+              <div style="font-size: 0.8rem; color: var(--ink-500); margin-top: 2px;">
+                Yalnızca <strong>Adrese Teslim (Paket Servis)</strong> siparişlerinde geçerlidir. 0 ₺ bırakırsanız alt limit / teslimat ücreti uygulanmaz.
+              </div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+              <div class="discount-rate-wrap">
+                <span style="font-size:0.78rem; font-weight:700; color:var(--ink-500);">Min. Sepet: ₺</span>
+                <input type="number" id="adminMinOrderAmount" class="discount-rate-input" style="width:76px;" min="0" max="5000" step="10" value="0">
+              </div>
+              <div class="discount-rate-wrap">
+                <span style="font-size:0.78rem; font-weight:700; color:var(--ink-500);">Teslimat Ücreti: ₺</span>
+                <input type="number" id="adminDeliveryFee" class="discount-rate-input" style="width:68px;" min="0" max="500" step="5" value="0">
+              </div>
+              <button type="button" class="btn-header btn-header-primary" id="btnSaveDeliveryRules" onclick="saveDeliveryRulesSettings()">
+                💾 Kuralları Kaydet
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Ödeme Tipleri (Aç/Kapat & Yeni Ekle) -->
         <div id="adminPaymentMethodsBox" class="payment-methods-box">
           <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px;">
@@ -1601,6 +1629,12 @@
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <button type="button" class="btn-header" id="btnResetDefaults" title="Önbelleği temizler ve menüyü yeniler">
             ↺ Sıfırla
+          </button>
+          <button type="button" class="btn-header" id="btnOpenCloneMenu" onclick="openCloneMenuModal()" title="Hazır şablon veya başka mağazadan menü kopyala">
+            📋 Şablon / Menü Kopyala
+          </button>
+          <button type="button" class="btn-header" id="btnOpenBulkImport" onclick="openBulkImportModal()" title="Excel veya listeden toplu ürün yapıştırarak ekle">
+            📥 Toplu Ürün Ekle
           </button>
           <button type="button" class="btn-header" id="btnAddCategory" title="Bu mağaza için yeni menü kategorisi ekle">
             + Kategori Ekle
@@ -1945,6 +1979,18 @@
         <div class="form-group">
           <label class="form-label" for="editImage">Görsel Yolu / URL (Opsiyonel)</label>
           <input type="text" id="editImage" class="form-input" placeholder="Örn: images/menu/ginger-pizza.jpg veya https://...">
+          <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
+            <span style="font-size:0.72rem; color:var(--ink-500); font-weight:700;">🎨 Hazır Görsel (0 MB Kota):</span>
+            <button type="button" class="btn-mini-helper" onclick="pickStockFoodImage('https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80')">🍕 Margherita</button>
+            <button type="button" class="btn-mini-helper" onclick="pickStockFoodImage('https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=80')">🍕 Pepperoni</button>
+            <button type="button" class="btn-mini-helper" onclick="pickStockFoodImage('https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80')">🍕 Gurme Pizza</button>
+            <button type="button" class="btn-mini-helper" onclick="pickStockFoodImage('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80')">🍔 Smash Burger</button>
+            <button type="button" class="btn-mini-helper" onclick="pickStockFoodImage('https://images.unsplash.com/photo-1606755962773-d324e0a13086?auto=format&fit=crop&w=800&q=80')">🍗 Tavuk Burger</button>
+            <button type="button" class="btn-mini-helper" onclick="pickStockFoodImage('https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=800&q=80')">🍟 Patates</button>
+            <button type="button" class="btn-mini-helper" onclick="pickStockFoodImage('https://images.unsplash.com/photo-1639024471283-03518883512d?auto=format&fit=crop&w=800&q=80')">🧅 Soğan Halkası</button>
+            <button type="button" class="btn-mini-helper" onclick="pickStockFoodImage('https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80')">🥗 Salata</button>
+            <button type="button" class="btn-mini-helper" onclick="pickStockFoodImage('https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80')">🥤 İçecek</button>
+          </div>
         </div>
 
         <div class="form-group">
@@ -2221,8 +2267,11 @@
       <div style="background:var(--sand-50); border:1px solid var(--sand-200); border-radius:8px; padding:8px 10px; font-family:monospace; font-size:0.75rem; color:var(--ink-700); word-break:break-all; margin-bottom:14px;" id="qrTargetUrlText"></div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-        <button type="button" class="btn-header btn-header-primary" onclick="downloadQrPng()" style="justify-content:center;">
-          ⬇️ PNG İndir
+        <button type="button" class="btn-header btn-header-primary" onclick="downloadQrPosterPng()" style="justify-content:center; grid-column: 1 / -1;">
+          🖼️ Baskıya Hazır Masa / Magnet Kartı İndir (PNG)
+        </button>
+        <button type="button" class="btn-header" onclick="downloadQrPng()" style="justify-content:center;">
+          ⬇️ Sadece QR (PNG)
         </button>
         <button type="button" class="btn-header" onclick="printQrPoster()" style="justify-content:center;">
           🖨️ Yazdır
@@ -2237,13 +2286,89 @@
     </div>
   </div>
 
+  <!-- ========================================================================
+       9. MODAL: TOPLU ÜRÜN İÇE AKTARMA (EXCEL / TABLO YAPIŞTIR)
+       ======================================================================== -->
+  <div id="bulkImportModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 620px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
+        <div>
+          <h2 class="modal-title" style="margin-bottom:4px;">📥 Toplu Ürün Ekle (Liste / Excel Yapıştır)</h2>
+          <p style="font-size:0.83rem; color:var(--ink-500); margin:0;">
+            Her satıra bir ürün gelecek şekilde <code>Kategori Adı | Ürün Adı | Açıklama | Fiyat</code> formatında yapıştırın (Excel'den doğrudan kopyalayıp yapıştırabilirsiniz).
+          </p>
+        </div>
+        <button type="button" class="btn-header" onclick="closeBulkImportModal()">✕</button>
+      </div>
+
+      <div style="background:var(--sand-50); border:1px solid var(--sand-200); border-radius:10px; padding:10px 12px; font-size:0.78rem; color:var(--ink-700); margin-bottom:12px; line-height:1.45;">
+        <strong>Örnek Satırlar:</strong><br>
+        <code>Burgerler | Classic Smash Burger | Çift köfte, cheddar, karamelize soğan | 290</code><br>
+        <code>Pizzalar | Margherita Pizza | Domates sos, mozzarella, fesleğen | 260 | 320 | 380</code> <span style="color:var(--ink-500);">(3 fiyat yazarsanız Small/Medium/Large pizza olarak eklenir)</span><br>
+        <code>İçecekler | Coca-Cola (330 ml) | Soğuk kutu içecek | 65</code>
+      </div>
+
+      <textarea id="bulkImportTextarea" class="form-input" rows="8" placeholder="Burgerler | Classic Smash | Çift köfte, cheddar | 290&#10;Yan Ürünler | Kajun Patates | Baharatlı çıtır patates | 110&#10;İçecekler | Ayran | 300 ml | 50" style="font-family:monospace; font-size:0.82rem; line-height:1.45;"></textarea>
+
+      <div id="bulkImportStatus" style="display:none; margin-top:10px; font-size:0.82rem; font-weight:700;"></div>
+
+      <div class="modal-actions" style="margin-top:14px;">
+        <button type="button" class="btn-header" onclick="closeBulkImportModal()">İptal</button>
+        <button type="button" class="btn-header btn-header-primary" id="btnRunBulkImport" onclick="handleRunBulkImport()">
+          🚀 Ürünleri İçe Aktar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       10. MODAL: ŞABLON / MAĞAZADAN MENÜ KOPYALA
+       ======================================================================== -->
+  <div id="cloneMenuModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 480px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
+        <div>
+          <h2 class="modal-title" style="margin-bottom:4px;">📋 Şablon / Mağazadan Menü Kopyala</h2>
+          <p style="font-size:0.83rem; color:var(--ink-500); margin:0;">
+            Hazır sektör şablonunu veya başka bir şubenin tüm kategorilerini, ürünlerini ve ilave seçeneklerini bu mağazaya tek tıkla kopyalayın.
+          </p>
+        </div>
+        <button type="button" class="btn-header" onclick="closeCloneMenuModal()">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="cloneSourceSlugSelect">Kaynak Şablon / Mağaza Seçin</label>
+        <select id="cloneSourceSlugSelect" class="form-input">
+          <option value="__template_burger__">🍔 Hazır Burgerci Başlangıç Şablonu (4 Kategori, 7 Ürün)</option>
+          <option value="__template_pizza__">🍕 Hazır Pizzacı Başlangıç Şablonu (4 Kategori, 3 Boyutlu Pizzalar)</option>
+          <option value="we-smash-the-burger">🍔 We Smash The Burger Menüsü (Tüm Menü)</option>
+          <option value="ginger-pizza">🍕 Ginger Pizza Menüsü (Tüm Menü)</option>
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-top:10px;">
+        <label style="display:flex; align-items:flex-start; gap:8px; font-size:0.83rem; color:var(--ink-700); cursor:pointer;">
+          <input type="checkbox" id="cloneReplaceExisting" style="margin-top:3px;">
+          <span>Mevcut menüyü silip sıfırdan bununla değiştir <span style="color:var(--ink-500);">(İşaretlenmezse mevcut ürünlerin yanına ekler)</span></span>
+        </label>
+      </div>
+
+      <div class="modal-actions" style="margin-top:16px;">
+        <button type="button" class="btn-header" onclick="closeCloneMenuModal()">Vazgeç</button>
+        <button type="button" class="btn-header btn-header-primary" id="btnRunCloneMenu" onclick="handleRunCloneMenu()">
+          📋 Menüyü Kopyala
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast" class="toast-msg">Değişiklikler kaydedildi</div>
 
   <!-- Menu API, Dükkan Durumu & Sipariş/Rapor API -->
   <script src="js/config.js?v=20261114c"></script>
   <script src="js/menu-api.js?v=20261114a"></script>
-  <script src="js/store-status.js?v=20261114a"></script>
+  <script src="js/store-status.js?v=20261114b"></script>
   <script src="js/order-api.js?v=20261112i"></script>
 
   <script>
@@ -2390,10 +2515,24 @@
 
         // Veritabanı ve Sıfırlama Kısıtlaması (Admin dışındakilere tamamen gizli)
         const btnUsers = document.getElementById("btnOpenUsersModal");
+        const btnMaster = document.getElementById("btnBackToMasterPanel");
+        const navOrders = document.getElementById("navLinkOrders");
+        const navStore = document.getElementById("navLinkStorefront");
         const tabReports = document.getElementById("tabBtnReports");
         const tabProfile = document.getElementById("tabBtnProfile");
         const btnResetSales = document.getElementById("btnResetSalesAndCustomers");
         const canViewReports = user.role !== "staff";
+        if (btnMaster) btnMaster.style.display = user.authRole === "super_admin" ? "inline-flex" : "none";
+        if (navOrders) {
+          navOrders.href = activeSlug && activeSlug !== "ginger-pizza"
+            ? `orders.html?r=${encodeURIComponent(activeSlug)}`
+            : "orders.html";
+        }
+        if (navStore) {
+          navStore.href = activeSlug && activeSlug !== "ginger-pizza"
+            ? `onizleme.html?r=${encodeURIComponent(activeSlug)}`
+            : "onizleme.html";
+        }
         if (btnUsers) btnUsers.style.display = user.canEditDb ? "inline-flex" : "none";
         if (btnDb) btnDb.style.display = user.canEditDb ? "inline-flex" : "none";
         if (btnReset) btnReset.style.display = user.canReset ? "inline-flex" : "none";
@@ -2568,12 +2707,50 @@
       if (!settings) return;
       const chk = document.getElementById("adminDiscountEnabled");
       const inp = document.getElementById("adminDiscountPercent");
+      const minInp = document.getElementById("adminMinOrderAmount");
+      const feeInp = document.getElementById("adminDeliveryFee");
       if (chk) chk.checked = Boolean(settings.online_discount_enabled);
       if (inp && document.activeElement !== inp) {
         inp.value = Number(settings.online_discount_percent) || 0;
       }
+      if (minInp && document.activeElement !== minInp) {
+        minInp.value = Math.max(0, Number(settings.min_order_amount) || 0);
+      }
+      if (feeInp && document.activeElement !== feeInp) {
+        feeInp.value = Math.max(0, Number(settings.delivery_fee) || 0);
+      }
       window.renderAdminDiscountUI();
     }
+
+    window.saveDeliveryRulesSettings = async function() {
+      if (!window.StoreStatus) return;
+      const btn = document.getElementById("btnSaveDeliveryRules");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Kaydediliyor...";
+      }
+      try {
+        const current = adminStoreSettings || await StoreStatus.getSettings();
+        const minOrder = Math.max(0, Number(document.getElementById("adminMinOrderAmount")?.value) || 0);
+        const deliveryFee = Math.max(0, Number(document.getElementById("adminDeliveryFee")?.value) || 0);
+        const next = {
+          ...current,
+          min_order_amount: minOrder,
+          delivery_fee: deliveryFee
+        };
+        const res = await StoreStatus.saveSettings(next);
+        adminStoreSettings = res.settings;
+        syncAdminDiscountInputsFromSettings(adminStoreSettings);
+        showToast(res.synced
+          ? `Teslimat kuralları kaydedildi! (Min: ${minOrder} ₺, Ücret: ${deliveryFee} ₺)`
+          : "Teslimat kuralları yerel olarak kaydedildi.");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "💾 Kuralları Kaydet";
+        }
+      }
+    };
 
     function getAdminPaymentMethodsListSafe(settings) {
       if (window.StoreStatus && typeof StoreStatus.getPaymentMethods === "function") {
@@ -4408,6 +4585,267 @@
         </head><body><div class="card"><h1>${brandName}</h1><p>Online Paket Servis Siparişi İçin Okutun</p><img src="${dataUrl}" alt="QR Kod"><div class="foot">Hızlı Menü &amp; Online Sipariş</div></div>
         <script>window.onload=function(){setTimeout(function(){window.print();},200);};<\/script></body></html>`);
       win.document.close();
+    };
+
+    window.downloadQrPosterPng = function() {
+      const targetUrl = getQrTargetUrl();
+      const slug = typeof window.getActiveRestaurantSlug === "function"
+        ? window.getActiveRestaurantSlug()
+        : "ginger-pizza";
+      const info = window.__ACTIVE_RESTAURANT_INFO__ || {};
+      const brandName = (info && info.name) ? info.name : "Ginger Pizza";
+      const brandColor = (info && info.primary_color) ? info.primary_color : "#d86a1a";
+
+      const qrCanvas = document.createElement("canvas");
+      if (!drawQrToCanvas(qrCanvas, targetUrl, 640)) {
+        showToast("QR kütüphanesi henüz yüklenemedi.");
+        return;
+      }
+
+      const poster = document.createElement("canvas");
+      poster.width = 1080;
+      poster.height = 1350;
+      const ctx = poster.getContext("2d");
+
+      // Arka plan
+      ctx.fillStyle = "#14110f";
+      ctx.fillRect(0, 0, 1080, 1350);
+
+      // Üst marka şeridi
+      ctx.fillStyle = brandColor;
+      ctx.fillRect(0, 0, 1080, 28);
+
+      // İç kart
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(70, 90, 940, 1170, 36);
+      } else {
+        ctx.rect(70, 90, 940, 1170);
+      }
+      ctx.fill();
+
+      // Mağaza adı
+      ctx.fillStyle = "#14110f";
+      ctx.font = "800 56px system-ui, -apple-system, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(brandName.slice(0, 28), 540, 210);
+
+      // Alt başlık
+      ctx.fillStyle = brandColor;
+      ctx.font = "700 32px system-ui, -apple-system, sans-serif";
+      ctx.fillText("DİJİTAL MENÜ & ONLİNE SİPARİŞ", 540, 270);
+
+      // QR çerçevesi
+      ctx.strokeStyle = brandColor;
+      ctx.lineWidth = 6;
+      ctx.strokeRect(210, 325, 660, 660);
+      ctx.drawImage(qrCanvas, 230, 345, 620, 620);
+
+      // Çağrı metni
+      ctx.fillStyle = "#14110f";
+      ctx.font = "800 36px system-ui, -apple-system, sans-serif";
+      ctx.fillText("📱 Telefonunuzun Kamerasıyla Okutun", 540, 1070);
+
+      ctx.fillStyle = "#5c534c";
+      ctx.font = "600 26px system-ui, -apple-system, sans-serif";
+      ctx.fillText("Beklemeden menüyü inceleyin ve sıcak sipariş verin", 540, 1125);
+
+      ctx.fillStyle = "#8a7f77";
+      ctx.font = "600 22px monospace";
+      ctx.fillText(targetUrl.replace(/^https?:\/\//, "").replace(/\?qr=1$/, ""), 540, 1195);
+
+      const link = document.createElement("a");
+      link.download = `qr-masa-karti-${slug}.png`;
+      link.href = poster.toDataURL("image/png");
+      link.click();
+      showToast("Baskıya hazır QR Masa/Magnet Kartı indirildi!");
+    };
+
+    // Hazır Görsel Seçici (0 MB Kota)
+    window.pickStockFoodImage = function(url) {
+      const inp = document.getElementById("editImage");
+      if (inp) {
+        inp.value = url;
+        showToast("Hazır görsel seçildi!");
+      }
+    };
+
+    // Toplu Ürün İçe Aktarma (Excel / Liste Yapıştır)
+    window.openBulkImportModal = function() {
+      const st = document.getElementById("bulkImportStatus");
+      if (st) st.style.display = "none";
+      document.getElementById("bulkImportModal")?.classList.add("open");
+    };
+
+    window.closeBulkImportModal = function() {
+      document.getElementById("bulkImportModal")?.classList.remove("open");
+    };
+
+    window.handleRunBulkImport = async function() {
+      const ta = document.getElementById("bulkImportTextarea");
+      const st = document.getElementById("bulkImportStatus");
+      const btn = document.getElementById("btnRunBulkImport");
+      const raw = (ta ? ta.value : "").trim();
+      if (!raw) {
+        showToast("Lütfen eklenecek ürün satırlarını yapıştırın.");
+        return;
+      }
+
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length === 0) return;
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⏳ Aktarılıyor...";
+      }
+      if (st) {
+        st.style.display = "block";
+        st.style.color = "var(--ink-700)";
+        st.textContent = `0 / ${lines.length} ürün işleniyor...`;
+      }
+
+      try {
+        let cats = await MenuAPI.getCategories();
+        let addedCount = 0;
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const parts = line.includes("|")
+            ? line.split("|").map(s => s.trim())
+            : (line.includes("\t")
+                ? line.split("\t").map(s => s.trim())
+                : line.split(";").map(s => s.trim()));
+
+          if (parts.length < 3) continue;
+
+          const catName = parts[0] || "Genel";
+          const itemName = parts[1];
+          if (!itemName) continue;
+
+          let desc = "";
+          let isPizza = false;
+          let fixedPrice = 0;
+          let prices = null;
+
+          if (parts.length >= 6 && !isNaN(Number(parts[3])) && !isNaN(Number(parts[4])) && !isNaN(Number(parts[5]))) {
+            desc = parts[2] || "";
+            isPizza = true;
+            prices = {
+              small: Math.max(0, Number(parts[3]) || 0),
+              medium: Math.max(0, Number(parts[4]) || 0),
+              xlarge: Math.max(0, Number(parts[5]) || 0)
+            };
+          } else if (parts.length >= 4) {
+            desc = parts[2] || "";
+            fixedPrice = Math.max(0, Number(String(parts[3]).replace(/[^\d.]/g, "")) || 0);
+          } else {
+            fixedPrice = Math.max(0, Number(String(parts[2]).replace(/[^\d.]/g, "")) || 0);
+          }
+
+          let targetCat = cats.find(c =>
+            c.name.toLocaleLowerCase("tr-TR") === catName.toLocaleLowerCase("tr-TR")
+            || c.slug === catName.toLocaleLowerCase("tr-TR")
+          );
+          if (!targetCat) {
+            const created = await MenuAPI.createCategory(catName);
+            if (created && created.slug) {
+              cats = await MenuAPI.getCategories();
+              targetCat = cats.find(c => c.slug === created.slug) || created;
+            }
+          }
+
+          const categorySlug = (targetCat && targetCat.slug) || (cats[0] && cats[0].slug) || "ana-urunler";
+
+          await MenuAPI.saveItem({
+            name: itemName,
+            category: categorySlug,
+            desc,
+            badge: "",
+            image: "",
+            available: true,
+            isPizza,
+            prices: isPizza ? prices : null,
+            fixedPrice: isPizza ? null : fixedPrice,
+            modifiers: { removals: [], additions: [] }
+          });
+
+          addedCount++;
+          if (st) st.textContent = `${addedCount} / ${lines.length} ürün eklendi...`;
+        }
+
+        if (ta) ta.value = "";
+        closeBulkImportModal();
+        await loadDashboard();
+        showToast(`🎉 ${addedCount} ürün başarıyla menüye eklendi!`);
+      } catch (err) {
+        alert("Toplu ürün aktarımında hata: " + (err.message || err));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "🚀 Ürünleri İçe Aktar";
+        }
+      }
+    };
+
+    // Şablon / Başka Mağazadan Menü Kopyalama
+    window.openCloneMenuModal = function() {
+      const chk = document.getElementById("cloneReplaceExisting");
+      if (chk) chk.checked = false;
+      document.getElementById("cloneMenuModal")?.classList.add("open");
+    };
+
+    window.closeCloneMenuModal = function() {
+      document.getElementById("cloneMenuModal")?.classList.remove("open");
+    };
+
+    window.handleRunCloneMenu = async function() {
+      const sel = document.getElementById("cloneSourceSlugSelect");
+      const chk = document.getElementById("cloneReplaceExisting");
+      const btn = document.getElementById("btnRunCloneMenu");
+      const sourceSlug = sel ? sel.value : "";
+      const replaceExisting = Boolean(chk && chk.checked);
+      const targetSlug = getActiveAdminSlug();
+
+      if (!sourceSlug) return;
+      if (sourceSlug === targetSlug) {
+        alert("Kaynak ve hedef mağaza aynı olamaz.");
+        return;
+      }
+      if (replaceExisting && !confirm("DİKKAT: Bu mağazadaki mevcut tüm ürünler silinip seçilen şablon/menü yüklenecektir. Onaylıyor musunuz?")) {
+        return;
+      }
+
+      const sb = typeof window.getSupabaseClient === "function" ? window.getSupabaseClient() : null;
+      if (!sb) {
+        alert("Bulut veritabanı bağlantısı bulunamadı.");
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⏳ Kopyalanıyor...";
+      }
+
+      try {
+        const { data, error } = await sb.rpc("clone_restaurant_menu", {
+          p_source_slug: sourceSlug,
+          p_target_slug: targetSlug,
+          p_replace_existing: replaceExisting
+        });
+        if (error) throw error;
+
+        closeCloneMenuModal();
+        await loadDashboard();
+        showToast(`🎉 Menü kopyalandı! (${(data && data.copied_items) || 0} ürün aktarıldı)`);
+      } catch (err) {
+        alert("Menü kopyalama hatası: " + (err.message || err));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "📋 Menüyü Kopyala";
+        }
+      }
     };
 
     // Başlat
