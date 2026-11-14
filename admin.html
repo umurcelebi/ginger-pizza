@@ -2464,7 +2464,7 @@
   <script src="js/config.js?v=20261114c"></script>
   <script src="js/menu-api.js?v=20261114a"></script>
   <script src="js/store-status.js?v=20261114b"></script>
-  <script src="js/order-api.js?v=20261112i"></script>
+  <script src="js/order-api.js?v=20261114d"></script>
 
   <script>
     // ========================================================================
@@ -3264,6 +3264,58 @@
       }
     }
 
+    let adminWatcherStarted = false;
+    let adminInitialOrdersLoaded = false;
+    const adminKnownNewOrderIds = new Set();
+
+    function startAdminOrderAlertWatcher() {
+      if (adminWatcherStarted || typeof OrderAPI === "undefined") return;
+      adminWatcherStarted = true;
+      if (window.SoundAlert) {
+        SoundAlert.unlock();
+      }
+
+      const checkOrders = async () => {
+        try {
+          const allOrders = await OrderAPI.getOrders();
+          const newOrders = (allOrders || []).filter(o => o.status === "new");
+
+          const navLink = document.getElementById("navLinkOrders");
+          if (navLink) {
+            navLink.textContent = newOrders.length > 0
+              ? `🔔 Canlı Siparişler (${newOrders.length})`
+              : "🔔 Canlı Siparişler";
+          }
+
+          let latestOrder = null;
+          newOrders.forEach(o => {
+            if (!adminKnownNewOrderIds.has(o.id)) {
+              adminKnownNewOrderIds.add(o.id);
+              latestOrder = o;
+            }
+          });
+
+          if (adminInitialOrdersLoaded && latestOrder) {
+            if (window.SoundAlert && typeof SoundAlert.ringForOrder === "function") {
+              SoundAlert.ringForOrder(latestOrder);
+            }
+            if (typeof showToast === "function") {
+              showToast(`☎️ YENİ SİPARİŞ GELDİ! #${latestOrder.order_number || ""}`);
+            }
+          }
+          adminInitialOrdersLoaded = true;
+        } catch (e) {}
+      };
+
+      checkOrders();
+      OrderAPI.subscribe(() => { checkOrders(); });
+      if (window.SoundAlert && typeof SoundAlert.startBackgroundTicker === "function") {
+        SoundAlert.startBackgroundTicker(checkOrders, 7000);
+      } else {
+        setInterval(checkOrders, 7000);
+      }
+    }
+
     async function loadDashboard() {
       currentMenuItems = await MenuAPI.getMenu();
       await syncAdminDynamicCategories();
@@ -3271,6 +3323,7 @@
       renderTable();
       updateDbStatus();
       loadStoreControlPanel();
+      startAdminOrderAlertWatcher();
     }
 
     // İstatistikleri Güncelle

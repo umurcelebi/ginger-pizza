@@ -15,7 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js?v=20261114c"></script>
   <script src="js/store-status.js?v=20261114b"></script>
-  <script src="js/order-api.js?v=20261112i"></script>
+  <script src="js/order-api.js?v=20261114d"></script>
 
   <style>
     :root {
@@ -790,8 +790,8 @@
       <button type="button" class="btn-kds btn-kds-store is-open" id="btnKdsStoreStatus" onclick="openKdsStoreModal()" title="Dükkan sipariş durumu ve yoğun mod kontrolü">
         🟢 Siparişe Açık
       </button>
-      <button type="button" class="btn-kds btn-kds-sound active" id="btnToggleSound" title="Yeni sipariş geldiğinde ses çal">
-        🔔 Ses Açık (Test Et)
+      <button type="button" class="btn-kds btn-kds-sound active" id="btnToggleSound" title="Yeni sipariş geldiğinde telefon zili çal">
+        ☎️ Zil Açık (Test Et)
       </button>
       <button type="button" class="btn-kds" id="btnToggleAutoPrint" title="Yeni sipariş düştüğünde adisyon fişini otomatik yazdır">
         🖨️ Oto-Fiş: Kapalı
@@ -1242,19 +1242,25 @@
         ? doneOrders.slice(0, 50).map(renderOrderCard).join("")
         : '<div class="col-empty">Henüz tamamlanan sipariş yok.</div>';
 
-      // Yeni gelen sipariş varsa ses çal ve Oto-Fiş açıksa yazdır!
+      // Yeni gelen sipariş varsa eski telefon zili çal (sekme arka planda olsa bile) ve Oto-Fiş açıksa yazdır!
       let hasBrandNew = false;
       let latestBrandNewId = null;
+      let latestBrandNewOrder = null;
       newOrders.forEach(o => {
         if (!knownNewOrderIds.has(o.id)) {
           hasBrandNew = true;
           latestBrandNewId = o.id;
+          latestBrandNewOrder = o;
           knownNewOrderIds.add(o.id);
         }
       });
 
-      if (hasBrandNew && soundEnabled) {
-        SoundAlert.playBell();
+      if (hasBrandNew && hasInitialOrderLoadDone && soundEnabled && latestBrandNewOrder) {
+        if (window.SoundAlert && typeof SoundAlert.ringForOrder === "function") {
+          SoundAlert.ringForOrder(latestBrandNewOrder);
+        } else if (window.SoundAlert) {
+          SoundAlert.playBell();
+        }
       }
       if (hasBrandNew && hasInitialOrderLoadDone && autoPrintEnabled && latestBrandNewId) {
         setTimeout(() => {
@@ -1385,10 +1391,12 @@
       const btnSound = document.getElementById("btnToggleSound");
       btnSound.addEventListener("click", () => {
         SoundAlert.init();
+        SoundAlert.unlock();
+        SoundAlert.requestNotificationPermission();
         SoundAlert.playBell();
         soundEnabled = !soundEnabled;
         btnSound.className = soundEnabled ? "btn-kds btn-kds-sound active" : "btn-kds btn-kds-sound";
-        btnSound.textContent = soundEnabled ? "🔔 Ses Açık (Test Et)" : "🔕 Ses Kapalı";
+        btnSound.textContent = soundEnabled ? "☎️ Zil Açık (Test Et)" : "🔕 Zil Kapalı";
       });
 
       // Oto-Fiş Butonu ve Linkler
@@ -1530,8 +1538,12 @@
           setInterval(renderKdsStoreStatus, 30000);
         }
 
-        // Periyodik Polling (Her 10 saniyede bir garanti kontrol)
-        setInterval(loadOrders, 10000);
+        // Arka planda tarayıcı tarafından yavaşlatılmayan periyodik garanti kontrolü (6 sn)
+        if (window.SoundAlert && typeof SoundAlert.startBackgroundTicker === "function") {
+          SoundAlert.startBackgroundTicker(loadOrders, 6000);
+        } else {
+          setInterval(loadOrders, 6000);
+        }
       }
 
       const authOverlay = document.getElementById("kdsAuthOverlay");

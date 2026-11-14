@@ -223,59 +223,420 @@ const Cart = {
 };
 
 // ============================================================================
-// 2. SESLİ BİLDİRİM (WEB AUDIO API - DIŞ DOSYA GEREKTİRMEZ)
+// 2. SESLİ BİLDİRİM (ESKİ MEKANİK TELEFON ZİLİ - ARKA PLAN SEKMELERİ UYUMLU)
 // ============================================================================
 const SoundAlert = {
   ctx: null,
+  audioEl: null,
+  _wavUri: null,
+  _audioUnlocked: false,
+  _isRinging: false,
+  _unlockBound: false,
+  _titleFlashTimer: null,
+  _originalTitle: null,
+
+  buildRetroPhoneWavDataUri() {
+    if (this._wavUri) return this._wavUri;
+    const sampleRate = 22050;
+    const durationSec = 4.0;
+    const numSamples = Math.floor(sampleRate * durationSec);
+    const pcmBytes = numSamples * 2;
+    const buffer = new ArrayBuffer(44 + pcmBytes);
+    const view = new DataView(buffer);
+
+    const writeAscii = (offset, str) => {
+      for (let i = 0; i < str.length; i++) {
+        view.setUint8(offset + i, str.charCodeAt(i));
+      }
+    };
+
+    writeAscii(0, "RIFF");
+    view.setUint32(4, 36 + pcmBytes, true);
+    writeAscii(8, "WAVE");
+    writeAscii(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM
+    view.setUint16(22, 1, true); // Mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeAscii(36, "data");
+    view.setUint32(40, pcmBytes, true);
+
+    // 3 uzun çaldırma (Trrrrrring! ... Trrrrrring! ... Trrrrrring!)
+    const bursts = [
+      [0.0, 0.95],
+      [1.4, 2.35],
+      [2.8, 3.75]
+    ];
+
+    for (let i = 0; i < numSamples; i++) {
+      const t = i / sampleRate;
+      let sample = 0;
+
+      for (let b = 0; b < bursts.length; b++) {
+        const start = bursts[b][0];
+        const end = bursts[b][1];
+        if (t >= start && t <= end) {
+          const localT = t - start;
+          const burstLen = end - start;
+          const attack = Math.min(1, localT / 0.02);
+          const release = Math.min(1, (burstLen - localT) / 0.04);
+          const env = Math.min(attack, release);
+
+          // 22 Hz mekanik tokmak darbe modülasyonu (|sin(pi * 22 * t)| -> saniyede 22 vuruş)
+          const strikeEnv = 0.28 + 0.72 * Math.pow(Math.abs(Math.sin(Math.PI * 22 * localT)), 0.65);
+
+          // Çift pirinç çan frekansı: 820 Hz + 1025 Hz + 2050 Hz metalik harmonik
+          const bellA = Math.sin(2 * Math.PI * 820 * t);
+          const bellB = Math.sin(2 * Math.PI * 1025 * t);
+          const harmonic = 0.42 * Math.sin(2 * Math.PI * 2050 * t);
+          const ringWave = (bellA + bellB + harmonic) / 2.42;
+
+          sample = ringWave * strikeEnv * env * 0.88;
+          break;
+        }
+      }
+
+      const clipped = Math.max(-1, Math.min(1, sample));
+      view.setInt16(44 + i * 2, clipped < 0 ? clipped * 32768 : clipped * 32767, true);
+    }
+
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    this._wavUri = "data:audio/wav;base64," + btoa(binary);
+    return this._wavUri;
+  },
+
+  ensureAudioEl() {
+    if (typeof Audio === "undefined") return null;
+    if (!this.audioEl) {
+      try {
+        const el = new Audio(this.buildRetroPhoneWavDataUri());
+        el.preload = "auto";
+        el.volume = 1.0;
+        el.addEventListener("ended", () => {
+          this._isRinging = false;
+        });
+        this.audioEl = el;
+      } catch (e) {
+        return null;
+      }
+    }
+    return this.audioEl;
+  },
 
   init() {
-    if (!this.ctx) {
+    if (!this.ctx && typeof window !== "undefined") {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) this.ctx = new AudioCtx();
     }
     if (this.ctx && this.ctx.state === "suspended") {
-      this.ctx.resume();
+      try {
+        this.ctx.resume().catch(() => {});
+      } catch (e) {}
+    }
+  },
+
+  unlock() {
+    try {
+      this.init();
+    } catch (e) {}
+
+    try {
+      const el = this.ensureAudioEl();
+      if (el && !this._isRinging && !this._audioUnlocked) {
+        el.muted = true;
+        const p = el.play();
+        if (p && typeof p.then === "function") {
+          p.then(() => {
+            if (!this._isRinging) {
+              el.pause();
+              el.currentTime = 0;
+            }
+            el.muted = false;
+            this._audioUnlocked = true;
+          }).catch(() => {
+            el.muted = false;
+          });
+        }
+      }
+    } catch (e) {}
+  },
+
+  bindAutoUnlock() {
+    if (this._unlockBound || typeof window === "undefined") return;
+    this._unlockBound = true;
+    const onGesture = () => {
+      this.unlock();
+    };
+    ["pointerdown", "keydown", "touchstart", "click"].forEach(evt => {
+      window.addEventListener(evt, onGesture, { passive: true, capture: true });
+    });
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+          this.stopTitleFlash();
+        }
+      });
+    }
+  },
+
+  playWebAudioRetroPhone() {
+    try {
+      this.init();
+      if (!this.ctx || this.ctx.state !== "running") {
+        // Askıdaki (suspended) AudioContext kuyruğuna asla osilatör ekleme;
+        // sekme aktif olunca sonradan gecikmeli çalma bug'ına yol açar.
+        return false;
+      }
+
+      const now = this.ctx.currentTime;
+      const bursts = [0, 1.4, 2.8];
+      for (let i = 0; i < bursts.length; i++) {
+        const start = now + bursts[i];
+        const dur = 0.95;
+
+        const masterGain = this.ctx.createGain();
+        masterGain.gain.setValueAtTime(0.001, start);
+        masterGain.gain.linearRampToValueAtTime(0.45, start + 0.02);
+        masterGain.gain.setValueAtTime(0.45, start + dur - 0.04);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, start + dur);
+
+        const amGain = this.ctx.createGain();
+        amGain.gain.setValueAtTime(0.65, start);
+        const lfo = this.ctx.createOscillator();
+        lfo.type = "triangle";
+        lfo.frequency.setValueAtTime(22, start);
+        const lfoDepth = this.ctx.createGain();
+        lfoDepth.gain.setValueAtTime(0.35, start);
+        lfo.connect(lfoDepth);
+        lfoDepth.connect(amGain.gain);
+
+        const oscA = this.ctx.createOscillator();
+        oscA.type = "sine";
+        oscA.frequency.setValueAtTime(820, start);
+
+        const oscB = this.ctx.createOscillator();
+        oscB.type = "sine";
+        oscB.frequency.setValueAtTime(1025, start);
+
+        const oscC = this.ctx.createOscillator();
+        oscC.type = "triangle";
+        oscC.frequency.setValueAtTime(2050, start);
+        const gainC = this.ctx.createGain();
+        gainC.gain.setValueAtTime(0.35, start);
+
+        oscA.connect(amGain);
+        oscB.connect(amGain);
+        oscC.connect(gainC);
+        gainC.connect(amGain);
+        amGain.connect(masterGain);
+        masterGain.connect(this.ctx.destination);
+
+        lfo.start(start);
+        oscA.start(start);
+        oscB.start(start);
+        oscC.start(start);
+        lfo.stop(start + dur);
+        oscA.stop(start + dur);
+        oscB.stop(start + dur);
+        oscC.stop(start + dur);
+      }
+      return true;
+    } catch (e) {
+      console.warn("WebAudio retro phone error:", e);
+      return false;
     }
   },
 
   playBell() {
     try {
-      this.init();
-      if (!this.ctx) return;
-
-      const now = this.ctx.currentTime;
-      // İki tonlu hoş restoran gong/zil sesi (A5 880Hz -> D6 1174Hz)
-      const osc1 = this.ctx.createOscillator();
-      const gain1 = this.ctx.createGain();
-      osc1.type = "sine";
-      osc1.frequency.setValueAtTime(880, now);
-      gain1.gain.setValueAtTime(0.3, now);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-      osc1.connect(gain1);
-      gain1.connect(this.ctx.destination);
-      osc1.start(now);
-      osc1.stop(now + 0.8);
-
-      const osc2 = this.ctx.createOscillator();
-      const gain2 = this.ctx.createGain();
-      osc2.type = "sine";
-      osc2.frequency.setValueAtTime(1174, now + 0.15);
-      gain2.gain.setValueAtTime(0.35, now + 0.15);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
-      osc2.connect(gain2);
-      gain2.connect(this.ctx.destination);
-      osc2.start(now + 0.15);
-      osc2.stop(now + 1.2);
+      const el = this.ensureAudioEl();
+      if (el) {
+        el.muted = false;
+        el.volume = 1.0;
+        try { el.currentTime = 0; } catch (e) {}
+        this._isRinging = true;
+        const playPromise = el.play();
+        if (playPromise && typeof playPromise.then === "function") {
+          return playPromise
+            .then(() => {
+              this._audioUnlocked = true;
+              return true;
+            })
+            .catch(() => {
+              this._isRinging = false;
+              return this.playWebAudioRetroPhone();
+            });
+        }
+        this._audioUnlocked = true;
+        return Promise.resolve(true);
+      }
+      return Promise.resolve(this.playWebAudioRetroPhone());
     } catch (e) {
+      this._isRinging = false;
       console.warn("Sound error:", e);
+      return Promise.resolve(this.playWebAudioRetroPhone());
     }
+  },
+
+  stopTitleFlash() {
+    if (this._titleFlashTimer) {
+      clearInterval(this._titleFlashTimer);
+      this._titleFlashTimer = null;
+    }
+    if (this._originalTitle && typeof document !== "undefined") {
+      document.title = this._originalTitle;
+    }
+  },
+
+  startTitleFlash(alertText = "☎️ YENİ SİPARİŞ GELDİ!") {
+    if (typeof document === "undefined") return;
+    if (!this._originalTitle) this._originalTitle = document.title;
+    if (this._titleFlashTimer) clearInterval(this._titleFlashTimer);
+    let step = 0;
+    const orig = this._originalTitle;
+    this._titleFlashTimer = setInterval(() => {
+      if (!document.hidden || step >= 20) {
+        this.stopTitleFlash();
+        return;
+      }
+      document.title = step % 2 === 0 ? alertText : orig;
+      step += 1;
+    }, 1000);
+  },
+
+  requestNotificationPermission() {
+    try {
+      if (typeof Notification !== "undefined" && Notification.permission === "default") {
+        Notification.requestPermission().catch(() => {});
+      }
+    } catch (e) {}
+  },
+
+  showDesktopNotification(orderObjOrId) {
+    try {
+      if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+      if (typeof document !== "undefined" && !document.hidden) return;
+      const isObj = orderObjOrId && typeof orderObjOrId === "object";
+      const orderNum = isObj && orderObjOrId.order_number ? `#${orderObjOrId.order_number}` : "";
+      const custName = isObj && orderObjOrId.customer_name ? orderObjOrId.customer_name : "";
+      const amount = isObj && orderObjOrId.total_amount !== undefined ? `${orderObjOrId.total_amount} ₺` : "";
+      const parts = [custName, amount].filter(Boolean);
+      const body = parts.length > 0 ? `${parts.join(" · ")} — Mutfak ekranını kontrol edin.` : "Yeni sipariş düştü! Mutfak ekranını kontrol edin.";
+      const n = new Notification(`☎️ Yeni Sipariş${orderNum ? " " + orderNum : ""}`, {
+        body,
+        tag: `xubo-order-${isObj ? (orderObjOrId.id || orderNum) : String(orderObjOrId || "new")}`,
+        renotify: true
+      });
+      n.onclick = () => {
+        try { window.focus(); } catch (e) {}
+        try { n.close(); } catch (e) {}
+      };
+    } catch (e) {}
+  },
+
+  async ringForOrder(orderObjOrId) {
+    const rawId = (orderObjOrId && typeof orderObjOrId === "object")
+      ? (orderObjOrId.id || orderObjOrId.order_number)
+      : orderObjOrId;
+    const orderKey = rawId ? `xubo_last_ring_${String(rawId)}` : "";
+
+    if (orderKey && typeof localStorage !== "undefined") {
+      try {
+        const last = Number(localStorage.getItem(orderKey) || 0);
+        if (last && Date.now() - last < 8000) {
+          return false;
+        }
+      } catch (e) {}
+    }
+
+    const isHidden = typeof document !== "undefined" && document.hidden;
+    const canPreLock = orderKey && (!isHidden || this._audioUnlocked);
+    if (canPreLock && typeof localStorage !== "undefined") {
+      try {
+        localStorage.setItem(orderKey, String(Date.now()));
+      } catch (e) {}
+    }
+
+    if (isHidden) {
+      this.startTitleFlash("☎️ YENİ SİPARİŞ GELDİ!");
+      this.showDesktopNotification(orderObjOrId);
+    }
+
+    const played = await this.playBell();
+    if (orderKey && typeof localStorage !== "undefined") {
+      try {
+        if (played) {
+          localStorage.setItem(orderKey, String(Date.now()));
+        } else if (canPreLock) {
+          localStorage.removeItem(orderKey);
+        }
+      } catch (e) {}
+    }
+    return played;
+  },
+
+  startBackgroundTicker(callback, intervalMs = 6000) {
+    if (typeof callback !== "function") return () => {};
+    const ms = Math.max(1000, Number(intervalMs) || 6000);
+    let worker = null;
+    let workerUrl = null;
+    let fallbackTimer = null;
+
+    try {
+      if (
+        typeof Worker !== "undefined" &&
+        typeof Blob !== "undefined" &&
+        typeof URL !== "undefined" &&
+        typeof URL.createObjectURL === "function"
+      ) {
+        const workerCode = `setInterval(function(){ postMessage("tick"); }, ${ms});`;
+        const blob = new Blob([workerCode], { type: "application/javascript" });
+        workerUrl = URL.createObjectURL(blob);
+        worker = new Worker(workerUrl);
+        worker.onmessage = () => {
+          try {
+            callback();
+          } catch (e) {
+            console.warn("Background ticker callback error:", e);
+          }
+        };
+        return () => {
+          try { worker.terminate(); } catch (e) {}
+          try { URL.revokeObjectURL(workerUrl); } catch (e) {}
+        };
+      }
+    } catch (e) {
+      console.warn("Web Worker ticker unavailable, using setInterval fallback:", e);
+    }
+
+    fallbackTimer = setInterval(() => {
+      try {
+        callback();
+      } catch (e) {
+        console.warn("Ticker callback error:", e);
+      }
+    }, ms);
+    return () => clearInterval(fallbackTimer);
   }
 };
+SoundAlert.bindAutoUnlock();
 
 // ============================================================================
 // 3. SİPARİŞ APİ (ORDER API)
 // ============================================================================
 function getSupabaseClient() {
+  if (typeof window !== "undefined" && typeof window.getSupabaseClient === "function") {
+    const shared = window.getSupabaseClient();
+    if (shared) return shared;
+  }
   if (window.supabase && window.SUPABASE_CONFIG) {
     try {
       return window.supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.anonKey);
