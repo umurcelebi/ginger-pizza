@@ -63,6 +63,8 @@ check_http "restaurants anon PATCH" "401" "PATCH" "/restaurants?slug=eq.nonexist
 check_http "orders anon INSERT" "401" "POST" "/orders" '{}'
 check_http "RPC get_platform_restaurants_summary" "401" "POST" "/rpc/get_platform_restaurants_summary" '{}'
 check_http "RPC update_my_restaurant_profile" "401" "POST" "/rpc/update_my_restaurant_profile" '{"p_restaurant_slug":"ginger-pizza"}'
+check_http "RPC reset_restaurant_history" "401" "POST" "/rpc/reset_restaurant_history" '{"p_restaurant_slug":"ginger-pizza"}'
+check_http "RPC clone_restaurant_menu" "401" "POST" "/rpc/clone_restaurant_menu" '{"p_target_slug":"ginger-pizza","p_source_slug":"empty"}'
 check_http "RPC create_validated_order (boş slug)" "400" "POST" "/rpc/create_validated_order" '{"p_restaurant_slug":"","p_customer":{},"p_items":[]}'
 
 echo "🎉 Tüm duman testleri başarıyla geçti!"
