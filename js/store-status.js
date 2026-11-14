@@ -18,7 +18,6 @@ function getStoreSettingsStorageKey() {
 }
 
 const STORE_SETTINGS_CONFIG_KEY = "ginger_pizza_supabase_config_v1";
-const STORE_SETTINGS_ROW_ID = getStoreSettingsRowId();
 
 const STORE_DAY_NAMES = {
   "1": "Pazartesi",
@@ -77,7 +76,7 @@ function normalizePaymentMethods(raw) {
 
 function createDefaultStoreSettings() {
   return {
-    id: STORE_SETTINGS_ROW_ID,
+    id: getStoreSettingsRowId(),
     order_mode: "auto", // 'auto' | 'busy' | 'manual_open' | 'manual_closed'
     busy_until: null,
     status_message: "",
@@ -112,7 +111,7 @@ function normalizeStoreSettings(raw) {
   const clampedPercent = Number.isFinite(rawPercent) ? Math.min(90, Math.max(0, Math.round(rawPercent * 100) / 100)) : 0;
 
   return {
-    id: STORE_SETTINGS_ROW_ID,
+    id: getStoreSettingsRowId(),
     order_mode: mode,
     busy_until: src.busy_until || null,
     status_message: typeof src.status_message === "string" ? src.status_message : "",

@@ -1054,8 +1054,10 @@ const MenuAPI = {
     const sb = getSupabaseClient();
     if (sb) {
       try {
+        const activeSlug = getMenuRestaurantSlug();
         const { data: rpcCount, error: rpcErr } = await sb.rpc("copy_additions_to_all_pizzas", {
-          p_additions: normalizedAdditions
+          p_additions: normalizedAdditions,
+          p_restaurant_slug: activeSlug
         });
         if (!rpcErr) {
           synced = true;

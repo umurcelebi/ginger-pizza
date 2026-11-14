@@ -96,11 +96,7 @@
   async function fetchRestaurantByQuery(filterQuery) {
     if (typeof fetch !== "function") return null;
     try {
-      const path = (typeof location !== "undefined" && location.pathname ? location.pathname : "").toLowerCase();
-      const isStaffPage = path.includes("admin") || path.includes("orders");
-      const cols = isStaffPage
-        ? "id,name,slug,custom_domain,phone,address,instagram,primary_color,is_active,admin_email,admin_password"
-        : "id,name,slug,custom_domain,phone,address,instagram,primary_color,is_active";
+      const cols = "id,name,slug,custom_domain,phone,address,instagram,primary_color,is_active";
       const url = `${SUPABASE_URL}/rest/v1/restaurants?select=${cols}&${filterQuery}&limit=1`;
       const res = await fetch(url, {
         headers: {
