@@ -1126,10 +1126,49 @@ const MenuAPI = {
     return true;
   },
 
-  // Varsayılan menüye sıfırla
+  // Yeni kategori ekle (Aktif restoran için izole)
+  async createCategory(name) {
+    const cleanName = String(name || "").trim();
+    if (!cleanName) throw new Error("Kategori adı boş olamaz.");
+    const slug = cleanName
+      .toLocaleLowerCase("tr-TR")
+      .replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s")
+      .replace(/ı/g, "i").replace(/ö/g, "o").replace(/ç/g, "c")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || ("kategori-" + Date.now());
+
+    const sb = getSupabaseClient();
+    if (!sb) throw new Error("Veritabanı bağlantısı bulunamadı.");
+    const activeSlug = getMenuRestaurantSlug();
+    const { data: rest, error: rErr } = await sb.from("restaurants").select("id").eq("slug", activeSlug).maybeSingle();
+    if (rErr || !rest || !rest.id) throw new Error("Aktif restoran kaydı bulunamadı.");
+
+    const { data: existing } = await sb
+      .from("categories")
+      .select("id, slug, name, sort_order")
+      .eq("restaurant_id", rest.id)
+      .order("sort_order", { ascending: false })
+      .limit(1);
+    const nextOrder = (Array.isArray(existing) && existing[0] ? Number(existing[0].sort_order || 0) : 0) + 1;
+
+    const { data: inserted, error: insErr } = await sb
+      .from("categories")
+      .insert([{ restaurant_id: rest.id, slug, name: cleanName, sort_order: nextOrder }])
+      .select("id, slug, name, sort_order")
+      .single();
+    if (insErr) throw insErr;
+    return inserted;
+  },
+
+  // Varsayılan menüye sıfırla (Yalnızca ginger-pizza yerel varsayılanını yükler; diğerlerinde sadece önbelleği temizler)
   resetDefaults() {
-    saveLocalMenu(DEFAULT_MENU);
-    return DEFAULT_MENU;
+    if (getMenuRestaurantSlug() === "ginger-pizza") {
+      saveLocalMenu(DEFAULT_MENU);
+      return DEFAULT_MENU;
+    }
+    try {
+      localStorage.removeItem(getMenuStorageKey());
+    } catch (e) {}
+    return [];
   },
 
   // Supabase ayarlarını al/kaydet

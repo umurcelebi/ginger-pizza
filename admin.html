@@ -1598,9 +1598,12 @@
           <input type="text" id="searchAdmin" class="search-input-admin" placeholder="Ürün veya malzeme ara...">
         </div>
 
-        <div style="display: flex; gap: 8px;">
-          <button type="button" class="btn-header" id="btnResetDefaults" title="Fiyatları ve ürünleri ilk haline döndürür">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="btn-header" id="btnResetDefaults" title="Önbelleği temizler ve menüyü yeniler">
             ↺ Sıfırla
+          </button>
+          <button type="button" class="btn-header" id="btnAddCategory" title="Bu mağaza için yeni menü kategorisi ekle">
+            + Kategori Ekle
           </button>
           <button type="button" class="btn-header btn-header-primary" id="btnOpenNewItem">
             + Yeni Ürün Ekle
@@ -2070,35 +2073,14 @@
         </div>
       </div>
 
-      <!-- Yeni Kullanıcı Ekle Formu -->
-      <div style="background: var(--bg); border: 1px solid var(--sand-200); border-radius: var(--radius-md); padding: 18px;">
-        <h3 style="font-size: 0.92rem; font-weight: 700; color: var(--ink-900); margin-bottom: 12px;">
-          + Yeni Kullanıcı Tanımla
+      <!-- Supabase Auth Bilgi Notu -->
+      <div style="background: var(--bg); border: 1px solid var(--sand-200); border-radius: var(--radius-md); padding: 16px;">
+        <h3 style="font-size: 0.9rem; font-weight: 700; color: var(--ink-900); margin: 0 0 6px;">
+          🔐 Hesap ve Yetki Güvenliği
         </h3>
-        <form id="newUserForm">
-          <div class="users-form-grid-top" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 10px;">
-            <div>
-              <label class="form-label" style="font-size:0.78rem;">E-Posta Adresi</label>
-              <input type="email" id="newEmail" class="form-input" placeholder="kasa2@gingerpizza.com" required>
-            </div>
-            <div>
-              <label class="form-label" style="font-size:0.78rem;">Giriş Şifresi</label>
-              <input type="text" id="newPass" class="form-input" placeholder="Şifre belirleyin" required>
-            </div>
-          </div>
-          <div class="users-form-grid-bot" style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: flex-end;">
-            <div>
-              <label class="form-label" style="font-size:0.78rem;">Rol / Yetki Seviyesi</label>
-              <select id="newRole" class="form-input">
-                <option value="manager">Restoran Müdürü (Fiyat & Menü Yönetimi)</option>
-                <option value="staff">Mutfak / Kasa Personeli (Stok & Fiyat Güncelleme)</option>
-              </select>
-            </div>
-            <button type="submit" class="btn-header btn-header-primary" style="height: 42px; padding: 0 20px;">
-              Kullanıcı Ekle
-            </button>
-          </div>
-        </form>
+        <p style="font-size: 0.82rem; color: var(--ink-600); margin: 0; line-height: 1.5;">
+          Tüm yönetici ve mutfak personel hesapları Supabase Authentication üzerinden restoran bazlı JWT yetkisiyle izole edilmektedir. Yeni personel/yönetici tanımlama veya rol değişikliği işlemleri Master Panel / Supabase Auth üzerinden yapılır.
+        </p>
       </div>
 
       <div class="modal-actions" style="margin-top: 20px;">
@@ -3398,7 +3380,7 @@
       document.getElementById("resetAdminPassword").focus();
     });
 
-    document.getElementById("resetStep2Form").addEventListener("submit", (e) => {
+    document.getElementById("resetStep2Form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const user = getCurrentUser();
       if (!user || !user.canReset) {
@@ -3409,19 +3391,40 @@
 
       const entered = document.getElementById("resetAdminPassword").value;
       const errBox = document.getElementById("resetPasswordError");
-      const adminAccount = getStoredUsers().find(u => u.role === "admin") || getDefaultUsersForSlug()[0];
+      const sb = typeof window.getSupabaseClient === "function" ? window.getSupabaseClient() : null;
 
-      if (!entered || entered !== adminAccount.password) {
-        errBox.textContent = "Hatalı Süper Admin şifresi! Sıfırlama işlemi iptal edildi.";
+      if (!entered) {
+        errBox.textContent = "Lütfen yönetici şifrenizi girin.";
         errBox.style.display = "block";
-        document.getElementById("resetAdminPassword").select();
+        document.getElementById("resetAdminPassword").focus();
+        return;
+      }
+      if (!sb || !sb.auth || !user.email) {
+        errBox.textContent = "Kimlik doğrulama oturumu bulunamadı. Lütfen çıkış yapıp tekrar giriş yapın.";
+        errBox.style.display = "block";
         return;
       }
 
-      MenuAPI.resetDefaults();
-      closeResetConfirmModal();
-      showToast("Menü varsayılanlarına sıfırlandı.");
-      loadDashboard();
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+      try {
+        const { error: authErr } = await sb.auth.signInWithPassword({
+          email: user.email,
+          password: entered
+        });
+        if (authErr) {
+          errBox.textContent = "Hatalı yönetici şifresi! Sıfırlama işlemi iptal edildi.";
+          errBox.style.display = "block";
+          document.getElementById("resetAdminPassword").select();
+          return;
+        }
+        MenuAPI.resetDefaults();
+        closeResetConfirmModal();
+        showToast("Yerel menü önbelleği sıfırlandı ve yenilendi.");
+        loadDashboard();
+      } finally {
+        if (submitBtn) submitBtn.disabled = false;
+      }
     });
 
     // Geçmiş Satışlar & Müşteriler Sıfırlama (2 Adımlı Onay + Süper Admin Şifre Doğrulaması)
@@ -3567,38 +3570,26 @@
       document.getElementById("usersModal").classList.remove("open");
     });
 
-    // Yeni Kullanıcı Ekle Formu
-    document.getElementById("newUserForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const email = document.getElementById("newEmail").value.trim().toLowerCase();
-      const pass = document.getElementById("newPass").value.trim();
-      const role = document.getElementById("newRole").value;
-
-      let users = getStoredUsers();
-      if (users.some(u => u.email.toLowerCase() === email)) {
-        alert("Bu e-posta adresiyle kayıtlı bir kullanıcı zaten mevcut!");
-        return;
-      }
-
-      const roleLabels = {
-        manager: "💼 Restoran Müdürü",
-        staff: "🍕 Mutfak / Kasa"
-      };
-
-      users.push({
-        email: email,
-        password: pass,
-        role: role,
-        roleLabel: roleLabels[role] || "Personel",
-        canEditDb: false,
-        canReset: false
+    // Yeni Kategori Ekle Butonu
+    const btnAddCategory = document.getElementById("btnAddCategory");
+    if (btnAddCategory) {
+      btnAddCategory.addEventListener("click", async () => {
+        const name = prompt("Yeni kategori adını girin (örn: Tatlılar, Soslar, Özel Burgerler):");
+        if (!name || !name.trim()) return;
+        try {
+          const created = await MenuAPI.createCategory(name);
+          await syncAdminDynamicCategories();
+          const filterSel = document.getElementById("filterCategory");
+          if (filterSel && created && created.slug) {
+            filterSel.value = created.slug;
+            renderTable();
+          }
+          showToast(`✅ "${created.name}" kategorisi eklendi!`);
+        } catch (err) {
+          alert("Kategori eklenemedi: " + (err.message || err));
+        }
       });
-
-      saveStoredUsers(users);
-      renderUsersManagement();
-      document.getElementById("newUserForm").reset();
-      showToast("Yeni kullanıcı başarıyla eklendi!");
-    });
+    }
 
     // Veritabanı Modalı (Sadece yetkili süper admin açabilir)
     document.getElementById("btnOpenDbModal").addEventListener("click", () => {

@@ -556,11 +556,12 @@ const StoreStatus = {
 
     let channel = null;
     const sb = getStoreSupabaseClient();
+    const rowId = getStoreSettingsRowId();
     if (sb) {
       try {
         channel = sb
-          .channel("store-settings-live")
-          .on("postgres_changes", { event: "*", schema: "public", table: "store_settings" }, (payload) => {
+          .channel(`store-settings-live-${rowId}`)
+          .on("postgres_changes", { event: "*", schema: "public", table: "store_settings", filter: `id=eq.${rowId}` }, (payload) => {
             if (payload && payload.new) {
               if (payload.new.id && payload.new.id !== getStoreSettingsRowId()) return;
               const normalized = saveLocalStoreSettings(payload.new);
