@@ -16,6 +16,11 @@ SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMP_DIR="/tmp/xubo-safe-sync-$$"
 REPO_URL="https://github.com/umurcelebi/xubo.git"
 
+if [ -x "$SRC_DIR/smoke_test.sh" ]; then
+  echo "🧪 [0/5] Yayın öncesi duman ve izolasyon testi çalıştırılıyor..."
+  "$SRC_DIR/smoke_test.sh"
+fi
+
 echo "🚀 [1/5] Xubo reposu klonlanıyor..."
 rm -rf "$TEMP_DIR"
 git clone --depth 1 "$REPO_URL" "$TEMP_DIR"
