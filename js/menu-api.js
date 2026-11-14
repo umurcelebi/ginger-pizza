@@ -945,8 +945,11 @@ const MenuAPI = {
 
   // Yeni ürün ekle veya mevcut ürünü güncelle
   async saveItem(itemData) {
+    const rawImg = String((itemData && itemData.image) || "").trim();
+    const safeImage = (!rawImg || /^https:\/\//i.test(rawImg) || /^images\//i.test(rawImg)) ? rawImg : "";
     const normalizedItem = {
       ...itemData,
+      image: safeImage,
       modifiers: normalizeModifiers(itemData.modifiers)
     };
 

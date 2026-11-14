@@ -824,12 +824,12 @@
     <section class="kanban-col col-prep">
       <div class="col-header">
         <div class="col-title-wrap">
-          <span>🍕 Fırında / Hazırlanıyor</span>
+          <span id="colPrepTitle">👨‍🍳 Hazırlanıyor</span>
         </div>
         <span class="col-badge-count" id="countPrep">0</span>
       </div>
       <div class="col-cards-list" id="listPrep">
-        <div class="col-empty">Fırında bekleyen pizza yok.</div>
+        <div class="col-empty">Hazırlanan sipariş yok.</div>
       </div>
     </section>
 
@@ -918,7 +918,7 @@
       <label for="kdsStoreMessageInput" style="display:block; font-size:0.78rem; color:var(--ink-muted); margin-bottom:6px;">
         Müşteriye Gösterilecek Mesaj (Opsiyonel):
       </label>
-      <input type="text" id="kdsStoreMessageInput" class="kds-mode-note-input" placeholder="Örn: Fırın yoğunluğu nedeniyle kısa bir ara verdik.">
+      <input type="text" id="kdsStoreMessageInput" class="kds-mode-note-input" placeholder="Örn: Mutfak yoğunluğu nedeniyle kısa bir ara verdik.">
 
       <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
         <span style="font-size:0.76rem; color:var(--ink-muted);">Haftalık saatleri Admin panelinden düzenleyebilirsiniz.</span>
@@ -1225,6 +1225,8 @@
         : '<div class="col-empty">Şu anda yeni sipariş yok.</div>';
 
       const isGinger = typeof window.getActiveRestaurantSlug !== "function" || window.getActiveRestaurantSlug() === "ginger-pizza";
+      const colPrepTitle = document.getElementById("colPrepTitle");
+      if (colPrepTitle) colPrepTitle.textContent = isGinger ? "🍕 Fırında / Hazırlanıyor" : "👨‍🍳 Hazırlanıyor";
       listPrep.innerHTML = prepOrders.length > 0
         ? prepOrders.map(renderOrderCard).join("")
         : `<div class="col-empty">${isGinger ? "Fırında bekleyen pizza yok." : "Hazırlanan sipariş yok."}</div>`;

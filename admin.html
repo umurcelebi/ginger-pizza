@@ -1417,12 +1417,15 @@
           <a href="orders.html" id="navLinkOrders" class="btn-header btn-header-primary" style="display:inline-flex; align-items:center; gap:6px; background:#d86a1a; color:#fff;" title="Mutfak / Kasa canlı sipariş ekranını açar">
             🔔 Canlı Siparişler
           </a>
-          <span id="dbStatusBadge" class="db-status-badge db-status-local">● Bulut Bağlantısı</span>
-          <button type="button" class="btn-header" id="btnOpenUsersModal" title="Kullanıcıları Yönet (Sadece Süper Admin)">
+          <span id="dbStatusBadge" class="db-status-badge db-status-local" style="display:none;">● Bulut Bağlantısı</span>
+          <button type="button" class="btn-header" id="btnOpenUsersModal" style="display:none;" title="Kullanıcıları Yönet (Sadece Süper Admin)">
             👥 Kullanıcılar
           </button>
-          <button type="button" class="btn-header" id="btnOpenDbModal" title="Sadece Süper Admin görebilir">
+          <button type="button" class="btn-header" id="btnOpenDbModal" style="display:none;" title="Sadece Süper Admin görebilir">
             ⚙️ Veritabanı Ayarı
+          </button>
+          <button type="button" class="btn-header" id="btnChangePasswordHeader" onclick="handleChangeOwnPassword()" title="Giriş şifrenizi değiştirin">
+            🔑 Şifre Değiştir
           </button>
           <button type="button" class="btn-header" id="btnOpenQrModal" onclick="openQrCodeModal()" title="Paket Servis QR Kodu oluştur ve indir">
             📱 QR Kod
@@ -1470,9 +1473,9 @@
           <div class="stat-sub">Geçici stok dışı</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Pizza Çeşidi</div>
+          <div class="stat-label" id="statFourthLabel">Kategori / Varyant</div>
           <div class="stat-value" id="statPizzas" style="color: var(--ginger-500);">--</div>
-          <div class="stat-sub">Taş fırın seçenekleri</div>
+          <div class="stat-sub" id="statFourthSub">Menü seçenekleri</div>
         </div>
       </div>
 
@@ -1511,7 +1514,7 @@
           <label for="adminStoreMessage" style="font-size: 0.84rem; font-weight: 700; color: var(--ink-700);">
             Müşteri Mesajı (Opsiyonel):
           </label>
-          <input type="text" id="adminStoreMessage" class="store-message-input" placeholder="Örn: Fırın yoğunluğu nedeniyle 30 dk siparişe ara verdik.">
+          <input type="text" id="adminStoreMessage" class="store-message-input" placeholder="Örn: Mutfak yoğunluğu nedeniyle 30 dk siparişe ara verdik.">
           <button type="button" class="btn-header" onclick="handleSaveStoreMessage()">💬 Mesajı Güncelle</button>
         </div>
 
@@ -1627,10 +1630,10 @@
         </div>
 
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button type="button" class="btn-header" id="btnResetDefaults" title="Önbelleği temizler ve menüyü yeniler">
+          <button type="button" class="btn-header" id="btnResetDefaults" style="display:none;" title="Önbelleği temizler ve menüyü yeniler (Sadece Süper Admin)">
             ↺ Sıfırla
           </button>
-          <button type="button" class="btn-header" id="btnOpenCloneMenu" onclick="openCloneMenuModal()" title="Hazır şablon veya başka mağazadan menü kopyala">
+          <button type="button" class="btn-header" id="btnOpenCloneMenu" style="display:none;" onclick="openCloneMenuModal()" title="Hazır şablon veya başka mağazadan menü kopyala (Sadece Süper Admin)">
             📋 Şablon / Menü Kopyala
           </button>
           <button type="button" class="btn-header" id="btnOpenBulkImport" onclick="openBulkImportModal()" title="Excel veya listeden toplu ürün yapıştırarak ekle">
@@ -1951,7 +1954,7 @@
 
         <div class="form-group">
           <label class="form-label" for="editName">Ürün Adı</label>
-          <input type="text" id="editName" class="form-input" placeholder="Örn: Quattro Formaggi" required>
+          <input type="text" id="editName" class="form-input" placeholder="Örn: Klasik Menü, Smash Burger veya Margherita" required>
         </div>
 
         <div class="form-group">
@@ -1978,7 +1981,7 @@
 
         <div class="form-group">
           <label class="form-label" for="editImage">Görsel Yolu / URL (Opsiyonel)</label>
-          <input type="text" id="editImage" class="form-input" placeholder="Örn: images/menu/ginger-pizza.jpg veya https://...">
+          <input type="text" id="editImage" class="form-input" placeholder="https://... veya aşağıdaki hazır görsellerden seçin">
           <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:5px; align-items:center;">
             <span style="font-size:0.72rem; color:var(--ink-500); font-weight:700;">🎨 Hazır Görsel (0 MB Kota):</span>
             <button type="button" class="btn-mini-helper" onclick="pickStockFoodImage('https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80')">🍕 Margherita</button>
@@ -2140,9 +2143,9 @@
        ======================================================================== -->
   <div id="resetConfirmModal" class="modal-backdrop">
     <div class="modal-box" style="max-width: 460px;">
-      <h2 class="modal-title" style="color: var(--danger); margin-bottom: 6px;">⚠️ Menüyü Varsayılanlara Sıfırla</h2>
+      <h2 class="modal-title" style="color: var(--danger); margin-bottom: 6px;">⚠️ Yerel Menü Önbelleğini Sıfırla</h2>
       <p style="font-size: 0.86rem; color: var(--ink-500); margin-bottom: 16px;">
-        Yerel depolamadaki tüm ürün, fiyat ve ekle/çıkar değişiklikleri orijinal Ginger Pizza varsayılanlarına döndürülecektir.
+        Tarayıcıdaki yerel menü önbelleği temizlenecek ve bulut veritabanındaki güncel menü yeniden yüklenecektir.
       </p>
 
       <!-- Adım 1 / 2 -->
@@ -2401,12 +2404,12 @@
       const authRole = String(meta.role || "");
       const email = (authUser && authUser.email) || sessionStorage.getItem(getSessionKey("user_email")) || "";
       if (authRole === "super_admin") {
-        return { email, authRole, role: "admin", roleLabel: "👑 Süper Admin", canEditDb: true, canReset: true };
+        return { email, authRole, role: "admin", roleLabel: "👑 Süper Admin", isSuperAdmin: true, canEditDb: true, canReset: true };
       }
       if (authRole === "restaurant_admin") {
-        return { email, authRole, role: "admin", roleLabel: "👑 Restoran Yöneticisi", canEditDb: true, canReset: true };
+        return { email, authRole, role: "admin", roleLabel: "🏪 Mağaza Yöneticisi", isSuperAdmin: false, canEditDb: false, canReset: false };
       }
-      return { email, authRole: "staff", role: "staff", roleLabel: "🍕 Mutfak / Kasa", canEditDb: false, canReset: false };
+      return { email, authRole: "staff", role: "staff", roleLabel: "🧑‍🍳 Mutfak / Kasa", isSuperAdmin: false, canEditDb: false, canReset: false };
     }
 
     function getCurrentUser() {
@@ -2513,16 +2516,18 @@
         if (roleBadge) roleBadge.textContent = user.roleLabel;
         if (userInfo) userInfo.textContent = user.email;
 
-        // Veritabanı ve Sıfırlama Kısıtlaması (Admin dışındakilere tamamen gizli)
+        // Veritabanı, Şablon Kopyalama ve Sıfırlama Kısıtlaması (Sadece super_admin görebilir)
         const btnUsers = document.getElementById("btnOpenUsersModal");
         const btnMaster = document.getElementById("btnBackToMasterPanel");
+        const btnCloneMenu = document.getElementById("btnOpenCloneMenu");
         const navOrders = document.getElementById("navLinkOrders");
         const navStore = document.getElementById("navLinkStorefront");
         const tabReports = document.getElementById("tabBtnReports");
         const tabProfile = document.getElementById("tabBtnProfile");
         const btnResetSales = document.getElementById("btnResetSalesAndCustomers");
         const canViewReports = user.role !== "staff";
-        if (btnMaster) btnMaster.style.display = user.authRole === "super_admin" ? "inline-flex" : "none";
+        if (btnMaster) btnMaster.style.display = user.isSuperAdmin ? "inline-flex" : "none";
+        if (btnCloneMenu) btnCloneMenu.style.display = user.isSuperAdmin ? "inline-flex" : "none";
         if (navOrders) {
           navOrders.href = activeSlug && activeSlug !== "ginger-pizza"
             ? `orders.html?r=${encodeURIComponent(activeSlug)}`
@@ -2533,11 +2538,11 @@
             ? `onizleme.html?r=${encodeURIComponent(activeSlug)}`
             : "onizleme.html";
         }
-        if (btnUsers) btnUsers.style.display = user.canEditDb ? "inline-flex" : "none";
-        if (btnDb) btnDb.style.display = user.canEditDb ? "inline-flex" : "none";
-        if (btnReset) btnReset.style.display = user.canReset ? "inline-flex" : "none";
-        if (btnResetSales) btnResetSales.style.display = user.canReset ? "inline-flex" : "none";
-        if (dbBadge) dbBadge.style.display = user.canEditDb ? "inline-flex" : "none";
+        if (btnUsers) btnUsers.style.display = user.isSuperAdmin ? "inline-flex" : "none";
+        if (btnDb) btnDb.style.display = user.isSuperAdmin ? "inline-flex" : "none";
+        if (btnReset) btnReset.style.display = user.isSuperAdmin ? "inline-flex" : "none";
+        if (btnResetSales) btnResetSales.style.display = user.isSuperAdmin ? "inline-flex" : "none";
+        if (dbBadge) dbBadge.style.display = user.isSuperAdmin ? "inline-flex" : "none";
         if (tabReports) tabReports.style.display = canViewReports ? "inline-flex" : "none";
         if (tabProfile) tabProfile.style.display = canViewReports ? "inline-flex" : "none";
         if (!canViewReports && typeof window.switchAdminMainTab === "function") {
@@ -3043,11 +3048,24 @@
       const active = currentMenuItems.filter(i => i.isAvailable !== false).length;
       const hidden = total - active;
       const pizzas = currentMenuItems.filter(i => !!i.prices).length;
+      const uniqueCats = new Set(currentMenuItems.map(i => i.category).filter(Boolean)).size;
 
       document.getElementById("statTotal").textContent = total;
       document.getElementById("statActive").textContent = active;
       document.getElementById("statHidden").textContent = hidden;
-      document.getElementById("statPizzas").textContent = pizzas;
+
+      const fourthLabel = document.getElementById("statFourthLabel");
+      const fourthSub = document.getElementById("statFourthSub");
+      const fourthVal = document.getElementById("statPizzas");
+      if (pizzas > 0 || getActiveAdminSlug() === "ginger-pizza") {
+        if (fourthLabel) fourthLabel.textContent = "Çok Boyutlu / Pizza";
+        if (fourthSub) fourthSub.textContent = "Boyut seçenekli ürünler";
+        if (fourthVal) fourthVal.textContent = pizzas;
+      } else {
+        if (fourthLabel) fourthLabel.textContent = "Aktif Kategori";
+        if (fourthSub) fourthSub.textContent = "Menüdeki kategori grupları";
+        if (fourthVal) fourthVal.textContent = uniqueCats;
+      }
     }
 
     // Veritabanı Durum Etiketi
@@ -3419,10 +3437,12 @@
       document.getElementById("itemForm").reset();
       document.getElementById("editItemId").value = "";
       document.getElementById("itemModalTitle").textContent = "Yeni Ürün Ekle";
-      document.getElementById("typePizza").checked = true;
+      const defaultIsPizza = getActiveAdminSlug() === "ginger-pizza" || currentMenuItems.some(i => !!i.prices);
+      document.getElementById("typePizza").checked = defaultIsPizza;
+      document.getElementById("typeExtra").checked = !defaultIsPizza;
       modalRemovals = [];
       modalAdditions = [];
-      toggleTypeFields(true);
+      toggleTypeFields(defaultIsPizza);
       renderRemovalsEditor();
       renderAdditionsEditor();
       document.getElementById("itemModal").classList.add("open");
@@ -3487,13 +3507,19 @@
       const existing = id ? currentMenuItems.find(i => i.id === id) : null;
       const isPizza = document.getElementById("typePizza").checked;
 
+      const rawImage = document.getElementById("editImage").value.trim();
+      if (rawImage && !/^(https:\/\/|images\/)/i.test(rawImage)) {
+        alert("Güvenlik uyarısı: Görsel adresi yalnızca 'https://' ile başlayan güvenli bir link veya 'images/...' yerel görsel yolu olabilir.");
+        return;
+      }
+
       const itemData = {
         id: id || undefined,
         name: document.getElementById("editName").value.trim(),
         category: document.getElementById("editCategory").value,
         ingredients: document.getElementById("editDesc").value.trim(),
         badge: document.getElementById("editBadge").value.trim(),
-        image: document.getElementById("editImage").value.trim(),
+        image: rawImage,
         badgeType: isPizza ? "popular" : "gourmet",
         isAvailable: existing ? existing.isAvailable !== false : true,
         modifiers: MenuAPI.normalizeModifiers({
@@ -4788,8 +4814,13 @@
       }
     };
 
-    // Şablon / Başka Mağazadan Menü Kopyalama
+    // Şablon / Başka Mağazadan Menü Kopyalama (Yalnızca Süper Admin)
     window.openCloneMenuModal = function() {
+      const user = getCurrentUser();
+      if (!user || !user.isSuperAdmin) {
+        alert("Yetkisiz Erişim: Şablon veya mağazadan menü kopyalama işlemini yalnızca Süper Admin yapabilir.");
+        return;
+      }
       const chk = document.getElementById("cloneReplaceExisting");
       if (chk) chk.checked = false;
       document.getElementById("cloneMenuModal")?.classList.add("open");
