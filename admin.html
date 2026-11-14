@@ -3477,12 +3477,18 @@
 
       const entered = document.getElementById("resetSalesAdminPassword").value;
       const errBox = document.getElementById("resetSalesPasswordError");
-      const adminAccount = getStoredUsers().find(u => u.role === "admin") || getDefaultUsersForSlug()[0];
+      const sb = typeof window.getSupabaseClient === "function" ? window.getSupabaseClient() : null;
 
-      if (!entered || entered !== adminAccount.password) {
-        errBox.textContent = "Hatalı Süper Admin şifresi! Sıfırlama işlemi iptal edildi.";
+      if (!entered) {
+        errBox.textContent = "Lütfen yönetici şifrenizi girin.";
         errBox.style.display = "block";
-        document.getElementById("resetSalesAdminPassword").select();
+        document.getElementById("resetSalesAdminPassword").focus();
+        return;
+      }
+
+      if (!sb || !sb.auth || !user.email) {
+        errBox.textContent = "Kimlik doğrulama oturumu bulunamadı. Lütfen çıkış yapıp tekrar giriş yapın.";
+        errBox.style.display = "block";
         return;
       }
 
@@ -3494,9 +3500,21 @@
 
       const submitBtn = document.getElementById("btnResetSalesStep2Confirm");
       submitBtn.disabled = true;
-      submitBtn.textContent = "⏳ Sıfırlanıyor...";
+      submitBtn.textContent = "⏳ Doğrulanıyor...";
 
       try {
+        const { error: authErr } = await sb.auth.signInWithPassword({
+          email: user.email,
+          password: entered
+        });
+        if (authErr) {
+          errBox.textContent = "Hatalı yönetici şifresi! Sıfırlama işlemi iptal edildi.";
+          errBox.style.display = "block";
+          document.getElementById("resetSalesAdminPassword").select();
+          return;
+        }
+
+        submitBtn.textContent = "⏳ Sıfırlanıyor...";
         const result = await OrderAPI.resetSalesAndCustomers();
         cachedDailyOrders = [];
         cachedCustomersList = [];
