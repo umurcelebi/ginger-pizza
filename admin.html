@@ -2365,6 +2365,60 @@
     </div>
   </div>
 
+  <!-- ========================================================================
+       11. MODAL: ŞİFRE DEĞİŞTİR (ESKİ ŞİFRE KONTROLLÜ & ÇİFT GİRİŞ DOĞRULAMALI)
+       ======================================================================== -->
+  <div id="changePasswordModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width: 440px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px;">
+        <div>
+          <h2 class="modal-title" style="margin-bottom:4px;">🔑 Şifre Değiştir</h2>
+          <p style="font-size:0.82rem; color:var(--ink-500); margin:0;">
+            Güvenliğiniz için mevcut şifrenizi doğrulayın ve yeni şifrenizi iki kez girin.
+          </p>
+        </div>
+        <button type="button" class="btn-header" onclick="closeChangePasswordModal()">✕</button>
+      </div>
+
+      <div style="background:var(--sand-50); border:1px solid var(--sand-200); border-radius:10px; padding:10px 12px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+        <span style="font-size:0.78rem; color:var(--ink-500); font-weight:700;">Aktif Hesap:</span>
+        <strong id="cpAccountEmail" style="font-size:0.84rem; color:var(--ink-900); word-break:break-all;">—</strong>
+      </div>
+
+      <form id="changePasswordForm" onsubmit="submitChangeOwnPassword(event)">
+        <div class="form-group">
+          <label class="form-label" for="cpOldPassword">Mevcut (Eski) Şifreniz</label>
+          <input type="password" id="cpOldPassword" class="form-input" placeholder="Mevcut şifrenizi girin" autocomplete="current-password" required oninput="validatePasswordMatchInline()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cpNewPassword">Yeni Şifre <span style="font-weight:500; color:var(--ink-500);">(En az 6 karakter)</span></label>
+          <input type="password" id="cpNewPassword" class="form-input" placeholder="Yeni şifrenizi girin" minlength="6" autocomplete="new-password" required oninput="validatePasswordMatchInline()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="cpConfirmPassword">Yeni Şifre (Tekrar)</label>
+          <input type="password" id="cpConfirmPassword" class="form-input" placeholder="Yeni şifrenizi tekrar girin" minlength="6" autocomplete="new-password" required oninput="validatePasswordMatchInline()">
+          <div id="cpMatchHint" style="display:none; font-size:0.76rem; font-weight:700; margin-top:6px;"></div>
+        </div>
+
+        <label style="display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; color:var(--ink-600); cursor:pointer; user-select:none; margin-top:2px;">
+          <input type="checkbox" id="cpShowPasswordsToggle" onchange="toggleChangePasswordVisibility(this.checked)">
+          <span>Şifreleri göster</span>
+        </label>
+
+        <div id="cpFeedbackBox" style="display:none; margin-top:12px; padding:10px 12px; border-radius:10px; font-size:0.82rem; font-weight:700; line-height:1.4;"></div>
+
+        <div class="modal-actions" style="margin-top:16px;">
+          <button type="button" class="btn-header" onclick="closeChangePasswordModal()">Vazgeç</button>
+          <button type="submit" class="btn-header btn-header-primary" id="btnSubmitChangePassword">
+            🔒 Şifreyi Güncelle
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast" class="toast-msg">Değişiklikler kaydedildi</div>
 
@@ -2442,22 +2496,161 @@
       `;
     }
 
-    window.handleChangeOwnPassword = async function() {
+    window.handleChangeOwnPassword = function() {
+      const modal = document.getElementById("changePasswordModal");
+      if (!modal) return;
+      const user = getCurrentUser();
+      const emailEl = document.getElementById("cpAccountEmail");
+      if (emailEl) emailEl.textContent = user.email || "Yetkili Hesap";
+
+      const oldInp = document.getElementById("cpOldPassword");
+      const newInp = document.getElementById("cpNewPassword");
+      const confInp = document.getElementById("cpConfirmPassword");
+      const showChk = document.getElementById("cpShowPasswordsToggle");
+      const hintEl = document.getElementById("cpMatchHint");
+      const fbEl = document.getElementById("cpFeedbackBox");
+      const btn = document.getElementById("btnSubmitChangePassword");
+
+      if (oldInp) { oldInp.value = ""; oldInp.type = "password"; }
+      if (newInp) { newInp.value = ""; newInp.type = "password"; }
+      if (confInp) { confInp.value = ""; confInp.type = "password"; }
+      if (showChk) showChk.checked = false;
+      if (hintEl) { hintEl.style.display = "none"; hintEl.textContent = ""; }
+      if (fbEl) { fbEl.style.display = "none"; fbEl.textContent = ""; }
+      if (btn) { btn.disabled = false; btn.textContent = "🔒 Şifreyi Güncelle"; }
+
+      modal.classList.add("open");
+      setTimeout(() => { if (oldInp) oldInp.focus(); }, 60);
+    };
+
+    window.closeChangePasswordModal = function() {
+      const modal = document.getElementById("changePasswordModal");
+      if (modal) modal.classList.remove("open");
+    };
+
+    window.toggleChangePasswordVisibility = function(show) {
+      const type = show ? "text" : "password";
+      ["cpOldPassword", "cpNewPassword", "cpConfirmPassword"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.type = type;
+      });
+    };
+
+    window.validatePasswordMatchInline = function() {
+      const newVal = document.getElementById("cpNewPassword")?.value || "";
+      const confVal = document.getElementById("cpConfirmPassword")?.value || "";
+      const hintEl = document.getElementById("cpMatchHint");
+      const fbEl = document.getElementById("cpFeedbackBox");
+      if (fbEl) fbEl.style.display = "none";
+      if (!hintEl) return;
+
+      if (!newVal && !confVal) {
+        hintEl.style.display = "none";
+        return;
+      }
+      hintEl.style.display = "block";
+      if (newVal.length > 0 && newVal.length < 6) {
+        hintEl.style.color = "#c0392b";
+        hintEl.textContent = "⚠️ Yeni şifre en az 6 karakter olmalıdır.";
+      } else if (confVal.length > 0 && newVal !== confVal) {
+        hintEl.style.color = "#c0392b";
+        hintEl.textContent = "❌ Yeni şifreler birbiriyle eşleşmiyor.";
+      } else if (confVal.length >= 6 && newVal === confVal) {
+        hintEl.style.color = "var(--success)";
+        hintEl.textContent = "✅ Yeni şifreler eşleşiyor.";
+      } else {
+        hintEl.style.display = "none";
+      }
+    };
+
+    function showChangePasswordFeedback(message, isError) {
+      const fbEl = document.getElementById("cpFeedbackBox");
+      if (!fbEl) return;
+      fbEl.style.display = "block";
+      fbEl.style.background = isError ? "#fdf2f2" : "#edf9f0";
+      fbEl.style.border = isError ? "1px solid #f5c6cb" : "1px solid #b7ebc6";
+      fbEl.style.color = isError ? "#a93226" : "#1e8449";
+      fbEl.textContent = message;
+    }
+
+    window.submitChangeOwnPassword = async function(e) {
+      if (e) e.preventDefault();
       const sb = typeof window.getSupabaseClient === "function" ? window.getSupabaseClient() : null;
       if (!sb || !sb.auth) {
-        alert("Bulut kimlik doğrulama bağlantısı bulunamadı.");
+        showChangePasswordFeedback("Bulut kimlik doğrulama bağlantısı bulunamadı.", true);
         return;
       }
-      const newPass = prompt("Yeni şifrenizi giriniz (en az 6 karakter):");
-      if (!newPass || newPass.trim().length < 6) {
-        if (newPass !== null) alert("Şifre en az 6 karakter olmalıdır.");
+
+      const oldPass = (document.getElementById("cpOldPassword")?.value || "").trim();
+      const newPass = (document.getElementById("cpNewPassword")?.value || "").trim();
+      const confPass = (document.getElementById("cpConfirmPassword")?.value || "").trim();
+
+      if (!oldPass) {
+        showChangePasswordFeedback("Lütfen mevcut (eski) şifrenizi girin.", true);
         return;
       }
-      const { error } = await sb.auth.updateUser({ password: newPass.trim() });
-      if (error) {
-        alert("Şifre güncellenemedi: " + (error.message || "Bilinmeyen hata"));
-      } else {
+      if (newPass.length < 6) {
+        showChangePasswordFeedback("Yeni şifreniz en az 6 karakter olmalıdır.", true);
+        return;
+      }
+      if (newPass !== confPass) {
+        showChangePasswordFeedback("Girdiğiniz yeni şifreler birbiriyle eşleşmiyor. Lütfen kontrol edin.", true);
+        return;
+      }
+      if (oldPass === newPass) {
+        showChangePasswordFeedback("Yeni şifreniz mevcut şifrenizle aynı olamaz.", true);
+        return;
+      }
+
+      const btn = document.getElementById("btnSubmitChangePassword");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Doğrulanıyor...";
+      }
+
+      try {
+        let email = getCurrentUser().email;
+        if (!email) {
+          const { data: userData } = await sb.auth.getUser();
+          email = userData && userData.user ? userData.user.email : "";
+        }
+        if (!email) {
+          showChangePasswordFeedback("Oturum e-posta bilgisi alınamadı. Lütfen yeniden giriş yapın.", true);
+          return;
+        }
+
+        // 1. Adım: Mevcut (eski) şifreyi doğrula
+        const { error: verifyErr } = await sb.auth.signInWithPassword({
+          email,
+          password: oldPass
+        });
+        if (verifyErr) {
+          showChangePasswordFeedback("❌ Mevcut (eski) şifreniz hatalı. Lütfen kontrol edip tekrar deneyin.", true);
+          return;
+        }
+
+        // 2. Adım: Yeni şifreyi kaydet
+        if (btn) btn.textContent = "Güncelleniyor...";
+        const { error: updateErr } = await sb.auth.updateUser({
+          password: newPass
+        });
+        if (updateErr) {
+          showChangePasswordFeedback("Şifre güncellenemedi: " + (updateErr.message || "Bilinmeyen hata"), true);
+          return;
+        }
+
+        showChangePasswordFeedback("✅ Şifreniz başarıyla güncellendi!", false);
         showToast("Şifreniz başarıyla güncellendi!");
+        setTimeout(() => {
+          closeChangePasswordModal();
+        }, 900);
+      } catch (err) {
+        showChangePasswordFeedback("Beklenmeyen hata: " + (err.message || err), true);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "🔒 Şifreyi Güncelle";
+        }
       }
     };
 
