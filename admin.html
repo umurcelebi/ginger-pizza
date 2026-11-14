@@ -1443,6 +1443,9 @@
         <button type="button" class="admin-section-tab" id="tabBtnReports" data-main-tab="reports" onclick="switchAdminMainTab('reports')">
           📊 Raporlar
         </button>
+        <button type="button" class="admin-section-tab" id="tabBtnProfile" data-main-tab="profile" onclick="switchAdminMainTab('profile')">
+          🏪 Mağaza Profili &amp; Kanallar
+        </button>
       </div>
 
       <div id="adminMenuSection">
@@ -1782,6 +1785,117 @@
                   <tr><td colspan="7" class="report-empty-cell">Hesaplanıyor...</td></tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mağaza Profili & Kanallar Bölümü (Her restoran kendi bilgilerini yönetir) -->
+      <section id="adminProfileSection" style="display: none;">
+        <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 18px;">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
+            <div>
+              <h2 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text);">🏪 Mağaza Profili, Kanallar &amp; Vitrin</h2>
+              <p style="margin: 4px 0 0; font-size: 0.85rem; color: var(--muted);">Bu alandan yaptığınız değişiklikler yalnızca kendi mağaza sayfanıza yansır. Linki boş bırakılan sipariş kanalları vitrinde otomatik gizlenir.</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="btnSaveStoreProfile" onclick="saveStoreProfile()">💾 Profili Kaydet</button>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px;">
+            <!-- İletişim & WhatsApp -->
+            <div style="background: #fafafa; border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+              <h3 style="margin: 0 0 12px; font-size: 0.95rem; font-weight: 700;">📞 İletişim &amp; WhatsApp</h3>
+              <div class="form-group">
+                <label class="form-label" for="profPhone">Telefon Numarası</label>
+                <input type="text" id="profPhone" class="form-input" placeholder="0212 000 00 00">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profAddress">Açık Adres</label>
+                <textarea id="profAddress" class="form-input" rows="2" placeholder="Mahalle, Cadde, No, İlçe / İl"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profInstagram">Instagram Kullanıcı Adı / Link (Opsiyonel)</label>
+                <input type="text" id="profInstagram" class="form-input" placeholder="@magazaadi veya https://instagram.com/...">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profWhatsapp">WhatsApp Numarası (Opsiyonel, sadece rakam)</label>
+                <input type="text" id="profWhatsapp" class="form-input" placeholder="905551234567 (yoksa boş bırakın)">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="profWhatsappDisplay">WhatsApp Görünen Format (Opsiyonel)</label>
+                <input type="text" id="profWhatsappDisplay" class="form-input" placeholder="0555 123 45 67">
+              </div>
+            </div>
+
+            <!-- Sipariş Kanalları -->
+            <div style="background: #fafafa; border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+              <h3 style="margin: 0 0 12px; font-size: 0.95rem; font-weight: 700;">🛵 Sipariş Kanalları (Yalnızca https://)</h3>
+              <div class="form-group">
+                <label class="form-label" for="profChannelYs">Yemeksepeti Linki</label>
+                <input type="url" id="profChannelYs" class="form-input" placeholder="https://www.yemeksepeti.com/restaurant/...">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profChannelTy">Trendyol Yemek Linki</label>
+                <input type="url" id="profChannelTy" class="form-input" placeholder="https://www.tgoyemek.com/restoranlar/...">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profChannelMg">Migros Yemek Linki</label>
+                <input type="url" id="profChannelMg" class="form-input" placeholder="https://www.migros.com.tr/yemek/...">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="profChannelGt">GetirYemek Linki</label>
+                <input type="url" id="profChannelGt" class="form-input" placeholder="https://getir.com/yemek/restoran/...">
+              </div>
+            </div>
+
+            <!-- Vitrin & Marka Metinleri -->
+            <div style="background: #fafafa; border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+              <h3 style="margin: 0 0 12px; font-size: 0.95rem; font-weight: 700;">✨ Vitrin &amp; Marka Görünümü</h3>
+              <div class="form-group">
+                <label class="form-label" for="profLogoUrl">Logo URL (https:// veya images/...)</label>
+                <input type="text" id="profLogoUrl" class="form-input" placeholder="images/logo.jpg veya https://...">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profHeroTag">Üst Etiket (Hero Tag)</label>
+                <input type="text" id="profHeroTag" class="form-input" placeholder="Örn: Bahçelievler'in İmza Smash Burgeri">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profHeroTitle">Ana Başlık (Hero Title)</label>
+                <textarea id="profHeroTitle" class="form-input" rows="2" placeholder="Taze lezzet, özenli mutfak..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profHeroDesc">Ana Açıklama (Hero Desc)</label>
+                <textarea id="profHeroDesc" class="form-input" rows="2" placeholder="Kısa mağaza tanıtımı..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profStoryTitle">Hikaye Başlığı</label>
+                <input type="text" id="profStoryTitle" class="form-input" placeholder="Mutfağımızın hikayesi...">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="profStoryDesc">Hikaye Açıklaması</label>
+                <textarea id="profStoryDesc" class="form-input" rows="2" placeholder="Hazırlık sürecimiz ve malzemelerimiz..."></textarea>
+              </div>
+            </div>
+
+            <!-- Saatler & Alt Bilgi -->
+            <div style="background: #fafafa; border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+              <h3 style="margin: 0 0 12px; font-size: 0.95rem; font-weight: 700;">🕒 Saatler &amp; Alt Bilgi</h3>
+              <div class="form-group">
+                <label class="form-label" for="profMenuDesc">Menü Bölümü Açıklaması</label>
+                <textarea id="profMenuDesc" class="form-input" rows="2" placeholder="Sipariş anında taze hazırlanan lezzetler..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profHoursHtml">İletişim Çalışma Saatleri</label>
+                <input type="text" id="profHoursHtml" class="form-input" placeholder="Haftanın her günü: 12:00 – 03:45">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profFooterTagline">Footer Slogan</label>
+                <input type="text" id="profFooterTagline" class="form-input" placeholder="Kısa alt slogan...">
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label" for="profFooterCity">İlçe / Şehir</label>
+                <input type="text" id="profFooterCity" class="form-input" placeholder="Örn: Bahçelievler / İstanbul">
+              </div>
             </div>
           </div>
         </div>
@@ -2295,6 +2409,7 @@
         // Veritabanı ve Sıfırlama Kısıtlaması (Admin dışındakilere tamamen gizli)
         const btnUsers = document.getElementById("btnOpenUsersModal");
         const tabReports = document.getElementById("tabBtnReports");
+        const tabProfile = document.getElementById("tabBtnProfile");
         const btnResetSales = document.getElementById("btnResetSalesAndCustomers");
         const canViewReports = user.role !== "staff";
         if (btnUsers) btnUsers.style.display = user.canEditDb ? "inline-flex" : "none";
@@ -2303,6 +2418,7 @@
         if (btnResetSales) btnResetSales.style.display = user.canReset ? "inline-flex" : "none";
         if (dbBadge) dbBadge.style.display = user.canEditDb ? "inline-flex" : "none";
         if (tabReports) tabReports.style.display = canViewReports ? "inline-flex" : "none";
+        if (tabProfile) tabProfile.style.display = canViewReports ? "inline-flex" : "none";
         if (!canViewReports && typeof window.switchAdminMainTab === "function") {
           window.switchAdminMainTab("menu");
         }
@@ -3642,27 +3758,153 @@
 
     window.switchAdminMainTab = function(tabName) {
       const user = getCurrentUser();
-      if (tabName === "reports" && user.role === "staff") {
-        showToast("Mutfak hesabı finansal raporları görüntüleyemez.");
+      if ((tabName === "reports" || tabName === "profile") && user.role === "staff") {
+        showToast("Mutfak hesabı bu bölümü görüntüleyemez.");
         tabName = "menu";
       }
 
       activeAdminMainTab = tabName;
       const menuSec = document.getElementById("adminMenuSection");
       const repSec = document.getElementById("adminReportsSection");
+      const profSec = document.getElementById("adminProfileSection");
       const btnMenu = document.getElementById("tabBtnMenu");
       const btnRep = document.getElementById("tabBtnReports");
+      const btnProf = document.getElementById("tabBtnProfile");
 
       if (menuSec) menuSec.style.display = tabName === "menu" ? "block" : "none";
       if (repSec) repSec.style.display = tabName === "reports" ? "block" : "none";
+      if (profSec) profSec.style.display = tabName === "profile" ? "block" : "none";
       if (btnMenu) btnMenu.classList.toggle("active", tabName === "menu");
       if (btnRep) btnRep.classList.toggle("active", tabName === "reports");
+      if (btnProf) btnProf.classList.toggle("active", tabName === "profile");
 
       if (tabName === "reports") {
         initReportDefaultsIfNeeded();
         if (activeReportSubtab === "daily") loadDailyOrdersReport();
         else if (activeReportSubtab === "customers") loadCustomersReport();
         else if (activeReportSubtab === "products") loadProductRangeReport();
+      } else if (tabName === "profile") {
+        loadStoreProfileForm();
+      }
+    };
+
+    window.loadStoreProfileForm = async function() {
+      if (typeof window.ensureRestaurantConfigReady === "function") {
+        try { await window.ensureRestaurantConfigReady(); } catch (e) {}
+      }
+      const cfg = window.SUPABASE_CONFIG || {};
+      const sb = window.getSupabaseClient ? window.getSupabaseClient() : null;
+      const slug = cfg.restaurantSlug;
+      let info = cfg.restaurantInfo || {};
+
+      if (sb && slug) {
+        try {
+          const { data } = await sb
+            .from("restaurants")
+            .select("id,name,slug,phone,address,instagram,profile")
+            .eq("slug", slug)
+            .maybeSingle();
+          if (data) info = data;
+        } catch (e) {}
+      }
+
+      const p = (info.profile && typeof info.profile === "object") ? info.profile : {};
+      const ch = (p.channels && typeof p.channels === "object") ? p.channels : {};
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || "";
+      };
+
+      setVal("profPhone", info.phone || "");
+      setVal("profAddress", info.address || "");
+      setVal("profInstagram", info.instagram || "");
+      setVal("profWhatsapp", p.whatsapp || "");
+      setVal("profWhatsappDisplay", p.whatsapp_display || "");
+      setVal("profChannelYs", ch.yemeksepeti || "");
+      setVal("profChannelTy", ch.trendyol || "");
+      setVal("profChannelMg", ch.migros || "");
+      setVal("profChannelGt", ch.getir || "");
+      setVal("profLogoUrl", p.logo_url || "");
+      setVal("profHeroTag", p.hero_tag || "");
+      setVal("profHeroTitle", p.hero_title_html || "");
+      setVal("profHeroDesc", p.hero_desc || "");
+      setVal("profStoryTitle", p.story_title || "");
+      setVal("profStoryDesc", p.story_desc || "");
+      setVal("profMenuDesc", p.menu_desc || "");
+      setVal("profHoursHtml", p.hours_html || "");
+      setVal("profFooterTagline", p.footer_tagline || "");
+      setVal("profFooterCity", p.footer_city || "");
+    };
+
+    window.saveStoreProfile = async function() {
+      const sb = window.getSupabaseClient ? window.getSupabaseClient() : null;
+      if (!sb) {
+        showToast("Veritabanı bağlantısı kurulamadı.");
+        return;
+      }
+      const btn = document.getElementById("btnSaveStoreProfile");
+      const getVal = (id) => (document.getElementById(id)?.value || "").trim();
+
+      const channelUrls = {
+        yemeksepeti: getVal("profChannelYs"),
+        trendyol: getVal("profChannelTy"),
+        migros: getVal("profChannelMg"),
+        getir: getVal("profChannelGt")
+      };
+      for (const [key, url] of Object.entries(channelUrls)) {
+        if (url && !/^https:\/\//i.test(url)) {
+          showToast(`${key} linki https:// ile başlamalıdır.`);
+          return;
+        }
+      }
+
+      const profilePayload = {
+        whatsapp: getVal("profWhatsapp").replace(/[^0-9]/g, ""),
+        whatsapp_display: getVal("profWhatsappDisplay"),
+        channels: channelUrls,
+        logo_url: getVal("profLogoUrl"),
+        hero_tag: getVal("profHeroTag"),
+        hero_title_html: getVal("profHeroTitle"),
+        hero_desc: getVal("profHeroDesc"),
+        story_title: getVal("profStoryTitle"),
+        story_desc: getVal("profStoryDesc"),
+        menu_desc: getVal("profMenuDesc"),
+        hours_html: getVal("profHoursHtml"),
+        footer_tagline: getVal("profFooterTagline"),
+        footer_city: getVal("profFooterCity")
+      };
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Kaydediliyor...";
+      }
+      try {
+        const slug = window.SUPABASE_CONFIG ? window.SUPABASE_CONFIG.restaurantSlug : null;
+        const { data, error } = await sb.rpc("update_my_restaurant_profile", {
+          p_restaurant_slug: slug,
+          p_phone: getVal("profPhone"),
+          p_address: getVal("profAddress"),
+          p_instagram: getVal("profInstagram"),
+          p_profile: profilePayload
+        });
+        if (error) throw error;
+        if (window.SUPABASE_CONFIG && data) {
+          window.SUPABASE_CONFIG.restaurantInfo = Object.assign({}, window.SUPABASE_CONFIG.restaurantInfo || {}, {
+            phone: data.phone,
+            address: data.address,
+            instagram: data.instagram,
+            profile: data.profile
+          });
+        }
+        showToast("✅ Mağaza profili ve kanallar kaydedildi!");
+      } catch (err) {
+        console.error("saveStoreProfile error:", err);
+        showToast("❌ Kayıt hatası: " + (err.message || err));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "💾 Profili Kaydet";
+        }
       }
     };
 
