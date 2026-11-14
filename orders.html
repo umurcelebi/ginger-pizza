@@ -954,10 +954,11 @@
     function isKdsAuthUserAuthorized(user, activeSlug) {
       if (!user) return false;
       const meta = user.app_metadata || {};
-      const role = String(meta.role || "");
-      const tokenSlug = String(meta.restaurant_slug || "");
+      const role = String(meta.role || "").trim().toLowerCase();
+      const tokenSlug = String(meta.restaurant_slug || "").trim().toLowerCase();
+      const targetSlug = String(activeSlug || "").trim().toLowerCase();
       if (role === "super_admin") return true;
-      if ((role === "restaurant_admin" || role === "staff") && tokenSlug === activeSlug) return true;
+      if ((role === "restaurant_admin" || role === "staff" || role === "admin" || role === "manager") && tokenSlug === targetSlug) return true;
       return false;
     }
 
@@ -1349,7 +1350,10 @@
     }
 
     // Başlatıcı
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (typeof window.ensureRestaurantConfigReady === "function") {
+        try { await window.ensureRestaurantConfigReady(); } catch (e) {}
+      }
       // Ses Butonu
       const btnSound = document.getElementById("btnToggleSound");
       btnSound.addEventListener("click", () => {
@@ -1480,19 +1484,11 @@
       const authOverlay = document.getElementById("kdsAuthOverlay");
       const kdsLoginForm = document.getElementById("kdsLoginForm");
 
-      const authUser = await checkKdsSupabaseSession();
-      if (authUser) {
-        const authRole = (authUser.app_metadata && authUser.app_metadata.role) || "staff";
-        sessionStorage.setItem(getKdsSessionKey("admin_logged_in"), "true");
-        sessionStorage.setItem(getKdsSessionKey("user_email"), authUser.email || "");
-        sessionStorage.setItem(getKdsSessionKey("user_role"), authRole === "staff" ? "staff" : "admin");
-        if (authOverlay) authOverlay.style.display = "none";
-        startKdsRuntime();
-      } else if (kdsLoginForm) {
+      if (kdsLoginForm) {
         kdsLoginForm.addEventListener("submit", async (e) => {
           e.preventDefault();
           if (typeof window.ensureRestaurantConfigReady === "function") {
-            await window.ensureRestaurantConfigReady();
+            try { await window.ensureRestaurantConfigReady(); } catch (err) {}
           }
           const email = document.getElementById("kdsLoginEmail").value.trim().toLowerCase();
           const pass = document.getElementById("kdsLoginPass").value;
@@ -1533,6 +1529,16 @@
           if (authOverlay) authOverlay.style.display = "none";
           startKdsRuntime();
         });
+      }
+
+      const authUser = await checkKdsSupabaseSession();
+      if (authUser) {
+        const authRole = (authUser.app_metadata && authUser.app_metadata.role) || "staff";
+        sessionStorage.setItem(getKdsSessionKey("admin_logged_in"), "true");
+        sessionStorage.setItem(getKdsSessionKey("user_email"), authUser.email || "");
+        sessionStorage.setItem(getKdsSessionKey("user_role"), authRole === "staff" ? "staff" : "admin");
+        if (authOverlay) authOverlay.style.display = "none";
+        startKdsRuntime();
       }
     });
   </script>
