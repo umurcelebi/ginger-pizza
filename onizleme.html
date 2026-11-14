@@ -2227,6 +2227,7 @@
       }
       .mobile-bar {
         display: block;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
       }
       .floating-cart-pill {
         display: none !important;
@@ -2282,12 +2283,35 @@
         padding: 0 12px;
         gap: 6px;
       }
+      .brand-logo {
+        min-width: 0;
+        flex: 1;
+      }
       .brand-mark {
         width: 42px;
         height: 42px;
       }
+      .brand-text {
+        min-width: 0;
+        overflow: hidden;
+      }
       .brand-title {
-        font-size: 1.08rem;
+        font-size: 1.02rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .header-actions {
+        gap: 6px;
+      }
+      .featured-meta {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .store-banner-meta {
+        white-space: normal;
+      }
+      .customizer-footer-bar {
+        flex-wrap: wrap;
       }
       .btn-header-track {
         padding: 6px 9px;

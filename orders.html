@@ -705,7 +705,7 @@
         padding: 12px;
         gap: 12px;
       }
-      .col-body {
+      .col-cards-list {
         max-height: none;
         overflow-y: visible;
       }
@@ -724,6 +724,9 @@
         gap: 6px;
       }
       .btn-kds {
+        flex: 1 1 calc(50% - 6px);
+        justify-content: center;
+        text-align: center;
         padding: 7px 10px;
         font-size: 0.76rem;
       }
@@ -920,7 +923,7 @@
       </label>
       <input type="text" id="kdsStoreMessageInput" class="kds-mode-note-input" placeholder="Örn: Mutfak yoğunluğu nedeniyle kısa bir ara verdik.">
 
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px;">
         <span style="font-size:0.76rem; color:var(--ink-muted);">Haftalık saatleri Admin panelinden düzenleyebilirsiniz.</span>
         <button type="button" class="btn-modal-cancel" onclick="closeKdsStoreModal()">Kapat</button>
       </div>

@@ -538,6 +538,7 @@
 
     .modal-actions {
       display: flex;
+      flex-wrap: wrap;
       justify-content: flex-end;
       gap: 10px;
       margin-top: 24px;
@@ -1270,6 +1271,11 @@
     }
 
     @media (max-width: 560px) {
+      .admin-nav-actions .btn-header {
+        flex: 1 1 calc(50% - 6px);
+        justify-content: center;
+        text-align: center;
+      }
       .admin-section-tabs {
         width: 100%;
         display: grid;
@@ -1279,6 +1285,9 @@
         text-align: center;
         padding: 8px 8px;
         font-size: 0.8rem;
+      }
+      #adminMainTabs .admin-section-tab:nth-child(3) {
+        grid-column: 1 / -1;
       }
       .stats-row {
         gap: 10px;
@@ -1316,6 +1325,24 @@
         width: 100%;
         justify-content: space-between;
       }
+      #adminDeliveryRulesBox .discount-rate-wrap {
+        flex: 1 1 calc(50% - 6px);
+        justify-content: space-between;
+      }
+      #btnSaveDeliveryRules,
+      #btnSaveOnlineDiscount,
+      #btnSaveStoreHours,
+      #btnSaveStoreProfile {
+        width: 100%;
+        justify-content: center;
+      }
+      #adminProfileSection > div {
+        padding: 14px !important;
+      }
+      #adminProfileSection > div > div:last-child {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
       .payment-methods-list,
       .store-hours-grid,
       .report-kpis {
@@ -1352,10 +1379,21 @@
         max-height: calc(100dvh - 20px);
         border-radius: 16px;
       }
+      #qrPreviewCanvas {
+        max-width: 100%;
+        height: auto !important;
+      }
       .pizza-price-grid,
       .users-form-grid-top,
       .users-form-grid-bot {
         grid-template-columns: 1fr !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .modal-actions .btn-header {
+        flex: 1 1 auto;
+        justify-content: center;
       }
     }
 
@@ -1998,7 +2036,7 @@
 
         <div class="form-group">
           <label class="form-label">Ürün Tipi</label>
-          <div style="display: flex; gap: 16px; margin-top: 6px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 6px;">
             <label><input type="radio" name="itemType" value="pizza" checked id="typePizza"> 3 Boylu Pizza (Small / Med / XL)</label>
             <label><input type="radio" name="itemType" value="extra" id="typeExtra"> Sabit Porsiyon Fiyatlı</label>
           </div>
